@@ -1,0 +1,255 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  WORKSTATION CONFIGURATION - Windows 10/11 Endpoints
+  ==============================================================================
+
+  Profile: Balanced Workstation
+  Target: Standard corporate workstations (Windows 10/11)
+  CPU Impact: <5%
+  Daily Logs: ~300-500MB per workstation
+
+  OPTIMIZATIONS FOR WORKSTATIONS:
+  - Reduced network logging (internal networks excluded)
+  - Browser process exclusions (Chrome, Edge, Firefox)
+  - Common office software exclusions
+  - OneDrive/cloud storage exclusions
+  - Development tool exclusions (if applicable)
+
+  DEPLOYMENT:
+  .\deployment\Install-Sysmon.ps1 -ConfigPath ".\examples\workstation-config.xml"
+
+  ==============================================================================
+-->
+
+  <HashAlgorithms>SHA256,IMPHASH</HashAlgorithms>
+  <CheckRevocation/>
+
+  <EventFiltering>
+
+    <!-- Process Creation: Focus on security-relevant processes -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Windows system processes -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <Image condition="is">C:\Windows\System32\wbem\WmiApSrv.exe</Image>
+
+        <!-- Windows Update -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">WpnService</CommandLine>
+        </Rule>
+
+        <!-- Microsoft Edge auto-update -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Microsoft\EdgeUpdate\</ParentImage>
+          <Image condition="contains">\Microsoft\EdgeUpdate\</Image>
+        </Rule>
+
+        <!-- Chrome update -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Google\Chrome\Application\</ParentImage>
+          <CommandLine condition="contains">--type=crashpad-handler</CommandLine>
+        </Rule>
+
+        <!-- OneDrive sync -->
+        <Image condition="is">C:\Program Files\Microsoft OneDrive\OneDrive.exe</Image>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Network: Log external connections and critical protocols -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Exclude internal networks (adjust for your environment) -->
+        <Rule groupRelation="and">
+          <DestinationIp condition="begin with">10.</DestinationIp>
+          <DestinationPort condition="is not">22</DestinationPort>
+          <DestinationPort condition="is not">3389</DestinationPort>
+          <DestinationPort condition="is not">445</DestinationPort>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <DestinationIp condition="begin with">192.168.</DestinationIp>
+          <DestinationPort condition="is not">22</DestinationPort>
+          <DestinationPort condition="is not">3389</DestinationPort>
+          <DestinationPort condition="is not">445</DestinationPort>
+        </Rule>
+
+        <!-- Localhost -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+
+        <!-- Microsoft services -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\msedge.exe</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <!-- OneDrive sync -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <DestinationHostname condition="end with">onedrive.live.com</DestinationHostname>
+        </Rule>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Process Access: Focus on LSASS and security processes -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+      </ProcessAccess>
+
+      <ProcessAccess onmatch="exclude">
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="begin with">C:\Program Files\Windows Defender\</SourceImage>
+        </Rule>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Image Load: Only unsigned DLLs from suspicious paths -->
+    <RuleGroup name="ImageLoad" groupRelation="or">
+      <ImageLoad onmatch="exclude">
+        <Rule groupRelation="and">
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\</ImageLoaded>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Program Files\</ImageLoaded>
+        </Rule>
+      </ImageLoad>
+
+      <ImageLoad onmatch="include">
+        <ImageLoaded condition="begin with">C:\Users\</ImageLoaded>
+        <ImageLoaded condition="begin with">C:\ProgramData\</ImageLoaded>
+        <ImageLoaded condition="contains">\Temp\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- Registry: Security-critical keys only -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows NT\CurrentVersion\Winlogon</TargetObject>
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows Defender\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- DNS: Suspicious domains only -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <QueryName condition="end with">microsoft.com</QueryName>
+        <QueryName condition="end with">windows.com</QueryName>
+        <QueryName condition="end with">google.com</QueryName>
+        <QueryName condition="end with">cloudflare.com</QueryName>
+      </DnsQuery>
+
+      <DnsQuery onmatch="include">
+        <QueryName condition="end with">duckdns.org</QueryName>
+        <QueryName condition="end with">no-ip.com</QueryName>
+        <QueryName condition="end with">.tk</QueryName>
+        <QueryName condition="end with">ngrok.io</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- File Creation: Executables in user-writable locations -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="include">
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+
+        <TargetFilename condition="contains">\Microsoft\Windows\Start Menu\Programs\Startup\</TargetFilename>
+      </FileCreate>
+
+      <FileCreate onmatch="exclude">
+        <Rule groupRelation="and">
+          <Image condition="contains">\Google\Chrome\</Image>
+          <TargetFilename condition="contains">\Google\Chrome\User Data\</TargetFilename>
+        </Rule>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- Always log critical events -->
+    <RuleGroup name="SysmonStatus" groupRelation="or">
+      <SysmonStatus onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="DriverLoad" groupRelation="or">
+      <DriverLoad onmatch="exclude">
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+        </Rule>
+      </DriverLoad>
+    </RuleGroup>
+
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="contains">\Google\Chrome\Application\chrome.exe</SourceImage>
+          <TargetImage condition="contains">\Google\Chrome\Application\chrome.exe</TargetImage>
+        </Rule>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <RuleGroup name="RawAccessRead" groupRelation="or">
+      <RawAccessRead onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <Image condition="begin with">C:\Program Files\Windows Defender\</Image>
+      </RawAccessRead>
+    </RuleGroup>
+
+    <RuleGroup name="FileCreateTime" groupRelation="or">
+      <FileCreateTime onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\msiexec.exe</Image>
+      </FileCreateTime>
+    </RuleGroup>
+
+    <RuleGroup name="PipeEvent" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains">PSEXESVC</PipeName>
+        <PipeName condition="contains">msagent_</PipeName>
+      </PipeEvent>
+
+      <PipeEvent onmatch="exclude">
+        <Rule groupRelation="and">
+          <Image condition="contains">\Google\Chrome\</Image>
+          <PipeName condition="begin with">\\mojo.</PipeName>
+        </Rule>
+      </PipeEvent>
+    </RuleGroup>
+
+    <RuleGroup name="WmiEvent" groupRelation="or">
+      <WmiEvent onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="FileDelete" groupRelation="or">
+      <FileDelete onmatch="include">
+        <TargetFilename condition="contains">\Windows\System32\winevt\Logs\</TargetFilename>
+        <TargetFilename condition="contains">\System Volume Information\</TargetFilename>
+      </FileDelete>
+    </RuleGroup>
+
+    <RuleGroup name="ProcessTampering" groupRelation="or">
+      <ProcessTampering onmatch="include"/>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

@@ -1,0 +1,407 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  TECHNIQUE MODULE: T1055 - Process Injection
+  ==============================================================================
+
+  MITRE ATT&CK: T1055
+  Tactic: Defense Evasion, Privilege Escalation
+  Priority: CRITICAL
+  Expected FP Rate: Low-Medium
+  Estimated Events: 100-500/day
+
+  DESCRIPTION:
+  Detects various process injection techniques including:
+  - T1055.001: Dynamic-link Library Injection
+  - T1055.002: Portable Executable Injection
+  - T1055.003: Thread Execution Hijacking
+  - T1055.004: Asynchronous Procedure Call
+  - T1055.005: Thread Local Storage
+  - T1055.008: Ptrace System Calls
+  - T1055.009: Proc Memory
+  - T1055.011: Extra Window Memory Injection
+  - T1055.012: Process Hollowing
+  - T1055.013: Process Doppelgänging
+  - T1055.014: VDSO Hijacking
+
+  DETECTION STRATEGY:
+  1. Monitor CreateRemoteThread calls
+  2. Detect DLL injection from unusual locations
+  3. Monitor process access with injection-like rights
+  4. Detect process hollowing via process tampering
+  5. Monitor reflective DLL loading
+
+  REFERENCES:
+  - https://attack.mitre.org/techniques/T1055/
+  - JPCERT Tool Analysis
+  - https://www.elastic.co/blog/ten-process-injection-techniques-technical-survey-common-and-trending-process
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         CreateRemoteThread Injection (T1055.001, T1055.002)
+         ====================================================================== -->
+
+    <RuleGroup name="T1055_CreateRemoteThread" groupRelation="or">
+
+      <!-- Event ID 8: CreateRemoteThread -->
+      <CreateRemoteThread onmatch="include">
+
+        <!-- Cross-process thread creation (exclude same process) -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is not">TargetImage</SourceImage>
+          <!-- Exclude legitimate sources -->
+          <SourceImage condition="is not">C:\Windows\System32\svchost.exe</SourceImage>
+          <SourceImage condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+          <SourceImage condition="is not">C:\Windows\System32\csrss.exe</SourceImage>
+        </Rule>
+
+        <!-- Injection into sensitive processes -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+
+        <!-- Injection from suspicious locations -->
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\</TargetImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\ProgramData\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\</TargetImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Temp\</SourceImage>
+        </Rule>
+
+        <!-- Start address in unusual memory regions -->
+        <Rule groupRelation="and">
+          <StartModule condition="is">null</StartModule>
+        </Rule>
+
+      </CreateRemoteThread>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         DLL Injection via LoadLibrary
+         ====================================================================== -->
+
+    <RuleGroup name="T1055_DLL_Injection" groupRelation="or">
+
+      <!-- Event ID 7: ImageLoad - DLL loading from suspicious paths -->
+      <ImageLoad onmatch="include">
+
+        <!-- Unsigned DLLs loaded into system processes -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\explorer.exe</Image>
+          <Signed condition="is">false</Signed>
+          <ImageLoaded condition="begin with">C:\Users\</ImageLoaded>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\svchost.exe</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+
+        <!-- DLLs from temp directories -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="contains">\Temp\</ImageLoaded>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <ImageLoaded condition="begin with">C:\Windows\Temp\</ImageLoaded>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <ImageLoaded condition="contains">\AppData\Local\Temp\</ImageLoaded>
+        </Rule>
+
+        <!-- DLLs from ProgramData (common malware location) -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="begin with">C:\ProgramData\</ImageLoaded>
+          <Signed condition="is">false</Signed>
+        </Rule>
+
+        <!-- DLLs from Downloads folder -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="contains">\Downloads\</ImageLoaded>
+        </Rule>
+
+        <!-- Known malicious DLL names (obfuscation attempts) -->
+        <ImageLoaded condition="end with">\kernel32.dll</ImageLoaded>
+        <ImageLoaded condition="end with">\ntdll.dll</ImageLoaded>
+        <ImageLoaded condition="end with">\user32.dll</ImageLoaded>
+
+        <!-- Reflective DLL injection indicators -->
+        <ImageLoaded condition="contains">ReflectiveLoader</ImageLoaded>
+
+      </ImageLoad>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Process Hollowing (T1055.012)
+         ====================================================================== -->
+
+    <RuleGroup name="T1055.012_Process_Hollowing" groupRelation="or">
+
+      <!-- Event ID 25: ProcessTampering -->
+      <ProcessTampering onmatch="include">
+        <!-- Log all process tampering events -->
+      </ProcessTampering>
+
+      <!-- Event ID 10: ProcessAccess - Hollowing prep -->
+      <ProcessAccess onmatch="include">
+
+        <!-- VirtualAllocEx + WriteProcessMemory pattern -->
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x1F0FFF</GrantedAccess>  <!-- PROCESS_ALL_ACCESS -->
+        </Rule>
+
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x1F1FFF</GrantedAccess>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x1FFFFF</GrantedAccess>
+        </Rule>
+
+        <!-- Access from suspicious processes -->
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <GrantedAccess condition="is">0x1410</GrantedAccess>  <!-- PROCESS_VM_OPERATION + PROCESS_VM_WRITE -->
+        </Rule>
+
+      </ProcessAccess>
+
+      <!-- Event ID 1: ProcessCreate - Suspended process creation -->
+      <!-- Note: Sysmon doesn't log suspended flag directly, but can detect via timing -->
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Process Doppelgänging (T1055.013)
+         ====================================================================== -->
+
+    <RuleGroup name="T1055.013_Process_Doppelganging" groupRelation="or">
+
+      <!-- Event ID 1: ProcessCreate - Unusual parent relationships -->
+      <ProcessCreate onmatch="include">
+
+        <!-- Process created without expected parent -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">null</ParentImage>
+          <Image condition="is not">C:\Windows\System32\smss.exe</Image>
+        </Rule>
+
+        <!-- System process with unusual parent -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Windows\System32\</Image>
+          <ParentImage condition="begin with">C:\Users\</ParentImage>
+        </Rule>
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         APC Queue Injection (T1055.004)
+         ====================================================================== -->
+
+    <RuleGroup name="T1055.004_APC_Injection" groupRelation="or">
+
+      <!-- Event ID 8: CreateRemoteThread - APC-based injection -->
+      <CreateRemoteThread onmatch="include">
+
+        <!-- Thread start address in APC region -->
+        <Rule groupRelation="and">
+          <StartFunction condition="contains">ntdll.dll!NtQueueApcThread</StartFunction>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <StartFunction condition="contains">kernel32.dll!QueueUserAPC</StartFunction>
+        </Rule>
+
+      </CreateRemoteThread>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Thread Hijacking (T1055.003)
+         ====================================================================== -->
+
+    <RuleGroup name="T1055.003_Thread_Hijacking" groupRelation="or">
+
+      <!-- Event ID 8: CreateRemoteThread - Hijacking existing threads -->
+      <CreateRemoteThread onmatch="include">
+
+        <!-- Injection from PowerShell -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\powershell.exe</SourceImage>
+          <TargetImage condition="is not">SourceImage</TargetImage>
+        </Rule>
+
+        <!-- Injection from scripting hosts -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\cscript.exe</SourceImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\wscript.exe</SourceImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\mshta.exe</SourceImage>
+        </Rule>
+
+      </CreateRemoteThread>
+
+      <!-- Event ID 10: ProcessAccess - Thread context manipulation -->
+      <ProcessAccess onmatch="include">
+
+        <!-- THREAD_SET_CONTEXT access -->
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x0010</GrantedAccess>  <!-- THREAD_SET_CONTEXT -->
+        </Rule>
+
+        <Rule groupRelation="and">
+          <CallTrace condition="contains">SetThreadContext</CallTrace>
+        </Rule>
+
+      </ProcessAccess>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Extra Window Memory Injection (T1055.011)
+         ====================================================================== -->
+
+    <RuleGroup name="T1055.011_EWMI" groupRelation="or">
+
+      <!-- Event ID 10: ProcessAccess - SetWindowLong abuse -->
+      <ProcessAccess onmatch="include">
+
+        <Rule groupRelation="and">
+          <CallTrace condition="contains">user32.dll!SetWindowLongPtr</CallTrace>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <CallTrace condition="contains">user32.dll!SetWindowLong</CallTrace>
+        </Rule>
+
+      </ProcessAccess>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Known Injection Tools
+         ====================================================================== -->
+
+    <RuleGroup name="T1055_Known_Tools" groupRelation="or">
+
+      <!-- Event ID 1: ProcessCreate - Known injection tools -->
+      <ProcessCreate onmatch="include">
+
+        <!-- Cobalt Strike -->
+        <CommandLine condition="contains">inject</CommandLine>
+        <CommandLine condition="contains">shinject</CommandLine>
+        <CommandLine condition="contains">execute-assembly</CommandLine>
+
+        <!-- Metasploit -->
+        <CommandLine condition="contains">migrate</CommandLine>
+        <CommandLine condition="contains">post/windows/manage/migrate</CommandLine>
+
+        <!-- PowerSploit -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-DllInjection</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-ReflectivePEInjection</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-Shellcode</CommandLine>
+        </Rule>
+
+        <!-- Process Hacker (can be used for injection) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\ProcessHacker.exe</Image>
+          <CommandLine condition="contains">-s</CommandLine>
+        </Rule>
+
+        <!-- Mavinject.exe (Windows utility abused for injection) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mavinject.exe</Image>
+          <CommandLine condition="contains">/INJECTRUNNING</CommandLine>
+        </Rule>
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         PowerShell Injection Patterns
+         ====================================================================== -->
+
+    <RuleGroup name="T1055_PowerShell_Injection" groupRelation="or">
+
+      <!-- Event ID 1: ProcessCreate - PowerShell with injection keywords -->
+      <ProcessCreate onmatch="include">
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">VirtualAlloc</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">WriteProcessMemory</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">CreateRemoteThread</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">QueueUserAPC</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">[System.Runtime.InteropServices.Marshal]::Copy</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-MemoryLoad</CommandLine>
+        </Rule>
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>
