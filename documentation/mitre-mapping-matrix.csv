@@ -1,0 +1,120 @@
+Technique_ID,Technique_Name,Tactic,Priority,Sysmon_Event_IDs,Detection_Method,Coverage_Level,Expected_FP_Rate,Module_File,Notes
+T1003,OS Credential Dumping,Credential Access,Critical,"10,9,1,11,13",ProcessAccess + RawAccessRead + ProcessCreate,High,Low,T1003_credential_dumping.xml,LSASS access and credential dumping tools
+T1003.001,LSASS Memory,Credential Access,Critical,"10,1,11",ProcessAccess to lsass.exe,High,Low,T1003_credential_dumping.xml,Mimikatz ProcDump comsvcs.dll techniques
+T1003.002,Security Account Manager,Credential Access,High,"9,1,11",RawAccessRead + reg.exe save,High,Low,T1003_credential_dumping.xml,SAM/SYSTEM/SECURITY hive access
+T1003.003,NTDS,Credential Access,Critical,"1,11",ntdsutil.exe + VSS + file copy,High,Low,T1003_credential_dumping.xml,Domain controller NTDS.dit extraction
+T1003.004,LSA Secrets,Credential Access,Medium,13,Registry access to LSA keys,Medium,Low,T1003_credential_dumping.xml,Registry-based credential theft
+T1003.005,Cached Domain Credentials,Credential Access,Medium,13,Registry cache access,Medium,Low,T1003_credential_dumping.xml,Cached credentials in registry
+T1003.006,DCSync,Credential Access,Critical,"1,3",Mimikatz lsadump::dcsync + network,Medium,Low,T1003_credential_dumping.xml,Requires Windows Event 4662 correlation
+T1014,Rootkit,Defense Evasion | Privilege Escalation,High,6,Unsigned driver loads,Medium,Medium,,Driver loading from unusual locations
+T1021,Remote Services,Lateral Movement,Critical,"1,3,17,18",ProcessCreate + NetworkConnect + Pipes,High,Medium,T1021_remote_services.xml,PSExec WMI RDP SMB detection
+T1021.001,Remote Desktop Protocol,Lateral Movement,High,"1,3",mstsc.exe + network + rdpclip.exe,High,Low,,RDP client/server activity
+T1021.002,SMB/Windows Admin Shares,Lateral Movement,High,"3,17,18",Network 445 + named pipes,High,Medium,,PSExec-like lateral movement
+T1021.003,Distributed Component Object Model,Lateral Movement,Medium,"1,3",dcomcnfg + DCOM process creation,Medium,Low,,DCOM-based lateral movement
+T1021.004,SSH,Lateral Movement,Medium,"1,3",ssh.exe + network port 22,High,Low,,SSH client activity
+T1021.006,Windows Remote Management,Lateral Movement,High,"1,3",winrs.exe + wsmprovhost.exe,High,Low,,WinRM-based lateral movement
+T1027,Obfuscated Files or Information,Defense Evasion,Medium,"11,15",File creation + ADS + encodings,Medium,Medium,,Obfuscated script and file detection
+T1036,Masquerading,Defense Evasion,High,"1,11",Process names mimicking system files,Medium,Medium,,Process masquerading detection
+T1036.003,Rename System Utilities,Defense Evasion,Medium,1,Common utilities with wrong names,Medium,Medium,,Renamed tools like cmd.exe -> svchost.exe
+T1036.004,Masquerade Task or Service,Defense Evasion,Medium,"1,13,16",Services with suspicious names,Medium,Low,,Service masquerading
+T1036.005,Match Legitimate Name or Location,Defense Evasion,High,1,System process from wrong location,High,Low,,explorer.exe not from C:\Windows
+T1040,Network Sniffing,Credential Access | Discovery,Medium,"1,6",WinPcap drivers + sniffing tools,Medium,Low,,Wireshark tcpdump pktmon
+T1047,Windows Management Instrumentation,Execution | Lateral Movement,Critical,"1,19,20,21",WMI process creation + subscriptions,High,Medium,T1047_wmi_execution.xml,WMI execution and persistence
+T1053,Scheduled Task/Job,Execution | Persistence | Privilege Escalation,High,"1,13",schtasks.exe + at.exe + taskeng.exe,High,Low,,Scheduled task creation
+T1053.005,Scheduled Task,Execution | Persistence,High,"1,13",schtasks.exe + registry TaskCache,High,Low,,Task Scheduler abuse
+T1055,Process Injection,Defense Evasion | Privilege Escalation,Critical,"8,7,10,25",CreateRemoteThread + DLL loads + tampering,High,Low-Medium,T1055_process_injection.xml,All injection techniques
+T1055.001,Dynamic-link Library Injection,Defense Evasion | Privilege Escalation,High,"7,8",DLL from unusual paths + CreateRemoteThread,High,Medium,T1055_process_injection.xml,LoadLibrary-based injection
+T1055.002,Portable Executable Injection,Defense Evasion | Privilege Escalation,High,"8,10",CreateRemoteThread + memory manipulation,High,Low,T1055_process_injection.xml,Shellcode injection
+T1055.003,Thread Execution Hijacking,Defense Evasion | Privilege Escalation,High,"8,10",SetThreadContext calls,Medium,Low,T1055_process_injection.xml,Thread hijacking via context manipulation
+T1055.004,Asynchronous Procedure Call,Defense Evasion | Privilege Escalation,High,8,QueueUserAPC calls,Medium,Low,T1055_process_injection.xml,APC-based injection
+T1055.011,Extra Window Memory Injection,Defense Evasion | Privilege Escalation,Medium,10,SetWindowLong calls,Low,Low,T1055_process_injection.xml,EWMI technique
+T1055.012,Process Hollowing,Defense Evasion | Privilege Escalation,High,"25,10,1",ProcessTampering + suspended processes,High,Low,T1055_process_injection.xml,Process hollowing detection
+T1055.013,Process Doppelgänging,Defense Evasion | Privilege Escalation,High,"1,25",Unusual parent relationships + tampering,Medium,Low,T1055_process_injection.xml,Transaction-based hollowing
+T1057,Process Discovery,Discovery,Low,1,tasklist.exe + Get-Process,Low,High,,Process enumeration (very common)
+T1059,Command and Scripting Interpreter,Execution,High,1,cmd.exe powershell.exe wscript.exe,High,High,,Script execution detection
+T1059.001,PowerShell,Execution,Critical,1,powershell.exe with suspicious flags,High,Medium,,PowerShell execution and obfuscation
+T1059.003,Windows Command Shell,Execution,High,1,cmd.exe with suspicious commands,High,Medium,,Batch and command shell abuse
+T1059.005,Visual Basic,Execution,High,1,wscript.exe cscript.exe mshta.exe,High,Low,,VBScript execution
+T1059.007,JavaScript,Execution,Medium,1,wscript.exe cscript.exe node.exe,Medium,Low,,JavaScript execution
+T1068,Exploitation for Privilege Escalation,Privilege Escalation,Critical,"1,6,25",Exploit indicators + driver loads,Medium,Low,,Privilege escalation exploits
+T1070,Indicator Removal,Defense Evasion,High,"23,26,2,1",File deletion + timestomping + log clearing,High,Medium,,Anti-forensics techniques
+T1070.001,Clear Windows Event Logs,Defense Evasion,High,1,wevtutil.exe Clear-EventLog,High,Low,,Event log clearing
+T1070.004,File Deletion,Defense Evasion,High,"23,26",Critical file deletion,Medium,High,,Security log and artifact deletion
+T1070.006,Timestomp,Defense Evasion,Medium,2,File timestamp modification,High,Low,,Timestomping detection
+T1071,Application Layer Protocol,Command and Control,High,3,Network connections to C2,Medium,High,,C2 communication channels
+T1071.001,Web Protocols,Command and Control,High,3,HTTP/HTTPS to suspicious domains,Medium,High,,Web-based C2
+T1071.004,DNS,Command and Control,High,22,DNS queries to suspicious domains,Medium,Low,,DNS tunneling and C2
+T1078,Valid Accounts,Defense Evasion | Persistence | Privilege Escalation | Initial Access,High,1,Authentication context with processes,Low,High,,Credential use (better with WinEvent 4624)
+T1082,System Information Discovery,Discovery,Low,1,systeminfo.exe hostname.exe,Low,High,,System enumeration (common)
+T1083,File and Directory Discovery,Discovery,Low,1,dir.exe tree.exe,Low,Very High,,File enumeration (extremely common)
+T1090,Proxy,Command and Control,Medium,3,Proxy tool execution + network,Medium,Medium,,Proxy tool usage
+T1098,Account Manipulation,Persistence,Medium,1,net.exe user modification,Medium,Low,,Account modification commands
+T1105,Ingress Tool Transfer,Command and Control,High,"3,11",File downloads + network transfers,High,Medium,,Tool and malware downloads
+T1110,Brute Force,Credential Access,High,1,Password brute force tools,Medium,Low,,Brute force attempts
+T1112,Modify Registry,Defense Evasion,High,13,Registry modification of security keys,Medium,High,,Registry-based defense evasion
+T1113,Screen Capture,Collection,Medium,1,Screenshot tools execution,Medium,Low,,Screen capture utilities
+T1115,Clipboard Data,Collection,Low,24,Clipboard change events,Low,High,,Clipboard monitoring (privacy concern)
+T1134,Access Token Manipulation,Defense Evasion | Privilege Escalation,High,1,Token manipulation tools,Medium,Low,,Token theft and impersonation
+T1140,Deobfuscate/Decode Files or Information,Defense Evasion,Medium,1,certutil.exe -decode + base64 decoding,High,Medium,,Encoded payload decoding
+T1176,Browser Extensions,Persistence,Medium,13,Browser extension registry changes,Medium,Low,,Malicious browser extensions
+T1197,BITS Jobs,Defense Evasion | Persistence,Medium,1,bitsadmin.exe Start-BitsTransfer,High,Low,,BITS-based persistence
+T1202,Indirect Command Execution,Defense Evasion,Medium,1,pcalua.exe forfiles.exe,Medium,Low,,LOLBAS indirect execution
+T1204,User Execution,Execution,High,"1,11",User-initiated malicious execution,Medium,High,,Phishing and social engineering
+T1204.002,Malicious File,Execution,High,"1,11",Executable files in Downloads/Temp,High,Medium,,User executing malicious files
+T1218,System Binary Proxy Execution,Defense Evasion,Critical,1,regsvr32.exe rundll32.exe mshta.exe,High,Low,,LOLBAS abuse for execution
+T1218.001,Compiled HTML File,Defense Evasion,High,1,hh.exe with suspicious parameters,High,Low,,CHM file execution
+T1218.003,CMSTP,Defense Evasion,High,1,cmstp.exe with .inf files,High,Low,,CMSTP.exe abuse
+T1218.004,InstallUtil,Defense Evasion,Medium,1,InstallUtil.exe with DLLs,High,Low,,.NET InstallUtil abuse
+T1218.005,Mshta,Defense Evasion,High,1,mshta.exe with scripts,High,Low,,HTML Application execution
+T1218.007,Msiexec,Defense Evasion,Medium,1,msiexec.exe /quiet /i remote,High,Medium,,MSI-based execution
+T1218.010,Regsvr32,Defense Evasion,High,1,regsvr32.exe /s /n /u /i:,High,Low,,Squiblydoo and regsvr32 abuse
+T1218.011,Rundll32,Defense Evasion,High,1,rundll32.exe with suspicious DLLs,High,Medium,,Rundll32 execution abuse
+T1484,Domain Policy Modification,Defense Evasion | Privilege Escalation,High,13,Group Policy registry changes,Medium,Low,,GPO modification
+T1485,Data Destruction,Impact,Critical,23,Mass file deletion,High,Low,,Destructive malware/ransomware
+T1486,Data Encrypted for Impact,Impact,Critical,"23,1,11",Ransomware indicators + file encryption,High,Low,,Ransomware detection
+T1490,Inhibit System Recovery,Impact,Critical,1,vssadmin delete shadows + bcdedit,High,Low,,Ransomware disabling recovery
+T1518,Software Discovery,Discovery,Low,1,wmic product get + reg query,Low,High,,Software enumeration
+T1543,Create or Modify System Process,Persistence | Privilege Escalation,High,"1,13,16",Service creation + modification,High,Low,,Persistence via services
+T1543.003,Windows Service,Persistence | Privilege Escalation,High,"1,13,16",sc.exe create + net start,High,Low,,Malicious service creation
+T1546,Event Triggered Execution,Persistence | Privilege Escalation,High,"13,19,20,21",Persistence mechanism creation,High,Low,,Various auto-start methods
+T1546.003,Windows Management Instrumentation Event Subscription,Persistence | Privilege Escalation,High,"19,20,21",WMI event subscriptions,High,Low,,WMI-based persistence
+T1546.010,AppInit DLLs,Persistence | Privilege Escalation,Medium,13,AppInit_DLLs registry modification,High,Low,,AppInit DLL injection persistence
+T1546.011,Application Shimming,Persistence | Privilege Escalation,Medium,"13,1",Shim database creation,Medium,Low,,Application compatibility shims
+T1546.012,Image File Execution Options Injection,Persistence | Privilege Escalation,High,13,IFEO registry modification,High,Low,,Debugger persistence technique
+T1546.015,Component Object Model Hijacking,Persistence | Privilege Escalation,Medium,13,CLSID registry modification,Medium,Low,,COM hijacking persistence
+T1547,Boot or Logon Autostart Execution,Persistence | Privilege Escalation,High,13,Autostart location modifications,High,Low,,Various autostart mechanisms
+T1547.001,Registry Run Keys / Startup Folder,Persistence | Privilege Escalation,High,"13,11",Run key registry + Startup folder,High,Low,,Classic persistence technique
+T1547.004,Winlogon Helper DLL,Persistence | Privilege Escalation,High,13,Winlogon registry modification,High,Low,,Winlogon-based persistence
+T1547.005,Security Support Provider,Persistence | Privilege Escalation,High,13,Security provider registry changes,High,Low,,SSP-based credential theft persistence
+T1547.009,Shortcut Modification,Persistence | Privilege Escalation,Medium,11,.lnk file creation/modification,Medium,Medium,,LNK-based persistence
+T1548,Abuse Elevation Control Mechanism,Privilege Escalation | Defense Evasion,High,"1,13",UAC bypass techniques,Medium,Low,,UAC bypass detection
+T1548.002,Bypass User Account Control,Privilege Escalation | Defense Evasion,High,"1,13",Known UAC bypass techniques,Medium,Low,,UAC bypass methods
+T1550,Use Alternate Authentication Material,Defense Evasion | Lateral Movement,High,1,Pass-the-hash/ticket tools,Medium,Low,,Credential replay attacks
+T1552,Unsecured Credentials,Credential Access,Medium,1,Credential search tools,Medium,Medium,,Credential harvesting
+T1553,Subvert Trust Controls,Defense Evasion,High,"1,13",Code signing manipulation,Medium,Low,,Trust mechanism abuse
+T1558,Steal or Forge Kerberos Tickets,Credential Access,High,1,Kerberos ticket manipulation tools,Medium,Low,,Golden/Silver ticket attacks
+T1559,Inter-Process Communication,Execution,Medium,1,COM and DDE execution,Medium,Medium,,IPC-based execution
+T1560,Archive Collected Data,Collection,Medium,1,Archive tools (7z rar zip),Medium,Medium,,Data staging for exfiltration
+T1561,Disk Wipe,Impact,Critical,1,Disk wiping utilities,High,Low,,Destructive disk operations
+T1562,Impair Defenses,Defense Evasion,Critical,"1,13,4,16",Security tool tampering,High,Low,,Disabling security controls
+T1562.001,Disable or Modify Tools,Defense Evasion,Critical,"1,13,4",AV/EDR/Sysmon disabling,High,Low,,Security software tampering
+T1562.004,Disable or Modify System Firewall,Defense Evasion,High,"1,13",Firewall configuration changes,High,Low,,Firewall rule modification
+T1564,Hide Artifacts,Defense Evasion,Medium,"11,15,2",Hidden files + ADS + attributes,Medium,Medium,,Artifact hiding techniques
+T1564.004,NTFS File Attributes,Defense Evasion,Medium,15,Alternate Data Streams,High,Low,,ADS-based hiding
+T1566,Phishing,Initial Access,High,"1,11,3",Email attachment execution + downloads,Medium,High,,Phishing detection (endpoint side)
+T1568,Dynamic Resolution,Command and Control,Medium,22,DGA domains + DNS patterns,Low,Medium,,Domain generation algorithms
+T1569,System Services,Execution,High,"1,13,16",Service execution abuse,High,Medium,,Service-based execution
+T1569.002,Service Execution,Execution,High,1,Service execution for persistence,High,Low,,Malicious service execution
+T1570,Lateral Tool Transfer,Lateral Movement,High,"3,11",File transfers between hosts,Medium,Medium,,Internal tool propagation
+T1571,Non-Standard Port,Command and Control,Medium,3,Network on unusual ports,Low,High,,C2 on non-standard ports
+T1573,Encrypted Channel,Command and Control,Medium,3,Encrypted C2 communications,Low,High,,Encrypted network traffic
+T1574,Hijack Execution Flow,Persistence | Privilege Escalation | Defense Evasion,High,"7,13",DLL hijacking + search order,Medium,Medium,,Execution flow hijacking
+T1574.001,DLL Search Order Hijacking,Persistence | Privilege Escalation,Medium,7,DLL loading from unusual paths,Medium,Medium,,DLL search order abuse
+T1574.002,DLL Side-Loading,Persistence | Privilege Escalation,High,7,Signed binaries loading malicious DLLs,Medium,Low,,DLL side-loading technique
+T1583,Acquire Infrastructure,Resource Development,Low,22,DNS queries to attacker infra,Low,High,,Infrastructure reconnaissance
+T1587,Develop Capabilities,Resource Development,Low,1,Development tools execution,Low,Very High,,Capability development
+T1588,Obtain Capabilities,Resource Development,Low,11,Tool downloads,Low,High,,Tool acquisition
+T1590,Gather Victim Network Information,Reconnaissance,Low,1,Network scanning tools,Low,High,,Network reconnaissance
+T1592,Gather Victim Host Information,Reconnaissance,Low,1,Host enumeration tools,Low,High,,Host reconnaissance
+T1595,Active Scanning,Reconnaissance,Low,1,Port scanners + vulnerability scanners,Low,Medium,,Active scanning tools
+T1596,Search Open Technical Databases,Reconnaissance,Low,3,OSINT tool usage,Low,High,,Public database queries
