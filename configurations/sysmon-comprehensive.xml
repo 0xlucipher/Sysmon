@@ -1,0 +1,283 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  SYSMON COMPREHENSIVE CONFIGURATION
+  ==============================================================================
+
+  Profile: COMPREHENSIVE
+  Target CPU: <10%
+  Daily Logs: ~1.5GB
+  Use Case: High-security environments, critical infrastructure
+
+  STRATEGY:
+  - Maximum visibility with intelligent filtering
+  - Broader event coverage than balanced
+  - More aggressive network and file monitoring
+  - Reduced exclusions for detection gaps
+
+  COVERAGE:
+  - All process activity (minimal exclusions)
+  - Extensive network monitoring (internal + external)
+  - DLL loading from all non-system paths
+  - Comprehensive registry monitoring
+  - Full DNS query logging
+  - File operations in all user-writable areas
+
+  ==============================================================================
+-->
+
+  <HashAlgorithms>SHA256,IMPHASH,MD5</HashAlgorithms>
+  <CheckRevocation/>
+  <DnsLookup>False</DnsLookup>
+
+  <EventFiltering>
+
+    <!-- Process Creation: Log almost everything -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Only exclude truly noisy system processes -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">WpnService</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Network: Log internal AND external -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Only exclude localhost -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Process Access: Broad monitoring -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <!-- All access to critical processes -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+
+        <!-- Suspicious access patterns -->
+        <GrantedAccess condition="is">0x1F0FFF</GrantedAccess>
+        <GrantedAccess condition="is">0x1FFFFF</GrantedAccess>
+
+        <!-- Cross-process access from user space -->
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\</TargetImage>
+        </Rule>
+      </ProcessAccess>
+
+      <ProcessAccess onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Image Load: Monitor unsigned and unusual -->
+    <RuleGroup name="ImageLoad" groupRelation="or">
+      <ImageLoad onmatch="exclude">
+        <!-- Only exclude signed Microsoft from system paths -->
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\System32\</ImageLoaded>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\SysWOW64\</ImageLoaded>
+        </Rule>
+      </ImageLoad>
+
+      <ImageLoad onmatch="include">
+        <!-- Everything else -->
+        <ImageLoaded condition="begin with">C:\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- Registry: Extensive monitoring -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <!-- All Run keys -->
+        <TargetObject condition="contains">\Run</TargetObject>
+
+        <!-- Services -->
+        <TargetObject condition="contains">\Services\</TargetObject>
+
+        <!-- Security providers -->
+        <TargetObject condition="contains">\SecurityProviders\</TargetObject>
+        <TargetObject condition="contains">\Lsa\</TargetObject>
+
+        <!-- Windows Defender -->
+        <TargetObject condition="contains">\Windows Defender\</TargetObject>
+
+        <!-- Image File Execution Options -->
+        <TargetObject condition="contains">\Image File Execution Options\</TargetObject>
+
+        <!-- Winlogon -->
+        <TargetObject condition="contains">\Winlogon\</TargetObject>
+
+        <!-- COM hijacking -->
+        <TargetObject condition="contains">\CLSID\</TargetObject>
+
+        <!-- Scheduled tasks -->
+        <TargetObject condition="contains">\Schedule\TaskCache\</TargetObject>
+
+        <!-- Group Policy -->
+        <TargetObject condition="contains">\Group Policy\</TargetObject>
+
+        <!-- Firewall -->
+        <TargetObject condition="contains">\FirewallPolicy\</TargetObject>
+
+        <!-- UAC -->
+        <TargetObject condition="contains">\Policies\System\</TargetObject>
+
+        <!-- Office macros -->
+        <TargetObject condition="contains">\Microsoft\Office\</TargetObject>
+
+        <!-- Browser extensions -->
+        <TargetObject condition="contains">\Extensions\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- File Creation: Comprehensive -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="include">
+        <!-- All executables in user space -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.dll</TargetFilename>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.sys</TargetFilename>
+        </Rule>
+
+        <!-- All scripts -->
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.cmd</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.js</TargetFilename>
+
+        <!-- System directories (rare but critical) -->
+        <TargetFilename condition="begin with">C:\Windows\System32\</TargetFilename>
+        <TargetFilename condition="begin with">C:\Windows\SysWOW64\</TargetFilename>
+
+        <!-- ProgramData -->
+        <TargetFilename condition="begin with">C:\ProgramData\</TargetFilename>
+
+        <!-- Startup locations -->
+        <TargetFilename condition="contains">\Startup\</TargetFilename>
+
+        <!-- Web shells -->
+        <TargetFilename condition="end with">.asp</TargetFilename>
+        <TargetFilename condition="end with">.aspx</TargetFilename>
+        <TargetFilename condition="end with">.php</TargetFilename>
+        <TargetFilename condition="end with">.jsp</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- DNS: Broad logging with exclusions -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <!-- Exclude only major CDNs -->
+        <QueryName condition="end with">microsoft.com</QueryName>
+        <QueryName condition="end with">windows.com</QueryName>
+        <QueryName condition="end with">.local</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- Named Pipes: All pipe activity -->
+    <RuleGroup name="PipeEvent" groupRelation="or">
+      <PipeEvent onmatch="exclude">
+        <PipeName condition="begin with">\\lsass</PipeName>
+        <PipeName condition="begin with">\\samr</PipeName>
+        <PipeName condition="begin with">\\winreg</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- File Delete: Broad monitoring -->
+    <RuleGroup name="FileDelete" groupRelation="or">
+      <FileDelete onmatch="include">
+        <!-- Security logs -->
+        <TargetFilename condition="contains">\winevt\Logs\</TargetFilename>
+
+        <!-- Backup files -->
+        <TargetFilename condition="end with">.bak</TargetFilename>
+        <TargetFilename condition="end with">.backup</TargetFilename>
+
+        <!-- Shadow copies -->
+        <TargetFilename condition="contains">\System Volume Information\</TargetFilename>
+
+        <!-- Prefetch -->
+        <TargetFilename condition="contains">\Prefetch\</TargetFilename>
+
+        <!-- User documents (ransomware indicator) -->
+        <TargetFilename condition="contains">\Documents\</TargetFilename>
+      </FileDelete>
+    </RuleGroup>
+
+    <!-- Always log critical events -->
+    <RuleGroup name="SysmonStatus" groupRelation="or">
+      <SysmonStatus onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="DriverLoad" groupRelation="or">
+      <DriverLoad onmatch="exclude">
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+        </Rule>
+      </DriverLoad>
+    </RuleGroup>
+
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <RuleGroup name="RawAccessRead" groupRelation="or">
+      <RawAccessRead onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+      </RawAccessRead>
+    </RuleGroup>
+
+    <RuleGroup name="ProcessTampering" groupRelation="or">
+      <ProcessTampering onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="FileCreateTime" groupRelation="or">
+      <FileCreateTime onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\msiexec.exe</Image>
+      </FileCreateTime>
+    </RuleGroup>
+
+    <RuleGroup name="FileCreateStreamHash" groupRelation="or">
+      <FileCreateStreamHash onmatch="exclude">
+        <TargetFilename condition="end with">:Zone.Identifier</TargetFilename>
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+    <RuleGroup name="WmiEvent" groupRelation="or">
+      <WmiEvent onmatch="include"/>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

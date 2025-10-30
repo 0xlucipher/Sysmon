@@ -1,0 +1,175 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  SYSMON FORENSICS CONFIGURATION
+  ==============================================================================
+
+  Profile: FORENSICS / INCIDENT RESPONSE
+  Target CPU: ~15%
+  Daily Logs: ~3GB
+  Use Case: Temporary deep-dive investigations, IR mode, threat hunting
+
+  WARNING: This configuration generates EXTREMELY high log volumes.
+  Only use during active investigations or short-term threat hunting.
+
+  STRATEGY:
+  - Maximum visibility, minimal exclusions
+  - Log everything possible for timeline reconstruction
+  - Include process termination for full lifecycle
+  - Enable clipboard monitoring
+  - Extensive file and registry operations
+  - Full network visibility including internal
+
+  DEPLOYMENT:
+  - Deploy ONLY to systems under investigation
+  - Use for SHORT PERIODS (hours to days, not permanent)
+  - Ensure adequate disk space (10GB+ free recommended)
+  - Forward to SIEM immediately
+
+  ==============================================================================
+-->
+
+  <HashAlgorithms>SHA256,IMPHASH,MD5</HashAlgorithms>
+  <CheckRevocation/>
+  <DnsLookup>True</DnsLookup>
+
+  <EventFiltering>
+
+    <!-- Process Creation: Log EVERYTHING -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Image condition="begin with">C:\</Image>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Process Termination: ENABLED for timeline -->
+    <RuleGroup name="ProcessTerminate" groupRelation="or">
+      <ProcessTerminate onmatch="include">
+        <Image condition="begin with">C:\</Image>
+      </ProcessTerminate>
+    </RuleGroup>
+
+    <!-- Network: Log EVERYTHING including internal -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <Initiated condition="is">true</Initiated>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Process Access: Log ALL cross-process access -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <!-- All access patterns -->
+        <SourceImage condition="begin with">C:\</SourceImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Image Load: Log ALL DLL loads -->
+    <RuleGroup name="ImageLoad" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <ImageLoaded condition="begin with">C:\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!-- Registry: Log ALL registry operations -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- File Creation: Log ALL file operations -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+        <TargetFilename condition="begin with">C:\Windows\Temp\</TargetFilename>
+        <TargetFilename condition="begin with">C:\ProgramData\</TargetFilename>
+        <TargetFilename condition="begin with">C:\Temp\</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- DNS: Log ALL queries -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <QueryName condition="begin with">.</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- Named Pipes: Log ALL -->
+    <RuleGroup name="PipeEvent" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="begin with">\\</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- File Delete: Log ALL -->
+    <RuleGroup name="FileDelete" groupRelation="or">
+      <FileDelete onmatch="include">
+        <TargetFilename condition="begin with">C:\</TargetFilename>
+      </FileDelete>
+    </RuleGroup>
+
+    <!-- Clipboard: ENABLED (privacy warning - investigation only) -->
+    <RuleGroup name="ClipboardChange" groupRelation="or">
+      <ClipboardChange onmatch="include">
+        <Image condition="begin with">C:\</Image>
+      </ClipboardChange>
+    </RuleGroup>
+
+    <!-- File Stream: Log ALL ADS -->
+    <RuleGroup name="FileCreateStreamHash" groupRelation="or">
+      <FileCreateStreamHash onmatch="include">
+        <TargetFilename condition="begin with">C:\</TargetFilename>
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+    <!-- Always log all critical events -->
+    <RuleGroup name="SysmonStatus" groupRelation="or">
+      <SysmonStatus onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="DriverLoad" groupRelation="or">
+      <DriverLoad onmatch="include">
+        <ImageLoaded condition="begin with">C:\</ImageLoaded>
+      </DriverLoad>
+    </RuleGroup>
+
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="include">
+        <SourceImage condition="begin with">C:\</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <RuleGroup name="RawAccessRead" groupRelation="or">
+      <RawAccessRead onmatch="include">
+        <Image condition="begin with">C:\</Image>
+      </RawAccessRead>
+    </RuleGroup>
+
+    <RuleGroup name="ProcessTampering" groupRelation="or">
+      <ProcessTampering onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="FileCreateTime" groupRelation="or">
+      <FileCreateTime onmatch="include">
+        <Image condition="begin with">C:\</Image>
+      </FileCreateTime>
+    </RuleGroup>
+
+    <RuleGroup name="WmiEvent" groupRelation="or">
+      <WmiEvent onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="FileBlockExecutable" groupRelation="or">
+      <FileBlockExecutable onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="FileExecutableDetected" groupRelation="or">
+      <FileExecutableDetected onmatch="include">
+        <TargetFilename condition="begin with">C:\</TargetFilename>
+      </FileExecutableDetected>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>
