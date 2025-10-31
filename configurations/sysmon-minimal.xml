@@ -1,0 +1,159 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  SYSMON MINIMAL CONFIGURATION
+  ==============================================================================
+
+  Profile: MINIMAL
+  Target CPU: <2%
+  Daily Logs: ~100MB
+  Use Case: Resource-constrained environments, baseline monitoring
+
+  STRATEGY:
+  - Log only critical security events
+  - Minimal noise, maximum signal
+  - Focus on high-value IOCs
+  - Exclude everything non-essential
+
+  COVERAGE:
+  - Credential dumping (LSASS access)
+  - Process injection (critical only)
+  - Lateral movement indicators
+  - Persistence mechanisms (registry run keys, services)
+  - Defense evasion (security tool tampering)
+
+  ==============================================================================
+-->
+
+  <HashAlgorithms>SHA256</HashAlgorithms>
+  <CheckRevocation/>
+
+  <EventFiltering>
+
+    <!-- Process Creation: Security-relevant only -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- Known attack tools -->
+        <CommandLine condition="contains">mimikatz</CommandLine>
+        <CommandLine condition="contains">procdump</CommandLine>
+        <CommandLine condition="contains">comsvcs.dll</CommandLine>
+
+        <!-- PowerShell with suspicious flags -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-enc</CommandLine>
+        </Rule>
+
+        <!-- Scripting interpreters from unusual parents -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\cmd.exe</ParentImage>
+        </Rule>
+
+        <!-- LOLBAS abuse -->
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+        <Image condition="end with">\mshta.exe</Image>
+
+        <!-- Lateral movement -->
+        <Image condition="end with">\psexec.exe</Image>
+        <Image condition="end with">\winrs.exe</Image>
+
+        <!-- Credential access tools -->
+        <CommandLine condition="contains">sekurlsa</CommandLine>
+        <CommandLine condition="contains">lsadump</CommandLine>
+
+        <!-- Defense evasion -->
+        <CommandLine condition="contains">Set-MpPreference -DisableRealtimeMonitoring</CommandLine>
+        <CommandLine condition="contains">vssadmin delete shadows</CommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Network: External connections only -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Exclude all private networks -->
+        <DestinationIp condition="begin with">10.</DestinationIp>
+        <DestinationIp condition="begin with">172.16.</DestinationIp>
+        <DestinationIp condition="begin with">192.168.</DestinationIp>
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+
+        <!-- Exclude Microsoft services -->
+        <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        <DestinationHostname condition="end with">windows.com</DestinationHostname>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- Process Access: LSASS only -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+      </ProcessAccess>
+
+      <ProcessAccess onmatch="exclude">
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        </Rule>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- Image Load: Disabled (too noisy) -->
+
+    <!-- Registry: Critical persistence keys only -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows Defender\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- Named Pipes: Attack tools only -->
+    <RuleGroup name="PipeEvent" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains">PSEXESVC</PipeName>
+        <PipeName condition="contains">msagent_</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!-- WMI: All events (low volume) -->
+    <RuleGroup name="WmiEvent" groupRelation="or">
+      <WmiEvent onmatch="include"/>
+    </RuleGroup>
+
+    <!-- DNS: Suspicious domains only -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <QueryName condition="end with">duckdns.org</QueryName>
+        <QueryName condition="end with">no-ip.com</QueryName>
+        <QueryName condition="end with">.tk</QueryName>
+        <QueryName condition="end with">ngrok.io</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- CreateRemoteThread: All (critical) -->
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- Always log critical events -->
+    <RuleGroup name="SysmonStatus" groupRelation="or">
+      <SysmonStatus onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="ProcessTampering" groupRelation="or">
+      <ProcessTampering onmatch="include"/>
+    </RuleGroup>
+
+    <RuleGroup name="FileDelete" groupRelation="or">
+      <FileDelete onmatch="include">
+        <TargetFilename condition="contains">\winevt\Logs\</TargetFilename>
+      </FileDelete>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

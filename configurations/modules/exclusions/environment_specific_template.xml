@@ -1,0 +1,535 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  EXCLUSION MODULE: Environment-Specific Template
+  ==============================================================================
+
+  Purpose: Organization-specific exclusions customization template
+  Type: Customization Template
+  Maintenance: Update as environment changes
+
+  DESCRIPTION:
+  This is a TEMPLATE file for creating environment-specific exclusions.
+  Copy this file and customize it for your organization's unique needs.
+
+  CUSTOMIZATION STEPS:
+  1. Copy this file to: environment_specific.xml (or your org name)
+  2. Fill in the placeholders below with your actual software/paths
+  3. Remove template comments and unused sections
+  4. Test thoroughly before production deployment
+  5. Document all customizations
+
+  USAGE:
+  .\Generate-ModularConfig.ps1 -ExclusionModules @(
+      "exclusions\global_exclusions.xml",
+      "exclusions\environment_specific.xml"
+  )
+
+  SECURITY CONSIDERATIONS:
+  - Only exclude software you fully control and trust
+  - Verify all paths are correct for your environment
+  - Review exclusions quarterly for validity
+  - Test exclusions don't hide real attacks
+  - Document WHY each exclusion exists
+
+  EXAMPLES PROVIDED:
+  - Custom business applications
+  - Line-of-business (LOB) software
+  - Internal tools and utilities
+  - Industry-specific software (healthcare, finance, manufacturing)
+  - Legacy applications
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Custom Business Applications
+         ====================================================================== -->
+
+    <RuleGroup name="Custom_LOB_Apps" groupRelation="or">
+
+      <!-- CUSTOMIZE: Replace with your actual line-of-business applications -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Custom ERP system -->
+        <!--
+        <Image condition="begin with">C:\Program Files\YourCompany\ERP\</Image>
+        -->
+
+        <!-- Example: Internal reporting tool -->
+        <!--
+        <Image condition="is">C:\Tools\InternalReports\ReportGen.exe</Image>
+        -->
+
+        <!-- Example: Custom database client -->
+        <!--
+        <Image condition="end with">\YourDBClient.exe</Image>
+        -->
+
+        <!-- Example: Automated scripts (if trusted and controlled) -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">C:\Scripts\Approved\</CommandLine>
+          <ParentImage condition="is">C:\Windows\System32\services.exe</ParentImage>
+        </Rule>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Example: Internal application server communication -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\YourApp\</Image>
+          <DestinationIp condition="is">10.0.10.50</DestinationIp>
+        </Rule>
+        -->
+
+        <!-- Example: Database connections (known servers only) -->
+        <!--
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">1433</DestinationPort>
+          <DestinationIp condition="is">10.0.20.100</DestinationIp>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Example: Application log files -->
+        <!--
+        <TargetFilename condition="begin with">C:\ProgramData\YourCompany\Logs\</TargetFilename>
+        -->
+
+        <!-- Example: Application cache -->
+        <!--
+        <TargetFilename condition="begin with">C:\ProgramData\YourCompany\Cache\</TargetFilename>
+        -->
+
+      </FileCreate>
+
+      <!-- Registry -->
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Example: Application settings -->
+        <!--
+        <TargetObject condition="contains">\Software\YourCompany\</TargetObject>
+        -->
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Industry-Specific Software
+         ====================================================================== -->
+
+    <RuleGroup name="Industry_Specific" groupRelation="or">
+
+      <!-- HEALTHCARE EXAMPLES -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Electronic Health Records (EHR) system -->
+        <!--
+        <Image condition="contains">\Epic\</Image>
+        <Image condition="contains">\Cerner\</Image>
+        <Image condition="contains">\Meditech\</Image>
+        -->
+
+        <!-- Example: PACS (Picture Archiving) -->
+        <!--
+        <Image condition="contains">\PACS\</Image>
+        -->
+
+      </ProcessCreate>
+
+
+      <!-- FINANCE EXAMPLES -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Trading platforms -->
+        <!--
+        <Image condition="contains">\Bloomberg\</Image>
+        <Image condition="contains">\Reuters\</Image>
+        -->
+
+        <!-- Example: Financial modeling software -->
+        <!--
+        <Image condition="contains">\FactSet\</Image>
+        -->
+
+      </ProcessCreate>
+
+
+      <!-- MANUFACTURING EXAMPLES -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: SCADA/HMI systems (OT environments) -->
+        <!-- SECURITY WARNING: Monitor OT systems separately -->
+        <!--
+        <Image condition="contains">\Siemens\WinCC\</Image>
+        <Image condition="contains">\Rockwell\</Image>
+        -->
+
+        <!-- Example: CAD/CAM software -->
+        <!--
+        <Image condition="contains">\Autodesk\</Image>
+        <Image condition="contains">\SolidWorks\</Image>
+        -->
+
+      </ProcessCreate>
+
+
+      <!-- LEGAL EXAMPLES -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Case management systems -->
+        <!--
+        <Image condition="contains">\CaseManagement\</Image>
+        -->
+
+        <!-- Example: Document management (legal discovery) -->
+        <!--
+        <Image condition="contains">\Relativity\</Image>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Internal Tools and Utilities
+         ====================================================================== -->
+
+    <RuleGroup name="Internal_Tools" groupRelation="or">
+
+      <!-- CUSTOMIZE: Add your IT department's internal tools -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: IT helpdesk remote tools (if authorized) -->
+        <!--
+        <Image condition="is">C:\IT\Tools\RemoteSupport.exe</Image>
+        -->
+
+        <!-- Example: Inventory scanning tools -->
+        <!--
+        <Image condition="contains">\AssetManagement\</Image>
+        -->
+
+        <!-- Example: Scheduled maintenance scripts (controlled location) -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">C:\IT\Scripts\Maintenance\</CommandLine>
+        </Rule>
+        -->
+
+        <!-- Example: Monitoring agents (if not using standard tools) -->
+        <!--
+        <Image condition="contains">\MonitoringAgent\</Image>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Legacy Applications
+         ====================================================================== -->
+
+    <RuleGroup name="Legacy_Applications" groupRelation="or">
+
+      <!-- CUSTOMIZE: Add legacy apps that generate noise but can't be updated -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Old database application -->
+        <!--
+        <Image condition="is">C:\LegacyApps\OldDB\dbclient.exe</Image>
+        -->
+
+        <!-- Example: 16-bit applications via NTVDM -->
+        <!--
+        <Image condition="is">C:\Windows\System32\ntvdm.exe</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Example: Legacy protocol to known server -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="is">C:\LegacyApps\Client.exe</Image>
+          <DestinationIp condition="is">10.0.30.200</DestinationIp>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Scheduled Tasks and Automation
+         ====================================================================== -->
+
+    <RuleGroup name="Automation_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Authorized automation only -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Scheduled PowerShell scripts from controlled location -->
+        <!-- SECURITY WARNING: Ensure these scripts are ACL-protected -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="begin with">C:\Automation\Approved\</CommandLine>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+        -->
+
+        <!-- Example: Automated file transfers -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="end with">\robocopy.exe</Image>
+          <ParentImage condition="is">C:\Automation\FileSync.exe</ParentImage>
+        </Rule>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Development and Test Environments
+         ====================================================================== -->
+
+    <RuleGroup name="Dev_Test_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: ONLY for non-production development systems -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Local build processes -->
+        <!--
+        <Image condition="contains">\DevTools\</Image>
+        -->
+
+        <!-- Example: Test harnesses -->
+        <!--
+        <Image condition="contains">\TestFramework\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Example: Build artifacts -->
+        <!--
+        <TargetFilename condition="contains">\BuildOutput\</TargetFilename>
+        -->
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Specific Server Roles
+         ====================================================================== -->
+
+    <RuleGroup name="Server_Roles_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Server-specific exclusions -->
+
+      <!-- SQL Server -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: SQL Server processes (if dedicated SQL server) -->
+        <!--
+        <Image condition="begin with">C:\Program Files\Microsoft SQL Server\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Exchange Server -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Exchange processes (noisy but necessary) -->
+        <!--
+        <Image condition="begin with">C:\Program Files\Microsoft\Exchange Server\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Web Server -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: IIS worker processes for specific app pools -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\inetsrv\w3wp.exe</Image>
+          <CommandLine condition="contains">-ap "YourAppPool"</CommandLine>
+        </Rule>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Known Network Destinations
+         ====================================================================== -->
+
+    <RuleGroup name="Known_Destinations" groupRelation="or">
+
+      <!-- CUSTOMIZE: Whitelist known-good destinations to reduce noise -->
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Example: Internal application servers -->
+        <!--
+        <DestinationIp condition="is">10.0.40.10</DestinationIp>
+        <DestinationIp condition="is">10.0.40.11</DestinationIp>
+        -->
+
+        <!-- Example: Known SaaS provider (if monitored elsewhere) -->
+        <!--
+        <Rule groupRelation="and">
+          <DestinationHostname condition="end with">yourSaaSProvider.com</DestinationHostname>
+          <Image condition="is">C:\Program Files\YourApp\app.exe</Image>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Compliance and Audit Tools
+         ====================================================================== -->
+
+    <RuleGroup name="Compliance_Tools" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Example: Vulnerability scanners (authorized) -->
+        <!--
+        <Image condition="contains">\Nessus\</Image>
+        <Image condition="contains">\Qualys\</Image>
+        -->
+
+        <!-- Example: Compliance agents -->
+        <!--
+        <Image condition="contains">\ComplianceAgent\</Image>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Custom Named Pipes
+         ====================================================================== -->
+
+    <RuleGroup name="Custom_Pipes" groupRelation="or">
+
+      <!-- CUSTOMIZE: Known application pipes -->
+
+      <!-- Named Pipes -->
+      <PipeEvent onmatch="exclude">
+
+        <!-- Example: Application-specific pipe -->
+        <!--
+        <PipeName condition="begin with">\\YourApp_</PipeName>
+        -->
+
+      </PipeEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Documentation Section
+         ====================================================================== -->
+
+    <!--
+
+    CUSTOMIZATION NOTES:
+    ====================
+
+    Date Created: [YYYY-MM-DD]
+    Created By: [Your Name/Team]
+    Last Modified: [YYYY-MM-DD]
+    Modified By: [Your Name/Team]
+
+    PURPOSE OF CUSTOMIZATIONS:
+    - [Describe why these exclusions were added]
+    - [Document any special environment considerations]
+
+    EXCLUDED SOFTWARE LIST:
+    1. [Software Name] - [Reason for exclusion] - [Business justification]
+    2. [Software Name] - [Reason for exclusion] - [Business justification]
+    3. ...
+
+    REVIEW SCHEDULE:
+    - Next Review Date: [YYYY-MM-DD]
+    - Review Frequency: [Quarterly/Semi-annually]
+    - Reviewer: [Team/Role]
+
+    CHANGE LOG:
+    ===========
+    [YYYY-MM-DD] - [Name] - [Description of changes]
+    [YYYY-MM-DD] - [Name] - [Description of changes]
+
+    KNOWN RISKS:
+    ============
+    - [List any security risks introduced by these exclusions]
+    - [Mitigation strategies for each risk]
+
+    VALIDATION STEPS:
+    =================
+    1. [How to test these exclusions don't break detection]
+    2. [How to verify log volume reduction]
+    3. [How to confirm exclusions are working]
+
+    -->
+
+  </EventFiltering>
+
+</Sysmon>

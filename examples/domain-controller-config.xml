@@ -1,0 +1,499 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  EXAMPLE CONFIGURATION: Domain Controller
+  ==============================================================================
+
+  Target: Windows Server 2016/2019/2022 Domain Controllers
+  Server Role: Active Directory Domain Services (AD DS)
+  Profile: High security - Maximum visibility
+  Expected CPU: <10%
+  Expected Daily Logs: 1-3GB (depending on domain activity)
+
+  DESCRIPTION:
+  Optimized configuration for Domain Controllers with focus on:
+  - Credential dumping detection (LSASS, NTDS.dit)
+  - DCSync attacks
+  - Kerberos attacks (Golden Ticket, Silver Ticket)
+  - AD reconnaissance
+  - Persistence via GPO
+  - Privilege escalation
+
+  CRITICAL DETECTIONS:
+  - LSASS access (credential harvesting)
+  - NTDS.dit file access (domain database dump)
+  - Replication service abuse (DCSync)
+  - Kerberos anomalies
+  - Group Policy tampering
+  - Suspicious remote execution
+  - PowerShell attacks
+
+  DEPLOYMENT NOTE:
+  Domain Controllers are HIGH-VALUE TARGETS. Accept higher log volumes
+  for better visibility. Deploy this configuration in coordination with
+  domain admin and security teams.
+
+  DEPLOYMENT:
+  sysmon64.exe -accepteula -i domain-controller-config.xml
+
+  UPDATE:
+  sysmon64.exe -c domain-controller-config.xml
+
+  ==============================================================================
+-->
+
+  <HashAlgorithms>SHA256,IMPHASH,MD5</HashAlgorithms>
+  <CheckRevocation/>
+  <DnsLookup>False</DnsLookup>
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Process Creation - DC Focus
+         ====================================================================== -->
+
+    <RuleGroup name="DCProcessCreate" groupRelation="or">
+
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Minimal exclusions on DCs -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+
+        <!-- AD Replication (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">DcomLaunch</CommandLine>
+        </Rule>
+
+      </ProcessCreate>
+
+      <ProcessCreate onmatch="include">
+
+        <!-- PowerShell (always monitor on DCs) -->
+        <Image condition="end with">\powershell.exe</Image>
+
+        <!-- PowerShell ISE -->
+        <Image condition="end with">\powershell_ise.exe</Image>
+
+        <!-- cmd.exe (monitor all) -->
+        <Image condition="end with">\cmd.exe</Image>
+
+        <!-- WMI -->
+        <Image condition="end with">\wmic.exe</Image>
+
+        <!-- VBScript/JScript -->
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+
+        <!-- MSHTA -->
+        <Image condition="end with">\mshta.exe</Image>
+
+        <!-- Credential dumping tools -->
+        <CommandLine condition="contains">mimikatz</CommandLine>
+        <CommandLine condition="contains">procdump</CommandLine>
+        <CommandLine condition="contains">lsass</CommandLine>
+        <CommandLine condition="contains">sekurlsa</CommandLine>
+
+        <!-- NTDS.dit dumping -->
+        <CommandLine condition="contains">ntds.dit</CommandLine>
+        <CommandLine condition="contains">ntdsutil</CommandLine>
+        <CommandLine condition="contains">IFM</CommandLine>
+
+        <!-- Volume Shadow Copy (can be used to copy NTDS.dit) -->
+        <Image condition="end with">\vssadmin.exe</Image>
+        <CommandLine condition="contains">create shadow</CommandLine>
+
+        <!-- Shadow copy delete (ransomware/AV evasion) -->
+        <CommandLine condition="contains">delete shadows</CommandLine>
+
+        <!-- DCSync simulation -->
+        <CommandLine condition="contains">lsadump::dcsync</CommandLine>
+
+        <!-- Kerberos attacks -->
+        <CommandLine condition="contains">kerberos::golden</CommandLine>
+        <CommandLine condition="contains">kerberos::silver</CommandLine>
+        <CommandLine condition="contains">kerberos::ptt</CommandLine>
+
+        <!-- Active Directory module usage (monitor for abuse) -->
+        <CommandLine condition="contains">Get-ADUser</CommandLine>
+        <CommandLine condition="contains">Get-ADGroup</CommandLine>
+        <CommandLine condition="contains">Get-ADComputer</CommandLine>
+        <CommandLine condition="contains">Set-ADAccountPassword</CommandLine>
+
+        <!-- LDAP queries from command line -->
+        <Image condition="end with">\ldp.exe</Image>
+
+        <!-- Active Directory discovery -->
+        <CommandLine condition="contains">net user /domain</CommandLine>
+        <CommandLine condition="contains">net group /domain</CommandLine>
+        <CommandLine condition="contains">net group "domain admins" /domain</CommandLine>
+        <CommandLine condition="contains">nltest</CommandLine>
+
+        <!-- Remote execution tools -->
+        <Image condition="contains">psexec</Image>
+        <Image condition="end with">\winrs.exe</Image>
+        <Image condition="end with">\wsmprovhost.exe</Image>
+
+        <!-- Service manipulation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains">create</CommandLine>
+        </Rule>
+
+        <!-- Scheduled tasks -->
+        <Image condition="end with">\schtasks.exe</Image>
+
+        <!-- LOLBins -->
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+
+        <!-- Defense evasion -->
+        <CommandLine condition="contains">Set-MpPreference</CommandLine>
+        <CommandLine condition="contains">DisableRealtimeMonitoring</CommandLine>
+
+        <!-- Event log clearing -->
+        <CommandLine condition="contains">wevtutil cl</CommandLine>
+        <CommandLine condition="contains">Clear-EventLog</CommandLine>
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Network Connections - DC Monitoring
+         ====================================================================== -->
+
+    <RuleGroup name="DCNetwork" groupRelation="or">
+
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Localhost -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+
+        <!-- Legitimate AD replication (customize for your DCs) -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationIp condition="is">10.0.1.10</DestinationIp>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+      <NetworkConnect onmatch="include">
+
+        <!-- PowerShell network activity (potential C2) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- cmd.exe network -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- Script hosts -->
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+
+        <!-- LOLBins with network -->
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+
+        <!-- RDP outbound (DCs shouldn't initiate RDP) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mstsc.exe</Image>
+          <DestinationPort condition="is">3389</DestinationPort>
+        </Rule>
+
+        <!-- Suspicious ports -->
+        <DestinationPort condition="is">4444</DestinationPort>
+        <DestinationPort condition="is">8080</DestinationPort>
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Process Access - CRITICAL on Domain Controllers
+         ====================================================================== -->
+
+    <RuleGroup name="DCProcessAccess" groupRelation="or">
+
+      <ProcessAccess onmatch="include">
+
+        <!-- LSASS (CRITICAL - most targeted on DCs) -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+
+        <!-- Other critical processes -->
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+
+        <!-- Directory Services processes -->
+        <TargetImage condition="end with">\lsaiso.exe</TargetImage>
+
+      </ProcessAccess>
+
+      <ProcessAccess onmatch="exclude">
+
+        <!-- Legitimate system access only -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+          <TargetImage condition="is not">\lsass.exe</TargetImage>
+        </Rule>
+
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+
+        <!-- Task Manager (admin tool) -->
+        <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+
+      </ProcessAccess>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Registry - GPO and AD Configuration Changes
+         ====================================================================== -->
+
+    <RuleGroup name="DCRegistry" groupRelation="or">
+
+      <RegistryEvent onmatch="include">
+
+        <!-- Persistence -->
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+
+        <!-- Group Policy -->
+        <TargetObject condition="contains">\Software\Policies\Microsoft\Windows\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Group Policy\</TargetObject>
+
+        <!-- LSA (credential theft) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\</TargetObject>
+        <TargetObject condition="contains">\SecurityProviders\</TargetObject>
+
+        <!-- Security settings -->
+        <TargetObject condition="contains">\Windows Defender\</TargetObject>
+        <TargetObject condition="contains">\FirewallPolicy\</TargetObject>
+        <TargetObject condition="contains">\Policies\System\EnableLUA</TargetObject>
+
+        <!-- Kerberos configuration -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\Kerberos\</TargetObject>
+
+        <!-- Active Directory settings -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\NTDS\</TargetObject>
+
+        <!-- Scheduled tasks -->
+        <TargetObject condition="contains">\Schedule\TaskCache\</TargetObject>
+
+      </RegistryEvent>
+
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Minimal exclusions on DCs -->
+        <TargetObject condition="contains">\MuiCache\</TargetObject>
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         File Creation - Critical AD Files
+         ====================================================================== -->
+
+    <RuleGroup name="DCFileCreate" groupRelation="or">
+
+      <FileCreate onmatch="include">
+
+        <!-- NTDS.dit (AD database) - ANY access is suspicious -->
+        <TargetFilename condition="contains">ntds.dit</TargetFilename>
+
+        <!-- NTDS.dit log files -->
+        <TargetFilename condition="contains">edb.log</TargetFilename>
+
+        <!-- SAM/SYSTEM/SECURITY hives export -->
+        <TargetFilename condition="end with">.hiv</TargetFilename>
+
+        <!-- Group Policy files -->
+        <TargetFilename condition="begin with">C:\Windows\SYSVOL\</TargetFilename>
+
+        <!-- Scripts in SYSVOL -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\SYSVOL\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\SYSVOL\</TargetFilename>
+          <TargetFilename condition="end with">.bat</TargetFilename>
+        </Rule>
+
+        <!-- Scripts in temp -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+
+        <!-- System directory modifications -->
+        <TargetFilename condition="begin with">C:\Windows\System32\</TargetFilename>
+
+        <!-- Executable in user directories (rare on DC) -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         DNS Queries - Monitor for C2
+         ====================================================================== -->
+
+    <RuleGroup name="DCDNS" groupRelation="or">
+
+      <DnsQuery onmatch="exclude">
+
+        <!-- Internal domain -->
+        <QueryName condition="end with">.local</QueryName>
+
+        <!-- Microsoft -->
+        <QueryName condition="end with">microsoft.com</QueryName>
+        <QueryName condition="end with">windows.com</QueryName>
+
+        <!-- AD forest trusts (customize) -->
+        <!--
+        <QueryName condition="end with">trustedforest.com</QueryName>
+        -->
+
+      </DnsQuery>
+
+      <DnsQuery onmatch="include">
+
+        <!-- Suspicious TLDs -->
+        <QueryName condition="end with">.tk</QueryName>
+        <QueryName condition="end with">.xyz</QueryName>
+        <QueryName condition="end with">duckdns.org</QueryName>
+        <QueryName condition="end with">ngrok.io</QueryName>
+
+      </DnsQuery>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Named Pipes - Lateral Movement and C2
+         ====================================================================== -->
+
+    <RuleGroup name="DCPipes" groupRelation="or">
+
+      <PipeEvent onmatch="include">
+
+        <!-- PSExec -->
+        <PipeName condition="contains">PSEXESVC</PipeName>
+        <PipeName condition="contains">paexec</PipeName>
+
+        <!-- Cobalt Strike -->
+        <PipeName condition="contains">msagent_</PipeName>
+        <PipeName condition="contains">MSSE-</PipeName>
+        <PipeName condition="contains">postex_</PipeName>
+
+        <!-- Mimikatz -->
+        <PipeName condition="contains">mimikatz</PipeName>
+
+      </PipeEvent>
+
+      <PipeEvent onmatch="exclude">
+
+        <!-- Legitimate system pipes -->
+        <PipeName condition="begin with">\\lsass</PipeName>
+        <PipeName condition="begin with">\\samr</PipeName>
+        <PipeName condition="begin with">\\winreg</PipeName>
+
+      </PipeEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         File Delete - Log Clearing and Anti-Forensics
+         ====================================================================== -->
+
+    <RuleGroup name="DCFileDelete" groupRelation="or">
+
+      <FileDelete onmatch="include">
+
+        <!-- Event logs (critical on DCs) -->
+        <TargetFilename condition="contains">\winevt\Logs\</TargetFilename>
+
+        <!-- NTDS backups -->
+        <TargetFilename condition="contains">ntds</TargetFilename>
+
+        <!-- Prefetch (anti-forensics) -->
+        <TargetFilename condition="contains">\Prefetch\</TargetFilename>
+
+      </FileDelete>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Raw Access Read - NTDS.dit Copying
+         ====================================================================== -->
+
+    <RuleGroup name="DCRawAccess" groupRelation="or">
+
+      <RawAccessRead onmatch="include">
+
+        <!-- Monitor ALL raw disk access on DCs -->
+        <Image condition="begin with">C:\</Image>
+
+      </RawAccessRead>
+
+      <RawAccessRead onmatch="exclude">
+
+        <!-- Legitimate system only -->
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+
+        <!-- Backup software (if deployed) -->
+        <!--
+        <Image condition="contains">\Backup\</Image>
+        -->
+
+      </RawAccessRead>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Always Log Critical Events
+         ====================================================================== -->
+
+    <RuleGroup name="AlwaysLog" groupRelation="or">
+      <SysmonStatus onmatch="include"/>
+      <DriverLoad onmatch="exclude">
+        <Signed condition="is">true</Signed>
+        <Signature condition="is">Microsoft Windows</Signature>
+      </DriverLoad>
+      <CreateRemoteThread onmatch="include"/>
+      <ProcessTampering onmatch="include"/>
+      <WmiEvent onmatch="include"/>
+      <FileCreateTime onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\msiexec.exe</Image>
+      </FileCreateTime>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

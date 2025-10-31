@@ -1,0 +1,116 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  SYSMON MODULAR CONFIGURATION LOADER
+  ==============================================================================
+
+  This is the main loader for the modular Sysmon configuration system.
+
+  USAGE:
+  To use this modular system, you need to either:
+  1. Use the Generate-ModularConfig.ps1 script to merge modules into a single file
+  2. Manually merge desired modules into this template
+
+  NOTE: Sysmon does not natively support XML includes (XInclude).
+  This file serves as a template and documentation of the modular architecture.
+
+  MODULAR STRUCTURE:
+  - techniques/     : MITRE ATT&CK technique-based modules (T1003, T1055, etc.)
+  - categories/     : Event type-based modules (01_process_creation, etc.)
+  - exclusions/     : Noise reduction templates
+  - compliance/     : Regulatory requirement modules
+
+  GENERATING A MERGED CONFIGURATION:
+  .\tools\Generate-ModularConfig.ps1 `
+    -TechniqueModules @("T1003","T1055","T1021") `
+    -CategoryModules @("01","03","10") `
+    -OutputPath "my-custom-config.xml"
+
+  ==============================================================================
+-->
+
+  <!-- Global Settings -->
+  <HashAlgorithms>SHA256,IMPHASH</HashAlgorithms>
+  <CheckRevocation/>
+  <DnsLookup>False</DnsLookup>
+
+  <EventFiltering>
+
+    <!--
+    ============================================================================
+    MODULES TO INCLUDE
+    ============================================================================
+
+    The following sections should be populated by merging module files.
+    Use Generate-ModularConfig.ps1 to automatically merge selected modules.
+
+    Available Technique Modules:
+      - T1003_credential_dumping.xml          (Credential Access)
+      - T1055_process_injection.xml           (Defense Evasion, Privilege Escalation)
+      - T1021_remote_services.xml             (Lateral Movement)
+      - T1047_wmi_execution.xml               (Execution)
+      - T1053_scheduled_task.xml              (Persistence, Execution)
+      - T1059_command_scripting.xml           (Execution)
+
+    Available Category Modules:
+      - 01_process_creation.xml               (Event ID 1)
+      - 03_network_connections.xml            (Event ID 3)
+      - 10_process_access.xml                 (Event ID 10)
+      - 13_registry_events.xml                (Event ID 13)
+
+    Available Exclusion Modules:
+      - global_exclusions.xml                 (Cross-platform exclusions)
+      - microsoft_exclusions.xml              (Windows/Office exclusions)
+      - common_software.xml                   (Third-party software)
+      - environment_specific_template.xml     (Customize for your environment)
+
+    ============================================================================
+    -->
+
+    <!--
+    Example: Manually include a technique module by copying its content here
+
+    For automated merging, use:
+    .\tools\Generate-ModularConfig.ps1 -TechniqueModules @("T1003","T1055")
+    -->
+
+    <!-- PLACEHOLDER: Technique modules will be inserted here -->
+
+    <!-- PLACEHOLDER: Category modules will be inserted here -->
+
+    <!-- PLACEHOLDER: Exclusion modules will be inserted here -->
+
+    <!--
+    Default rule: If no modules are loaded, use minimal baseline
+    This prevents an empty configuration if modules fail to load
+    -->
+
+    <RuleGroup name="Baseline_Minimal" groupRelation="or">
+
+      <!-- Critical: Always log LSASS access -->
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+      </ProcessAccess>
+
+      <!-- Critical: Always log process injection -->
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+      </CreateRemoteThread>
+
+      <!-- Critical: Always log WMI persistence -->
+      <WmiEvent onmatch="include"/>
+
+      <!-- Critical: Always log Sysmon tampering -->
+      <SysmonStatus onmatch="include"/>
+
+      <!-- Critical: Always log config changes -->
+      <SysmonConfigurationChange onmatch="include"/>
+
+      <!-- Critical: Always log process tampering -->
+      <ProcessTampering onmatch="include"/>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

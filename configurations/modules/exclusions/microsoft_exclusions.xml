@@ -1,0 +1,463 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  EXCLUSION MODULE: Microsoft Products
+  ==============================================================================
+
+  Purpose: Reduce noise from Microsoft software (Office, Defender, Edge, Teams)
+  Type: Exclusion Template
+  Maintenance: Update when new Microsoft products deployed
+
+  DESCRIPTION:
+  Exclusions for legitimate Microsoft product behavior including:
+  - Microsoft Office (Word, Excel, PowerPoint, Outlook)
+  - Microsoft Defender
+  - Microsoft Edge
+  - Microsoft Teams
+  - OneDrive
+  - Visual Studio
+
+  USAGE:
+  Merge with other modules using Generate-ModularConfig.ps1:
+
+  .\Generate-ModularConfig.ps1 -ExclusionModules @(
+      "exclusions\global_exclusions.xml",
+      "exclusions\microsoft_exclusions.xml"
+  )
+
+  SECURITY CONSIDERATIONS:
+  - Office applications are common malware vectors
+  - Consider excluding only in low-risk environments
+  - For high-security, monitor Office macros separately
+  - Defender exclusions may hide attacker activity
+  - Review regularly for abuse
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Microsoft Office Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_Office_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Office Protected View sandbox -->
+        <ParentImage condition="contains">\Microsoft Office\root\Office</ParentImage>
+        <Image condition="end with">\protectedview.exe</Image>
+
+        <!-- Office ClickToRun updater -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OfficeClickToRun.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\services.exe</ParentImage>
+        </Rule>
+
+        <!-- Office update tasks -->
+        <Image condition="end with">\OfficeC2RClient.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Office telemetry and updates -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <DestinationHostname condition="end with">office.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <DestinationHostname condition="end with">office.net</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <!-- ClickToRun updates -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OfficeClickToRun.exe</Image>
+          <DestinationHostname condition="end with">officecdn.microsoft.com</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+      <!-- Registry -->
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Office MRU (Most Recently Used) -->
+        <TargetObject condition="contains">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains">\File MRU\</TargetObject>
+
+        <!-- Office Place MRU -->
+        <TargetObject condition="contains">\Place MRU\</TargetObject>
+
+        <!-- Office user settings (noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains">\Common\LanguageResources\</TargetObject>
+
+      </RegistryEvent>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Office temporary files -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <TargetFilename condition="begin with">~$</TargetFilename>
+        </Rule>
+
+        <!-- Office auto-save/recovery -->
+        <TargetFilename condition="contains">\Microsoft\Office\UnsavedFiles\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Microsoft Defender Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_Defender_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Defender processes (unless monitoring for tampering) -->
+        <Image condition="begin with">C:\ProgramData\Microsoft\Windows Defender\</Image>
+
+        <!-- MpCmdRun (Defender CLI) - legitimate use -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Program Files\Windows Defender\MpCmdRun.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- ConfigSecurityPolicy (Defender helper) -->
+        <Image condition="is">C:\Windows\System32\ConfigSecurityPolicy.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Defender updates -->
+        <Rule groupRelation="and">
+          <Image condition="contains">Windows Defender</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <!-- SmartScreen -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\smartscreen.exe</Image>
+          <DestinationHostname condition="contains">smartscreen</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Defender quarantine -->
+        <TargetFilename condition="begin with">C:\ProgramData\Microsoft\Windows Defender\Quarantine\</TargetFilename>
+
+        <!-- Defender scans -->
+        <TargetFilename condition="begin with">C:\ProgramData\Microsoft\Windows Defender\Scans\</TargetFilename>
+
+      </FileCreate>
+
+      <!-- Registry -->
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Defender signature updates (noisy) -->
+        <Rule groupRelation="and">
+          <TargetObject condition="contains">\Windows Defender\</TargetObject>
+          <TargetObject condition="contains">\Signature Updates\</TargetObject>
+        </Rule>
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Microsoft Edge Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_Edge_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Edge update processes -->
+        <Image condition="contains">\Microsoft\Edge\Application\</Image>
+        <CommandLine condition="contains">--type=</CommandLine>
+
+        <!-- Edge installer/updater -->
+        <Image condition="end with">\MicrosoftEdgeUpdate.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Edge to Microsoft services -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft\Edge\</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft\Edge\</Image>
+          <DestinationHostname condition="end with">bing.com</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Edge cache and temp files -->
+        <TargetFilename condition="contains">\Microsoft\Edge\User Data\</TargetFilename>
+
+      </FileCreate>
+
+      <!-- Registry -->
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Edge settings (extremely noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Edge\</TargetObject>
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Microsoft Teams Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_Teams_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Teams renderer processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Microsoft\Teams\</ParentImage>
+          <Image condition="contains">\Microsoft\Teams\</Image>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+
+        <!-- Teams updater -->
+        <Image condition="end with">\Teams\Update.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Teams communication (very noisy) -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft\Teams\</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft\Teams\</Image>
+          <DestinationHostname condition="end with">skype.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft\Teams\</Image>
+          <DestinationHostname condition="end with">teams.microsoft.com</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Teams cache -->
+        <TargetFilename condition="contains">\Microsoft\Teams\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         OneDrive Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_OneDrive_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- OneDrive sync process -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <CommandLine condition="contains">/background</CommandLine>
+        </Rule>
+
+        <!-- OneDrive updater -->
+        <Image condition="end with">\OneDriveSetup.exe</Image>
+
+        <!-- File Sync -->
+        <Image condition="end with">\FileCoAuth.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- OneDrive sync -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <DestinationHostname condition="end with">1drv.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <DestinationHostname condition="end with">onedrive.live.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <DestinationHostname condition="end with">sharepoint.com</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- OneDrive cache -->
+        <TargetFilename condition="contains">\OneDrive\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Windows Telemetry Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_Telemetry_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Telemetry and diagnostics -->
+        <Image condition="is">C:\Windows\System32\CompatTelRunner.exe</Image>
+        <Image condition="is">C:\Windows\System32\DeviceCensus.exe</Image>
+        <Image condition="is">C:\Windows\System32\DiagTrackRunner.exe</Image>
+
+        <!-- Universal Telemetry Client -->
+        <Image condition="is">C:\Windows\System32\utcutil.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Telemetry services -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="contains">telemetry</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="contains">vortex</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Windows Update Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_WindowsUpdate_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Windows Update -->
+        <Image condition="is">C:\Windows\System32\wuauclt.exe</Image>
+        <Image condition="is">C:\Windows\System32\UsoClient.exe</Image>
+
+        <!-- Windows Modules Installer -->
+        <Image condition="is">C:\Windows\System32\TiWorker.exe</Image>
+
+        <!-- Trusted Installer -->
+        <Image condition="is">C:\Windows\servicing\TrustedInstaller.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Windows Update cache -->
+        <TargetFilename condition="begin with">C:\Windows\SoftwareDistribution\</TargetFilename>
+
+        <!-- CBS logs -->
+        <TargetFilename condition="begin with">C:\Windows\Logs\CBS\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Visual Studio / .NET Development Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="MS_Development_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- MSBuild (very noisy during builds) -->
+        <Image condition="end with">\MSBuild.exe</Image>
+
+        <!-- Visual Studio Code processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Microsoft VS Code\</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+
+        <!-- .NET compiler servers -->
+        <Image condition="end with">\VBCSCompiler.exe</Image>
+        <Image condition="end with">\csc.exe</Image>
+        <Image condition="end with">\vbc.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Build outputs -->
+        <TargetFilename condition="contains">\bin\Debug\</TargetFilename>
+        <TargetFilename condition="contains">\bin\Release\</TargetFilename>
+        <TargetFilename condition="contains">\obj\Debug\</TargetFilename>
+        <TargetFilename condition="contains">\obj\Release\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

@@ -1,0 +1,305 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  CATEGORY MODULE: Event ID 13 - Registry Events
+  ==============================================================================
+
+  Event Type: Registry Value Set (Event ID 13)
+  Purpose: Monitor registry modifications for persistence and configuration changes
+  Performance Impact: MEDIUM-HIGH (can be very noisy)
+  Expected Volume: 500-2000 events/day per workstation
+
+  DESCRIPTION:
+  Monitors registry modifications (SetValue operations). Critical for detecting
+  persistence mechanisms, security setting tampering, and malicious configuration
+  changes. This is one of the noisiest event types and requires careful tuning.
+
+  DETECTION FOCUS:
+  - Autorun/persistence locations (Run keys, services, scheduled tasks)
+  - Security product tampering (Defender, Firewall, UAC)
+  - Image File Execution Options (IFEO) hijacking
+  - LSA providers and authentication mechanisms
+  - COM hijacking
+  - Group Policy modifications
+
+  USAGE:
+  .\Generate-ModularConfig.ps1 -CategoryModules @("categories\13_registry_events.xml")
+
+  TUNING:
+  - This module is VERY noisy by default
+  - Start with minimal monitoring and expand based on needs
+  - Review logs weekly and add exclusions for legitimate noise
+  - In high-security environments, accept higher volume
+
+  COMPLEMENTARY MODULES:
+  - T1547_boot_autostart.xml (persistence)
+  - T1112_modify_registry.xml (registry tampering)
+  - T1562_impair_defenses.xml (security tool tampering)
+
+  EVENT ID COVERAGE:
+  - Event ID 12: Registry Object Create/Delete (not covered here)
+  - Event ID 13: Registry Value Set (THIS MODULE)
+  - Event ID 14: Registry Key/Value Rename (not covered here)
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Registry Events - Focused on Security-Critical Keys
+         ====================================================================== -->
+
+    <RuleGroup name="RegistryEvent_SecurityCritical" groupRelation="or">
+
+      <!-- INCLUDE: Security-relevant registry modifications -->
+      <RegistryEvent onmatch="include">
+
+        <!-- ================================================================
+             CRITICAL: Autorun/Persistence Locations
+             ================================================================ -->
+
+        <!-- Run keys (most common persistence) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains">\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+
+        <!-- User Run keys -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run</TargetObject>
+
+        <!-- Services (common persistence) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+
+        <!-- Startup folder (registry reference) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\Startup</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\Startup</TargetObject>
+
+        <!-- Winlogon (persistence and credential theft) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\</TargetObject>
+
+        <!-- Terminal Services persistence -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Install\Software\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+
+        <!-- ================================================================
+             CRITICAL: Security Product Tampering
+             ================================================================ -->
+
+        <!-- Windows Defender -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows Defender\</TargetObject>
+        <TargetObject condition="contains">\Software\Policies\Microsoft\Windows Defender\</TargetObject>
+
+        <!-- Firewall -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\</TargetObject>
+
+        <!-- UAC -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\System\ConsentPromptBehaviorAdmin</TargetObject>
+
+        <!-- Security Center notifications -->
+        <TargetObject condition="contains">\Software\Microsoft\Security Center\</TargetObject>
+
+        <!-- ================================================================
+             Image File Execution Options (IFEO) - Hijacking
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\</TargetObject>
+        <TargetObject condition="contains">\Software\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\</TargetObject>
+
+        <!-- ================================================================
+             LSA / Authentication Providers
+             ================================================================ -->
+
+        <!-- LSA Security Packages (credential dumping) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\Security Packages</TargetObject>
+
+        <!-- LSA Authentication Packages -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\Authentication Packages</TargetObject>
+
+        <!-- LSA Notification Packages (password filters) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\Notification Packages</TargetObject>
+
+        <!-- LSASS Configuration -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\LsaCfgFlags</TargetObject>
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\RunAsPPL</TargetObject>
+
+        <!-- Security Providers -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\SecurityProviders\</TargetObject>
+
+        <!-- ================================================================
+             Scheduled Tasks (registry-based)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\</TargetObject>
+
+        <!-- ================================================================
+             COM Hijacking
+             ================================================================ -->
+
+        <!-- InprocServer32 (COM DLL hijacking) -->
+        <TargetObject condition="contains">\Software\Classes\CLSID\</TargetObject>
+        <TargetObject condition="contains">\InprocServer32\</TargetObject>
+
+        <!-- TreatAs (COM redirection) -->
+        <TargetObject condition="contains">\TreatAs\</TargetObject>
+
+        <!-- ================================================================
+             Office Security Settings
+             ================================================================ -->
+
+        <!-- Macro security -->
+        <TargetObject condition="contains">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains">\Security\VBAWarnings</TargetObject>
+
+        <!-- Trusted locations (macro bypass) -->
+        <TargetObject condition="contains">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains">\Security\Trusted Locations\</TargetObject>
+
+        <!-- Disable protected view -->
+        <TargetObject condition="contains">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains">\Security\ProtectedView\</TargetObject>
+
+        <!-- ================================================================
+             Group Policy
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Software\Policies\Microsoft\Windows\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\</TargetObject>
+
+        <!-- Group Policy Scripts -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\</TargetObject>
+
+        <!-- ================================================================
+             Browser Extensions (potential malware)
+             ================================================================ -->
+
+        <!-- Chrome extensions -->
+        <TargetObject condition="contains">\Software\Google\Chrome\Extensions\</TargetObject>
+        <TargetObject condition="contains">\Software\Wow6432Node\Google\Chrome\Extensions\</TargetObject>
+
+        <!-- Firefox add-ons -->
+        <TargetObject condition="contains">\Software\Mozilla\Firefox\Extensions\</TargetObject>
+
+        <!-- Edge extensions -->
+        <TargetObject condition="contains">\Software\Microsoft\Edge\Extensions\</TargetObject>
+
+        <!-- ================================================================
+             Network Configuration Tampering
+             ================================================================ -->
+
+        <!-- Hosts file location (registry reference) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\Tcpip\Parameters\DataBasePath</TargetObject>
+
+        <!-- DNS settings -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\</TargetObject>
+        <TargetObject condition="contains">\NameServer</TargetObject>
+
+        <!-- Proxy settings -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ProxyEnable</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ProxyServer</TargetObject>
+
+        <!-- ================================================================
+             AppInit DLLs (deprecated but still dangerous)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
+        <TargetObject condition="contains">\Software\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
+
+        <!-- ================================================================
+             Boot / Safe Boot Configuration
+             ================================================================ -->
+
+        <!-- Safe mode configuration -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\SafeBoot\</TargetObject>
+
+        <!-- Boot options -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Session Manager\BootExecute</TargetObject>
+
+        <!-- ================================================================
+             Session Manager (can be abused for persistence)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations</TargetObject>
+
+        <!-- ================================================================
+             WMI Persistence
+             ================================================================ -->
+
+        <!-- WMI namespaces -->
+        <TargetObject condition="contains">\Software\Microsoft\Wbem\</TargetObject>
+
+        <!-- ================================================================
+             Print Monitors (uncommon persistence)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Print\Monitors\</TargetObject>
+
+        <!-- ================================================================
+             Screensaver Settings (old persistence technique)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Control Panel\Desktop\SCRNSAVE.EXE</TargetObject>
+
+        <!-- ================================================================
+             Accessibility Features (sticky keys, etc.)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\Accessibility\</TargetObject>
+
+        <!-- ================================================================
+             SilentProcessExit (monitoring/injection technique)
+             ================================================================ -->
+
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\SilentProcessExit\</TargetObject>
+
+      </RegistryEvent>
+
+      <!-- EXCLUDE: Noisy but legitimate registry activity -->
+      <RegistryEvent onmatch="exclude">
+
+        <!-- MUI Cache (extremely noisy, low security value) -->
+        <TargetObject condition="contains">\Software\Classes\Local Settings\MuiCache\</TargetObject>
+
+        <!-- User Shell Folders (noisy, user activity) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\</TargetObject>
+        <TargetObject condition="excludes">\Startup</TargetObject> <!-- Except Startup -->
+
+        <!-- Shell Bags (noisy, user activity) -->
+        <TargetObject condition="contains">\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\</TargetObject>
+        <TargetObject condition="contains">\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\Bags\</TargetObject>
+
+        <!-- Recent Docs (noisy, low value) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs\</TargetObject>
+
+        <!-- Typed URLs -->
+        <TargetObject condition="contains">\Software\Microsoft\Internet Explorer\TypedURLs\</TargetObject>
+
+        <!-- File MRU lists -->
+        <TargetObject condition="contains">\OpenSavePidlMRU\</TargetObject>
+        <TargetObject condition="contains">\LastVisitedPidlMRU\</TargetObject>
+
+        <!-- Explorer SessionInfo -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\</TargetObject>
+
+        <!-- Performance counters -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib\</TargetObject>
+
+        <!-- AppCompatFlags (extremely noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\</TargetObject>
+
+        <!-- ActiveX Compatibility -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Ext\Settings\</TargetObject>
+
+        <!-- Window positions (very noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\StreamMRU\</TargetObject>
+
+        <!-- Known DLLs (monitored at different layer) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Session Manager\KnownDLLs\</TargetObject>
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

@@ -1,0 +1,283 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  CATEGORY MODULE: Event ID 3 - Network Connections
+  ==============================================================================
+
+  Event Type: Network Connection (Event ID 3)
+  Purpose: Monitor outbound network connections
+  Performance Impact: MEDIUM-HIGH
+  Expected Volume: 500-3000 events/day per workstation
+
+  DESCRIPTION:
+  Monitors outbound TCP/UDP connections initiated by processes. Critical for
+  detecting command-and-control (C2) communications, data exfiltration, and
+  lateral movement.
+
+  DETECTION FOCUS:
+  - Suspicious processes making network connections
+  - Connections to unusual ports
+  - Connections from script interpreters
+  - Connections from system utilities (LOLBins)
+  - Internal lateral movement (SMB, RDP, WinRM)
+
+  USAGE:
+  .\Generate-ModularConfig.ps1 -CategoryModules @("categories\03_network_connections.xml")
+
+  TUNING:
+  - High-volume environments: Exclude localhost and internal networks
+  - High-security: Log ALL connections (including internal)
+  - Cloud workloads: Exclude known cloud service IPs
+
+  COMPLEMENTARY MODULES:
+  - T1071_app_layer_protocol.xml (C2 detection)
+  - T1021_remote_services.xml (lateral movement)
+  - T1041_exfiltration.xml (data exfiltration)
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Network Connections - Comprehensive Monitoring
+         ====================================================================== -->
+
+    <RuleGroup name="NetworkConnect_Comprehensive" groupRelation="or">
+
+      <!-- EXCLUDE: Reduce noise from legitimate traffic -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Localhost connections -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+
+        <!-- Multicast/Broadcast -->
+        <DestinationIp condition="begin with">224.0.0.</DestinationIp>
+        <DestinationIp condition="begin with">239.255.</DestinationIp>
+        <DestinationIp condition="is">255.255.255.255</DestinationIp>
+
+        <!-- Link-local -->
+        <DestinationIp condition="begin with">169.254.</DestinationIp>
+        <DestinationIp condition="begin with">fe80:</DestinationIp>
+
+        <!-- OPTIONAL: Exclude internal networks (for minimal profile) -->
+        <!-- Uncomment if you want to focus only on external connections -->
+        <!--
+        <DestinationIp condition="begin with">10.</DestinationIp>
+        <DestinationIp condition="begin with">172.16.</DestinationIp>
+        <DestinationIp condition="begin with">192.168.</DestinationIp>
+        -->
+
+        <!-- SVCHOST to Microsoft (extremely noisy) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="end with">windows.com</DestinationHostname>
+        </Rule>
+
+        <!-- System processes (legitimate) -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+
+        <!-- WMI Provider -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+          <DestinationPort condition="is">135</DestinationPort>
+        </Rule>
+
+        <!-- Windows Update legitimate traffic -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="contains">update.microsoft.com</DestinationHostname>
+        </Rule>
+
+        <!-- Office telemetry (if allowed) -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <DestinationHostname condition="end with">office.com</DestinationHostname>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+      <!-- INCLUDE: Suspicious connection patterns -->
+      <NetworkConnect onmatch="include">
+
+        <!-- PowerShell making external connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <Initiated condition="is">true</Initiated>
+          <DestinationPort condition="is">443</DestinationPort>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <Initiated condition="is">true</Initiated>
+          <DestinationPort condition="is">80</DestinationPort>
+        </Rule>
+
+        <!-- cmd.exe making connections (unusual) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- Script hosts making connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wscript.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cscript.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- MSHTA making connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- LOLBins making connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\certutil.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\bitsadmin.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\regsvr32.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\rundll32.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- Executables from temp directories -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\AppData\Local\Temp\</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Windows\Temp\</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- Unsigned executables from user directories -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Users\</Image>
+          <Signed condition="is">false</Signed>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- Suspicious ports (common C2) -->
+        <DestinationPort condition="is">4444</DestinationPort>
+        <DestinationPort condition="is">5555</DestinationPort>
+        <DestinationPort condition="is">6666</DestinationPort>
+        <DestinationPort condition="is">7777</DestinationPort>
+        <DestinationPort condition="is">8080</DestinationPort>
+        <DestinationPort condition="is">8888</DestinationPort>
+        <DestinationPort condition="is">9999</DestinationPort>
+
+        <!-- IRC ports (uncommon in enterprise) -->
+        <DestinationPort condition="is">6667</DestinationPort>
+        <DestinationPort condition="is">6668</DestinationPort>
+        <DestinationPort condition="is">6669</DestinationPort>
+
+        <!-- Tor -->
+        <DestinationPort condition="is">9050</DestinationPort>
+        <DestinationPort condition="is">9150</DestinationPort>
+
+        <!-- SOCKS proxies -->
+        <DestinationPort condition="is">1080</DestinationPort>
+
+        <!-- Lateral movement ports -->
+
+        <!-- SMB (445) from non-system processes -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">445</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+          <Image condition="is not">C:\Windows\explorer.exe</Image>
+        </Rule>
+
+        <!-- RDP outbound (3389) -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">3389</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- WinRM (5985, 5986) -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">5985</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">5986</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- RPC (135) from non-system -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">135</DestinationPort>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+          <Image condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        </Rule>
+
+        <!-- SSH outbound (22) -->
+        <DestinationPort condition="is">22</DestinationPort>
+
+        <!-- Database ports (potential data exfiltration) -->
+        <DestinationPort condition="is">1433</DestinationPort>  <!-- MSSQL -->
+        <DestinationPort condition="is">3306</DestinationPort>  <!-- MySQL -->
+        <DestinationPort condition="is">5432</DestinationPort>  <!-- PostgreSQL -->
+        <DestinationPort condition="is">1521</DestinationPort>  <!-- Oracle -->
+        <DestinationPort condition="is">27017</DestinationPort> <!-- MongoDB -->
+
+        <!-- FTP (uncommon in modern environments) -->
+        <DestinationPort condition="is">21</DestinationPort>
+        <DestinationPort condition="is">20</DestinationPort>
+
+        <!-- Telnet (insecure, should not be used) -->
+        <DestinationPort condition="is">23</DestinationPort>
+
+        <!-- SMTP (potential email exfiltration) -->
+        <DestinationPort condition="is">25</DestinationPort>
+        <DestinationPort condition="is">587</DestinationPort>
+
+        <!-- DNS from non-DNS processes (potential tunneling) -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">53</DestinationPort>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+
+        <!-- Connections to IP addresses (not hostnames) - potential C2 -->
+        <!-- This can be noisy, uncomment if needed -->
+        <!--
+        <Rule groupRelation="and">
+          <DestinationHostname condition="is"></DestinationHostname>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>
