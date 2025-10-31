@@ -1,0 +1,535 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  EXCLUSION MODULE: Common Third-Party Software
+  ==============================================================================
+
+  Purpose: Reduce noise from popular enterprise software
+  Type: Exclusion Template
+  Maintenance: Customize for your environment
+
+  DESCRIPTION:
+  Exclusions for common third-party enterprise software:
+  - Web Browsers (Chrome, Firefox)
+  - Communication (Slack, Zoom)
+  - Security Tools
+  - Backup Software
+  - Development Tools
+  - Adobe Products
+
+  CUSTOMIZATION REQUIRED:
+  This is a TEMPLATE. Review and uncomment only the software actually
+  deployed in your environment. Remove or add entries as needed.
+
+  USAGE:
+  .\Generate-ModularConfig.ps1 -ExclusionModules @(
+      "exclusions\global_exclusions.xml",
+      "exclusions\common_software.xml"
+  )
+
+  SECURITY WARNING:
+  - Only exclude software you trust and manage
+  - Verify software paths match your deployment
+  - Review regularly for abuse
+  - Consider not excluding browsers (common attack vector)
+  - Test before deploying to production
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Web Browsers (Chrome, Firefox)
+         ====================================================================== -->
+
+    <RuleGroup name="Browsers_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Google Chrome renderer processes (extremely noisy) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Google\Chrome\Application\chrome.exe</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+
+        <!-- Chrome update processes -->
+        <Image condition="end with">\GoogleUpdate.exe</Image>
+
+        <!-- Firefox renderer processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Mozilla Firefox\firefox.exe</ParentImage>
+          <CommandLine condition="contains">-contentproc</CommandLine>
+        </Rule>
+
+        <!-- Firefox updater -->
+        <Image condition="end with">\updater.exe</Image>
+        <ParentImage condition="contains">\Mozilla Firefox\</ParentImage>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Chrome to Google services (VERY noisy) -->
+        <!-- SECURITY WARNING: Consider monitoring browser network activity -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\Google\Chrome\</Image>
+          <DestinationHostname condition="end with">google.com</DestinationHostname>
+        </Rule>
+        -->
+
+        <!-- Firefox to Mozilla services -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\Mozilla Firefox\</Image>
+          <DestinationHostname condition="end with">mozilla.org</DestinationHostname>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Chrome cache (extremely noisy) -->
+        <TargetFilename condition="contains">\Google\Chrome\User Data\</TargetFilename>
+
+        <!-- Firefox cache -->
+        <TargetFilename condition="contains">\Mozilla\Firefox\Profiles\</TargetFilename>
+
+      </FileCreate>
+
+      <!-- Registry -->
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Chrome settings (noisy) -->
+        <TargetObject condition="contains">\Software\Google\Chrome\</TargetObject>
+
+        <!-- Firefox settings -->
+        <TargetObject condition="contains">\Software\Mozilla\</TargetObject>
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Communication Tools (Slack, Zoom, Discord)
+         ====================================================================== -->
+
+    <RuleGroup name="Communication_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Slack processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Slack\</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+
+        <!-- Zoom processes -->
+        <Image condition="contains">\Zoom\bin\</Image>
+
+        <!-- Discord processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Discord\</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Slack (very noisy) -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Slack\</Image>
+          <DestinationHostname condition="end with">slack.com</DestinationHostname>
+        </Rule>
+
+        <!-- Zoom -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Zoom\</Image>
+          <DestinationHostname condition="end with">zoom.us</DestinationHostname>
+        </Rule>
+
+        <!-- Discord -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Discord\</Image>
+          <DestinationHostname condition="end with">discord.com</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Antivirus / EDR Solutions
+         ====================================================================== -->
+
+    <RuleGroup name="Security_Tools_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Uncomment your security solution -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- CrowdStrike Falcon -->
+        <!--
+        <Image condition="begin with">C:\Program Files\CrowdStrike\</Image>
+        -->
+
+        <!-- Carbon Black -->
+        <!--
+        <Image condition="contains">\carbonblack\</Image>
+        -->
+
+        <!-- SentinelOne -->
+        <!--
+        <Image condition="contains">\SentinelOne\</Image>
+        -->
+
+        <!-- Symantec Endpoint Protection -->
+        <!--
+        <Image condition="begin with">C:\Program Files\Symantec\</Image>
+        <Image condition="begin with">C:\Program Files (x86)\Symantec\</Image>
+        -->
+
+        <!-- McAfee -->
+        <!--
+        <Image condition="contains">\McAfee\</Image>
+        -->
+
+        <!-- Trend Micro -->
+        <!--
+        <Image condition="contains">\Trend Micro\</Image>
+        -->
+
+        <!-- ESET -->
+        <!--
+        <Image condition="begin with">C:\Program Files\ESET\</Image>
+        -->
+
+        <!-- Sophos -->
+        <!--
+        <Image condition="begin with">C:\Program Files\Sophos\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Add your security tool update servers here -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\YourSecurityTool\</Image>
+          <DestinationHostname condition="end with">yoursecurityvendor.com</DestinationHostname>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Backup Software
+         ====================================================================== -->
+
+    <RuleGroup name="Backup_Software_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Uncomment your backup solution -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Veeam -->
+        <!--
+        <Image condition="contains">\Veeam\</Image>
+        -->
+
+        <!-- Acronis -->
+        <!--
+        <Image condition="contains">\Acronis\</Image>
+        -->
+
+        <!-- Veritas Backup Exec -->
+        <!--
+        <Image condition="contains">\Veritas\</Image>
+        -->
+
+        <!-- Windows Server Backup -->
+        <!--
+        <Image condition="is">C:\Windows\System32\wbadmin.exe</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Raw Access Read -->
+      <RawAccessRead onmatch="exclude">
+
+        <!-- Backup software legitimately accesses raw disk -->
+        <!-- CUSTOMIZE: Add your backup solution -->
+        <!--
+        <Image condition="contains">\Veeam\</Image>
+        <Image condition="contains">\Acronis\</Image>
+        -->
+
+      </RawAccessRead>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Adobe Products
+         ====================================================================== -->
+
+    <RuleGroup name="Adobe_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Adobe Acrobat updater -->
+        <Image condition="end with">\AdobeARM.exe</Image>
+
+        <!-- Adobe Creative Cloud -->
+        <Image condition="contains">\Adobe\Adobe Creative Cloud\</Image>
+
+        <!-- Adobe GC Invoker (update checker) -->
+        <Image condition="end with">\AdobeGCClient.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Adobe update servers -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Adobe\</Image>
+          <DestinationHostname condition="end with">adobe.com</DestinationHostname>
+        </Rule>
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Development Tools (Git, Python, Node.js, Docker)
+         ====================================================================== -->
+
+    <RuleGroup name="Development_Tools_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Only if development workstations -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Git processes (can be noisy) -->
+        <!--
+        <Image condition="end with">\git.exe</Image>
+        <Image condition="end with">\git-remote-https.exe</Image>
+        -->
+
+        <!-- Python (development environments only) -->
+        <!--
+        <Image condition="end with">\python.exe</Image>
+        <Image condition="end with">\python3.exe</Image>
+        -->
+
+        <!-- Node.js -->
+        <!--
+        <Image condition="end with">\node.exe</Image>
+        -->
+
+        <!-- Docker Desktop -->
+        <!--
+        <Image condition="contains">\Docker\</Image>
+        -->
+
+        <!-- JetBrains IDEs -->
+        <!--
+        <Image condition="contains">\JetBrains\</Image>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Remote Management Tools
+         ====================================================================== -->
+
+    <RuleGroup name="Remote_Management_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Only if these are authorized and managed -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- TeamViewer (if authorized) -->
+        <!-- SECURITY WARNING: Remote access tools are attack vectors -->
+        <!--
+        <Image condition="contains">\TeamViewer\</Image>
+        -->
+
+        <!-- AnyDesk (if authorized) -->
+        <!--
+        <Image condition="contains">\AnyDesk\</Image>
+        -->
+
+        <!-- LogMeIn (if authorized) -->
+        <!--
+        <Image condition="contains">\LogMeIn\</Image>
+        -->
+
+        <!-- VNC (if authorized) -->
+        <!--
+        <Image condition="contains">\VNC\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- SECURITY WARNING: Only exclude if you manage and trust these tools -->
+        <!-- Monitor for unauthorized remote access tools -->
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Java Runtime Environment
+         ====================================================================== -->
+
+    <RuleGroup name="Java_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Java Auto Updater -->
+        <Image condition="end with">\jusched.exe</Image>
+        <Image condition="end with">\jucheck.exe</Image>
+
+        <!-- Java (development/app server environments only) -->
+        <!-- SECURITY WARNING: Java is a common attack vector -->
+        <!--
+        <Image condition="end with">\java.exe</Image>
+        <Image condition="end with">\javaw.exe</Image>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Printing and Imaging
+         ====================================================================== -->
+
+    <RuleGroup name="Printing_Exclude" groupRelation="or">
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Print spooler operations -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\spoolsv.exe</ParentImage>
+          <Image condition="begin with">C:\Windows\System32\spool\drivers\</Image>
+        </Rule>
+
+      </ProcessCreate>
+
+      <!-- File Creation -->
+      <FileCreate onmatch="exclude">
+
+        <!-- Print spool files -->
+        <TargetFilename condition="begin with">C:\Windows\System32\spool\PRINTERS\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         System Management Tools
+         ====================================================================== -->
+
+    <RuleGroup name="System_Management_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Add your management tools -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- SCCM / ConfigMgr (if deployed) -->
+        <!--
+        <Image condition="begin with">C:\Windows\CCM\</Image>
+        -->
+
+        <!-- Altiris -->
+        <!--
+        <Image condition="contains">\Altiris\</Image>
+        -->
+
+        <!-- WSUS -->
+        <!--
+        <Image condition="contains">\Update Services\</Image>
+        -->
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Cloud Storage / Sync
+         ====================================================================== -->
+
+    <RuleGroup name="Cloud_Storage_Exclude" groupRelation="or">
+
+      <!-- CUSTOMIZE: Only exclude authorized cloud storage -->
+
+      <!-- Process Creation -->
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Dropbox (if authorized) -->
+        <!--
+        <Image condition="contains">\Dropbox\</Image>
+        -->
+
+        <!-- Box Sync (if authorized) -->
+        <!--
+        <Image condition="contains">\Box\Box Sync\</Image>
+        -->
+
+        <!-- Google Drive (if authorized) -->
+        <!--
+        <Image condition="contains">\Google\Drive\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <!-- Network Connections -->
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Monitor cloud sync for data exfiltration -->
+        <!-- Only exclude if authorized and monitored -->
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

@@ -1,0 +1,413 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  EXCLUSION MODULE: Global Exclusions
+  ==============================================================================
+
+  Purpose: Cross-platform noise reduction for Windows systems
+  Type: Exclusion Template
+  Maintenance: Review quarterly, adjust based on environment
+
+  DESCRIPTION:
+  Common exclusions to reduce false positives and log volume across all
+  Windows environments. These exclude legitimate system behavior that
+  generates high event volumes with minimal security value.
+
+  USAGE:
+  This module should be merged with technique and category modules using
+  Generate-ModularConfig.ps1:
+
+  .\Generate-ModularConfig.ps1 -ExclusionModules @(
+      "exclusions\global_exclusions.xml",
+      "exclusions\microsoft_exclusions.xml"
+  )
+
+  WARNING:
+  - Exclusions reduce visibility - use judiciously
+  - Review regularly for environment fit
+  - Attackers may abuse excluded processes/paths
+  - Consider excluding only in low-risk environments
+  - For high-security environments, use minimal exclusions
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Process Creation Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_ProcessCreate_Exclude" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Console Host (extremely noisy) -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+
+        <!-- SearchIndexer and related processes -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchProtocolHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchFilterHost.exe</Image>
+
+        <!-- Background Intelligent Transfer Service -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <CommandLine condition="contains">BITS</CommandLine>
+        </Rule>
+
+        <!-- Windows Notification Services -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">WpnService</CommandLine>
+        </Rule>
+
+        <!-- Device Census -->
+        <Image condition="is">C:\Windows\System32\DeviceCensus.exe</Image>
+
+        <!-- Compatibility Telemetry -->
+        <Image condition="is">C:\Windows\System32\CompatTelRunner.exe</Image>
+
+        <!-- DLL Host (legitimate only) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\dllhost.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- Runtime Broker (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\RuntimeBroker.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- Taskhostw (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\taskhostw.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+      </ProcessCreate>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Network Connection Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_Network_Exclude" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Localhost (intra-system communication) -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+
+        <!-- Multicast/Broadcast -->
+        <DestinationIp condition="begin with">224.0.0.</DestinationIp>
+        <DestinationIp condition="begin with">239.255.</DestinationIp>
+        <DestinationIp condition="is">255.255.255.255</DestinationIp>
+
+        <!-- Link-local -->
+        <DestinationIp condition="begin with">169.254.</DestinationIp>
+        <DestinationIp condition="begin with">fe80:</DestinationIp>
+
+        <!-- SVCHOST legitimate connections -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationPort condition="is">80</DestinationPort>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationPort condition="is">443</DestinationPort>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <!-- SearchIndexer -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+
+      </NetworkConnect>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Image Load Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_ImageLoad_Exclude" groupRelation="or">
+      <ImageLoad onmatch="exclude">
+
+        <!-- Signed Microsoft DLLs from system directories -->
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\System32\</ImageLoaded>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\SysWOW64\</ImageLoaded>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\WinSxS\</ImageLoaded>
+        </Rule>
+
+        <!-- Font loading (extremely noisy) -->
+        <ImageLoaded condition="contains">\Fonts\</ImageLoaded>
+
+        <!-- IME (Input Method Editor) -->
+        <ImageLoaded condition="contains">\IME\</ImageLoaded>
+
+        <!-- .NET native images -->
+        <ImageLoaded condition="contains">\assembly\NativeImages_</ImageLoaded>
+
+      </ImageLoad>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Registry Event Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_Registry_Exclude" groupRelation="or">
+      <RegistryEvent onmatch="exclude">
+
+        <!-- MUI Cache (extremely noisy) -->
+        <TargetObject condition="contains">\Software\Classes\Local Settings\MuiCache\</TargetObject>
+
+        <!-- User Shell Folders (noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\</TargetObject>
+
+        <!-- Shell Bags (noisy) -->
+        <TargetObject condition="contains">\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\</TargetObject>
+        <TargetObject condition="contains">\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\Bags\</TargetObject>
+
+        <!-- Recent Docs (noisy, low security value) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs\</TargetObject>
+
+        <!-- TypedURLs -->
+        <TargetObject condition="contains">\Software\Microsoft\Internet Explorer\TypedURLs\</TargetObject>
+
+        <!-- File MRU lists -->
+        <TargetObject condition="contains">\OpenSavePidlMRU\</TargetObject>
+        <TargetObject condition="contains">\LastVisitedPidlMRU\</TargetObject>
+
+        <!-- Explorer session data -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\</TargetObject>
+
+        <!-- COM+ catalog -->
+        <TargetObject condition="contains">\Software\Classes\CLSID\{</TargetObject>
+
+        <!-- Performance counters -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib\</TargetObject>
+
+        <!-- AppCompatFlags (extremely noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\</TargetObject>
+
+      </RegistryEvent>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         File Creation Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_FileCreate_Exclude" groupRelation="or">
+      <FileCreate onmatch="exclude">
+
+        <!-- Temporary .tmp files -->
+        <TargetFilename condition="end with">.tmp</TargetFilename>
+
+        <!-- Thumbs.db -->
+        <TargetFilename condition="end with">Thumbs.db</TargetFilename>
+
+        <!-- Desktop.ini -->
+        <TargetFilename condition="end with">desktop.ini</TargetFilename>
+
+        <!-- ETL/WER files -->
+        <TargetFilename condition="end with">.etl</TargetFilename>
+        <TargetFilename condition="contains">\WER\</TargetFilename>
+
+        <!-- Prefetch (monitored elsewhere) -->
+        <TargetFilename condition="begin with">C:\Windows\Prefetch\</TargetFilename>
+
+        <!-- Log files (noisy) -->
+        <TargetFilename condition="end with">.log</TargetFilename>
+
+        <!-- Browser cache -->
+        <TargetFilename condition="contains">\AppData\Local\Microsoft\Windows\INetCache\</TargetFilename>
+        <TargetFilename condition="contains">\AppData\Local\Google\Chrome\User Data\</TargetFilename>
+        <TargetFilename condition="contains">\AppData\Local\Mozilla\Firefox\Profiles\</TargetFilename>
+
+        <!-- Windows Update cache -->
+        <TargetFilename condition="begin with">C:\Windows\SoftwareDistribution\</TargetFilename>
+
+      </FileCreate>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         DNS Query Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_DNS_Exclude" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+
+        <!-- Local domain -->
+        <QueryName condition="end with">.local</QueryName>
+
+        <!-- Reverse DNS lookups -->
+        <QueryName condition="end with">.in-addr.arpa</QueryName>
+        <QueryName condition="end with">.ip6.arpa</QueryName>
+
+        <!-- WPAD (Web Proxy Auto-Discovery) -->
+        <QueryName condition="is">wpad</QueryName>
+        <QueryName condition="begin with">wpad.</QueryName>
+
+        <!-- ISATAP -->
+        <QueryName condition="is">isatap</QueryName>
+        <QueryName condition="begin with">isatap.</QueryName>
+
+      </DnsQuery>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Named Pipe Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_Pipe_Exclude" groupRelation="or">
+      <PipeEvent onmatch="exclude">
+
+        <!-- System pipes (legitimate) -->
+        <PipeName condition="begin with">\\lsass</PipeName>
+        <PipeName condition="begin with">\\samr</PipeName>
+        <PipeName condition="begin with">\\winreg</PipeName>
+        <PipeName condition="begin with">\\spoolss</PipeName>
+        <PipeName condition="begin with">\\srvsvc</PipeName>
+        <PipeName condition="begin with">\\wkssvc</PipeName>
+        <PipeName condition="begin with">\\netlogon</PipeName>
+        <PipeName condition="begin with">\\protected_storage</PipeName>
+
+        <!-- PowerShell Remoting (if not monitoring) -->
+        <!-- <PipeName condition="contains">PSHost</PipeName> -->
+
+        <!-- WMI -->
+        <PipeName condition="begin with">\\WMIEP_</PipeName>
+
+      </PipeEvent>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Process Access Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_ProcessAccess_Exclude" groupRelation="or">
+      <ProcessAccess onmatch="exclude">
+
+        <!-- Legitimate system processes accessing each other -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+          <TargetImage condition="is">C:\Windows\System32\svchost.exe</TargetImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\lsass.exe</SourceImage>
+        </Rule>
+
+        <!-- Task Manager (legitimate) -->
+        <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+
+        <!-- Process Explorer (if deployed) -->
+        <SourceImage condition="end with">procexp.exe</SourceImage>
+        <SourceImage condition="end with">procexp64.exe</SourceImage>
+
+      </ProcessAccess>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         File Delete Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_FileDelete_Exclude" groupRelation="or">
+      <FileDelete onmatch="exclude">
+
+        <!-- Temp file cleanup -->
+        <TargetFilename condition="end with">.tmp</TargetFilename>
+
+        <!-- Browser cache cleanup -->
+        <TargetFilename condition="contains">\INetCache\</TargetFilename>
+        <TargetFilename condition="contains">\Google\Chrome\User Data\</TargetFilename>
+
+        <!-- Windows Update cleanup -->
+        <Image condition="is">C:\Windows\System32\cleanmgr.exe</Image>
+
+      </FileDelete>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         File Stream Hash Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_FileStream_Exclude" groupRelation="or">
+      <FileCreateStreamHash onmatch="exclude">
+
+        <!-- Zone.Identifier (Mark of the Web - monitor separately if needed) -->
+        <TargetFilename condition="end with">:Zone.Identifier</TargetFilename>
+
+        <!-- Favicon cache -->
+        <TargetFilename condition="contains">:favicon:</TargetFilename>
+
+      </FileCreateStreamHash>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Raw Access Read Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_RawAccess_Exclude" groupRelation="or">
+      <RawAccessRead onmatch="exclude">
+
+        <!-- Legitimate system services -->
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <Image condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+
+        <!-- Backup software (add your backup solution) -->
+        <!-- <Image condition="contains">Veeam</Image> -->
+        <!-- <Image condition="contains">Backup</Image> -->
+
+      </RawAccessRead>
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Create Remote Thread Exclusions
+         ====================================================================== -->
+
+    <RuleGroup name="Global_RemoteThread_Exclude" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+
+        <!-- Legitimate system threads -->
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+
+        <!-- csrss.exe (Client Server Runtime) -->
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+
+      </CreateRemoteThread>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

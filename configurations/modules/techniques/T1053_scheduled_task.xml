@@ -1,0 +1,226 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  TECHNIQUE MODULE: T1053 - Scheduled Task/Job
+  ==============================================================================
+
+  MITRE ATT&CK: T1053
+  Tactic: Execution, Persistence, Privilege Escalation
+  Priority: HIGH
+  Expected FP Rate: Medium
+  Estimated Events: 100-300/day
+
+  DESCRIPTION:
+  Detects scheduled task/job abuse for:
+  - T1053.002: At (legacy)
+  - T1053.005: Scheduled Task
+  - Persistence mechanisms
+  - Privilege escalation
+  - Remote task execution
+
+  DETECTION STRATEGY:
+  1. Monitor schtasks.exe execution
+  2. Track registry TaskCache modifications
+  3. Detect Task Scheduler service activity
+  4. Monitor at.exe (legacy but still used)
+
+  REFERENCES:
+  - https://attack.mitre.org/techniques/T1053/
+  - https://docs.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-start-page
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Scheduled Task Creation
+         ====================================================================== -->
+
+    <RuleGroup name="T1053.005_Schtasks" groupRelation="or">
+
+      <!-- Event ID 1: schtasks.exe execution -->
+      <ProcessCreate onmatch="include">
+        <!-- Local task creation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/create</CommandLine>
+        </Rule>
+
+        <!-- Remote task creation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/s </CommandLine>
+        </Rule>
+
+        <!-- Task modification -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/change</CommandLine>
+        </Rule>
+
+        <!-- Task with suspicious characteristics -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/ru system</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/rl highest</CommandLine>
+        </Rule>
+
+        <!-- Task executing scripts -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/tr</CommandLine>
+          <CommandLine condition="contains">powershell</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/tr</CommandLine>
+          <CommandLine condition="contains">.vbs</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/tr</CommandLine>
+          <CommandLine condition="contains">.js</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+      <!-- Event ID 1: Legacy AT command -->
+      <ProcessCreate onmatch="include">
+        <Image condition="end with">\at.exe</Image>
+      </ProcessCreate>
+
+      <!-- Event ID 1: Task Scheduler service spawning tasks -->
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="is not">C:\Windows\System32\conhost.exe</Image>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Task Scheduler Registry Changes
+         ====================================================================== -->
+
+    <RuleGroup name="T1053_Registry" groupRelation="or">
+
+      <!-- Event ID 13: Task registration in registry -->
+      <RegistryEvent onmatch="include">
+        <!-- Task creation in TaskCache -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\</TargetObject>
+
+        <!-- Task tree modifications -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\</TargetObject>
+
+        <!-- Plain (non-folder) tasks -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Plain\</TargetObject>
+
+        <!-- Logon triggers -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Logon\</TargetObject>
+
+        <!-- Boot triggers -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Boot\</TargetObject>
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Task Scheduler Files
+         ====================================================================== -->
+
+    <RuleGroup name="T1053_Files" groupRelation="or">
+
+      <!-- Event ID 11: Task XML files -->
+      <FileCreate onmatch="include">
+        <!-- Task definitions -->
+        <TargetFilename condition="begin with">C:\Windows\System32\Tasks\</TargetFilename>
+
+        <!-- Task backup/export -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="end with">.xml</TargetFilename>
+          <TargetFilename condition="contains">Task</TargetFilename>
+        </Rule>
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         PowerShell Scheduled Task Cmdlets
+         ====================================================================== -->
+
+    <RuleGroup name="T1053_PowerShell" groupRelation="or">
+
+      <!-- Event ID 1: PowerShell task cmdlets -->
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-ScheduledTask</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Register-ScheduledTask</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Set-ScheduledTask</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-ScheduledTaskTrigger</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-ScheduledTaskAction</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Suspicious Task Characteristics
+         ====================================================================== -->
+
+    <RuleGroup name="T1053_Suspicious" groupRelation="or">
+
+      <!-- Event ID 1: Tasks from unusual locations -->
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="begin with">C:\Users\</Image>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="begin with">C:\ProgramData\</Image>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="begin with">C:\Temp\</Image>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

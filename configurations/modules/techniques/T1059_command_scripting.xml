@@ -1,0 +1,352 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  TECHNIQUE MODULE: T1059 - Command and Scripting Interpreter
+  ==============================================================================
+
+  MITRE ATT&CK: T1059
+  Tactic: Execution
+  Priority: HIGH
+  Expected FP Rate: High (requires tuning)
+  Estimated Events: 500-2000/day
+
+  DESCRIPTION:
+  Detects abuse of command and scripting interpreters:
+  - T1059.001: PowerShell
+  - T1059.003: Windows Command Shell
+  - T1059.005: Visual Basic
+  - T1059.007: JavaScript/JScript
+
+  DETECTION STRATEGY:
+  1. Monitor suspicious PowerShell flags (-enc, -w hidden, -nop, -exec bypass)
+  2. Detect cmd.exe with suspicious patterns
+  3. Track script execution (VBS, JS, HTA)
+  4. Monitor script downloads and execution
+
+  REFERENCES:
+  - https://attack.mitre.org/techniques/T1059/
+  - https://www.fireeye.com/blog/threat-research/2016/02/greater_visibilityt.html
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         PowerShell Suspicious Execution (T1059.001)
+         ====================================================================== -->
+
+    <RuleGroup name="T1059.001_PowerShell" groupRelation="or">
+
+      <!-- Event ID 1: PowerShell with suspicious flags -->
+      <ProcessCreate onmatch="include">
+        <!-- Encoded commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-enc</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-EncodedCommand</CommandLine>
+        </Rule>
+
+        <!-- Hidden window -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-w hidden</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-WindowStyle hidden</CommandLine>
+        </Rule>
+
+        <!-- No profile -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-nop</CommandLine>
+        </Rule>
+
+        <!-- Execution policy bypass -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-ep bypass</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-ExecutionPolicy Bypass</CommandLine>
+        </Rule>
+
+        <!-- Non-interactive -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-NonI</CommandLine>
+        </Rule>
+
+        <!-- Download cradles -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">IEX</CommandLine>
+          <CommandLine condition="contains">Net.WebClient</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-Expression</CommandLine>
+          <CommandLine condition="contains">DownloadString</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">IEX</CommandLine>
+          <CommandLine condition="contains">DownloadString</CommandLine>
+        </Rule>
+
+        <!-- Base64 encoded PowerShell -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">FromBase64String</CommandLine>
+        </Rule>
+
+        <!-- Invoke-WebRequest to suspicious locations -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-WebRequest</CommandLine>
+          <CommandLine condition="contains">$env:TEMP</CommandLine>
+        </Rule>
+
+        <!-- PowerShell from suspicious parents -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\winword.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\excel.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\mshta.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\wscript.exe</ParentImage>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Command Shell Suspicious Usage (T1059.003)
+         ====================================================================== -->
+
+    <RuleGroup name="T1059.003_Cmd" groupRelation="or">
+
+      <!-- Event ID 1: cmd.exe suspicious patterns -->
+      <ProcessCreate onmatch="include">
+        <!-- cmd.exe with encoded commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">/c echo</CommandLine>
+          <CommandLine condition="contains">| powershell</CommandLine>
+        </Rule>
+
+        <!-- cmd.exe spawning PowerShell -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\cmd.exe</ParentImage>
+          <Image condition="end with">\powershell.exe</Image>
+        </Rule>
+
+        <!-- cmd.exe from Office applications -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\winword.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\excel.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\outlook.exe</ParentImage>
+        </Rule>
+
+        <!-- cmd.exe running suspicious commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">whoami</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">net user</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">net localgroup</CommandLine>
+        </Rule>
+
+        <!-- cmd.exe with certutil (download/decode) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">certutil</CommandLine>
+        </Rule>
+
+        <!-- cmd.exe with bitsadmin (download) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">bitsadmin</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         VBScript/JScript Execution (T1059.005, T1059.007)
+         ====================================================================== -->
+
+    <RuleGroup name="T1059_Scripts" groupRelation="or">
+
+      <!-- Event ID 1: Script execution -->
+      <ProcessCreate onmatch="include">
+        <!-- WScript.exe (VBS/JS) -->
+        <Image condition="end with">\wscript.exe</Image>
+
+        <!-- CScript.exe (VBS/JS) -->
+        <Image condition="end with">\cscript.exe</Image>
+
+        <!-- MSHTA (HTA files) -->
+        <Image condition="end with">\mshta.exe</Image>
+
+        <!-- MSHTA from unusual locations -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <CommandLine condition="contains">http</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <CommandLine condition="contains">javascript:</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <CommandLine condition="contains">vbscript:</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+      <!-- Event ID 11: Script file creation -->
+      <FileCreate onmatch="include">
+        <!-- VBS files in user directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.vbs</TargetFilename>
+        </Rule>
+
+        <!-- JS files in user directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.js</TargetFilename>
+        </Rule>
+
+        <!-- HTA files -->
+        <TargetFilename condition="end with">.hta</TargetFilename>
+
+        <!-- BAT/CMD files in suspicious locations -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Windows\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.bat</TargetFilename>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\AppData\Local\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.cmd</TargetFilename>
+        </Rule>
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Script Downloads and Execution Chain
+         ====================================================================== -->
+
+    <RuleGroup name="T1059_Download_Execute" groupRelation="or">
+
+      <!-- Event ID 3: Script downloads -->
+      <NetworkConnect onmatch="include">
+        <!-- PowerShell downloading -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <Initiated condition="is">true</Initiated>
+          <DestinationPort condition="is">443</DestinationPort>
+        </Rule>
+
+        <!-- Script hosts downloading -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wscript.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cscript.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Living Off the Land Binaries (LOLBins)
+         ====================================================================== -->
+
+    <RuleGroup name="T1059_LOLBins" groupRelation="or">
+
+      <!-- Event ID 1: Abuse of legitimate binaries -->
+      <ProcessCreate onmatch="include">
+        <!-- certutil for download/decode -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\certutil.exe</Image>
+          <CommandLine condition="contains">-urlcache</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\certutil.exe</Image>
+          <CommandLine condition="contains">-decode</CommandLine>
+        </Rule>
+
+        <!-- bitsadmin for download -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\bitsadmin.exe</Image>
+          <CommandLine condition="contains">/transfer</CommandLine>
+        </Rule>
+
+        <!-- regsvr32 /i (Squiblydoo) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\regsvr32.exe</Image>
+          <CommandLine condition="contains">/i:</CommandLine>
+        </Rule>
+
+        <!-- rundll32 javascript -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\rundll32.exe</Image>
+          <CommandLine condition="contains">javascript:</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

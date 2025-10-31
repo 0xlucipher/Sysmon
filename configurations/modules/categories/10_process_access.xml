@@ -1,0 +1,286 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  CATEGORY MODULE: Event ID 10 - Process Access
+  ==============================================================================
+
+  Event Type: Process Access (Event ID 10)
+  Purpose: Monitor inter-process memory access
+  Performance Impact: MEDIUM (can be noisy)
+  Expected Volume: 200-1000 events/day per workstation
+
+  DESCRIPTION:
+  Monitors when one process opens another process with specific access rights.
+  Critical for detecting credential dumping (LSASS access), process injection,
+  and other process manipulation techniques.
+
+  DETECTION FOCUS:
+  - LSASS.exe memory access (credential dumping)
+  - Cross-process access from user space to system processes
+  - Suspicious access rights (PROCESS_ALL_ACCESS, etc.)
+  - Process injection preparation
+  - Debugger attachment
+
+  USAGE:
+  .\Generate-ModularConfig.ps1 -CategoryModules @("categories\10_process_access.xml")
+
+  TUNING:
+  - High noise environments: Focus only on LSASS access
+  - High security: Monitor all cross-process access
+  - Performance concerns: Reduce to critical targets only
+
+  COMPLEMENTARY MODULES:
+  - T1003_credential_dumping.xml (LSASS access patterns)
+  - T1055_process_injection.xml (injection detection)
+
+  ACCESS RIGHTS REFERENCE:
+  - 0x1410: PROCESS_QUERY_INFORMATION | PROCESS_VM_READ (credential dumping)
+  - 0x1F0FFF: PROCESS_ALL_ACCESS (full control)
+  - 0x1FFFFF: PROCESS_ALL_ACCESS (full control - Vista+)
+  - 0x1478: PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_VM_WRITE
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Process Access - Focused Monitoring
+         ====================================================================== -->
+
+    <RuleGroup name="ProcessAccess_Focused" groupRelation="or">
+
+      <!-- INCLUDE: High-value targets and suspicious patterns -->
+      <ProcessAccess onmatch="include">
+
+        <!-- ================================================================
+             CRITICAL: LSASS Access (Credential Dumping)
+             ================================================================ -->
+
+        <!-- Any access to LSASS -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+
+        <!-- ================================================================
+             CRITICAL: Other Security-Sensitive Processes
+             ================================================================ -->
+
+        <!-- Windows Logon Application -->
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+
+        <!-- Services Control Manager -->
+        <TargetImage condition="end with">\services.exe</TargetImage>
+
+        <!-- Client Server Runtime -->
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+
+        <!-- Windows Subsystem -->
+        <TargetImage condition="end with">\wininit.exe</TargetImage>
+
+        <!-- ================================================================
+             Suspicious Access Rights
+             ================================================================ -->
+
+        <!-- PROCESS_ALL_ACCESS -->
+        <GrantedAccess condition="is">0x1F0FFF</GrantedAccess>
+        <GrantedAccess condition="is">0x1FFFFF</GrantedAccess>
+
+        <!-- Credential dumping pattern (Mimikatz, ProcDump) -->
+        <GrantedAccess condition="is">0x1410</GrantedAccess>
+
+        <!-- Process injection rights -->
+        <GrantedAccess condition="is">0x1478</GrantedAccess>
+
+        <!-- CreateRemoteThread rights -->
+        <GrantedAccess condition="is">0x143A</GrantedAccess>
+
+        <!-- ================================================================
+             Cross-Process Access from User Space to System
+             ================================================================ -->
+
+        <!-- User processes accessing system processes -->
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\System32\</TargetImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\SysWOW64\</TargetImage>
+        </Rule>
+
+        <!-- ================================================================
+             Suspicious Source Processes
+             ================================================================ -->
+
+        <!-- PowerShell accessing other processes -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\powershell.exe</SourceImage>
+          <TargetImage condition="is not">C:\Windows\System32\conhost.exe</TargetImage>
+        </Rule>
+
+        <!-- cmd.exe accessing other processes (unusual) -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\cmd.exe</SourceImage>
+          <TargetImage condition="is not">C:\Windows\System32\conhost.exe</TargetImage>
+        </Rule>
+
+        <!-- Script hosts accessing processes -->
+        <SourceImage condition="end with">\wscript.exe</SourceImage>
+        <SourceImage condition="end with">\cscript.exe</SourceImage>
+
+        <!-- MSHTA accessing processes -->
+        <SourceImage condition="end with">\mshta.exe</SourceImage>
+
+        <!-- rundll32 accessing processes -->
+        <SourceImage condition="end with">\rundll32.exe</SourceImage>
+
+        <!-- regsvr32 accessing processes -->
+        <SourceImage condition="end with">\regsvr32.exe</SourceImage>
+
+        <!-- ================================================================
+             Access from Temporary Locations
+             ================================================================ -->
+
+        <!-- Executables from temp accessing other processes -->
+        <SourceImage condition="contains">\AppData\Local\Temp\</SourceImage>
+        <SourceImage condition="contains">\Windows\Temp\</SourceImage>
+
+        <!-- ================================================================
+             Known Attack Tools
+             ================================================================ -->
+
+        <!-- Mimikatz -->
+        <SourceImage condition="contains">mimikatz</SourceImage>
+
+        <!-- ProcDump -->
+        <SourceImage condition="contains">procdump</SourceImage>
+
+        <!-- Any process with "dump" in name accessing LSASS -->
+        <Rule groupRelation="and">
+          <SourceImage condition="contains">dump</SourceImage>
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+        </Rule>
+
+        <!-- ================================================================
+             Debuggers Attaching (can be used for injection)
+             ================================================================ -->
+
+        <!-- Visual Studio debugger (legitimate use in dev environments) -->
+        <!--
+        <SourceImage condition="end with">\vsjitdebugger.exe</SourceImage>
+        -->
+
+        <!-- WinDbg (legitimate in IT/dev, suspicious elsewhere) -->
+        <SourceImage condition="end with">\windbg.exe</SourceImage>
+        <SourceImage condition="end with">\cdb.exe</SourceImage>
+
+        <!-- ================================================================
+             Office Applications Accessing Processes (potential malware)
+             ================================================================ -->
+
+        <SourceImage condition="end with">\winword.exe</SourceImage>
+        <SourceImage condition="end with">\excel.exe</SourceImage>
+        <SourceImage condition="end with">\powerpnt.exe</SourceImage>
+        <SourceImage condition="end with">\outlook.exe</SourceImage>
+
+        <!-- ================================================================
+             Browsers Accessing Processes (potential exploit/malware)
+             ================================================================ -->
+
+        <Rule groupRelation="and">
+          <SourceImage condition="contains">\chrome.exe</SourceImage>
+          <TargetImage condition="is not">C:\Windows\System32\conhost.exe</TargetImage>
+          <TargetImage condition="does not contain">\chrome.exe</TargetImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <SourceImage condition="contains">\firefox.exe</SourceImage>
+          <TargetImage condition="is not">C:\Windows\System32\conhost.exe</TargetImage>
+          <TargetImage condition="does not contain">\firefox.exe</TargetImage>
+        </Rule>
+
+      </ProcessAccess>
+
+      <!-- EXCLUDE: Known legitimate access patterns -->
+      <ProcessAccess onmatch="exclude">
+
+        <!-- System processes accessing each other (legitimate) -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+          <TargetImage condition="is">C:\Windows\System32\svchost.exe</TargetImage>
+        </Rule>
+
+        <!-- WMI Provider (very noisy, legitimate) -->
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+
+        <!-- LSASS accessing itself -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\lsass.exe</SourceImage>
+          <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+        </Rule>
+
+        <!-- Services.exe accessing services -->
+        <SourceImage condition="is">C:\Windows\System32\services.exe</SourceImage>
+
+        <!-- csrss.exe -->
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+
+        <!-- Task Manager (legitimate admin tool) -->
+        <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+
+        <!-- Process Explorer (if deployed as admin tool) -->
+        <SourceImage condition="end with">procexp.exe</SourceImage>
+        <SourceImage condition="end with">procexp64.exe</SourceImage>
+
+        <!-- Process Monitor (if deployed) -->
+        <SourceImage condition="end with">procmon.exe</SourceImage>
+        <SourceImage condition="end with">procmon64.exe</SourceImage>
+
+        <!-- VMware Tools (if virtualized) -->
+        <SourceImage condition="begin with">C:\Program Files\VMware\VMware Tools\</SourceImage>
+
+        <!-- Antivirus/EDR (customize for your solution) -->
+        <!-- Uncomment and adjust for your security tools -->
+        <!--
+        <SourceImage condition="contains">\CrowdStrike\</SourceImage>
+        <SourceImage condition="contains">\SentinelOne\</SourceImage>
+        <SourceImage condition="contains">\Symantec\</SourceImage>
+        -->
+
+        <!-- Windows Defender -->
+        <SourceImage condition="begin with">C:\Program Files\Windows Defender\</SourceImage>
+        <SourceImage condition="begin with">C:\ProgramData\Microsoft\Windows Defender\</SourceImage>
+
+        <!-- System accessing conhost (very noisy, always legitimate) -->
+        <TargetImage condition="is">C:\Windows\System32\conhost.exe</TargetImage>
+
+        <!-- LSASS legitimate access from system -->
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        </Rule>
+
+        <!-- LSASS access with safe rights (0x1000 = QUERY_LIMITED_INFORMATION) -->
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <GrantedAccess condition="is">0x1000</GrantedAccess>
+        </Rule>
+
+        <!-- LSASS access with 0x1400 (QUERY_INFORMATION only, safe) -->
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <GrantedAccess condition="is">0x1400</GrantedAccess>
+        </Rule>
+
+      </ProcessAccess>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

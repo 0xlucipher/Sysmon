@@ -1,0 +1,295 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  TECHNIQUE MODULE: T1021 - Remote Services
+  ==============================================================================
+
+  MITRE ATT&CK: T1021
+  Tactic: Lateral Movement
+  Priority: CRITICAL
+  Expected FP Rate: Medium
+  Estimated Events: 100-500/day (varies by network activity)
+
+  DESCRIPTION:
+  Detects lateral movement via remote services including:
+  - T1021.001: Remote Desktop Protocol
+  - T1021.002: SMB/Windows Admin Shares (PSExec-style)
+  - T1021.003: Distributed Component Object Model
+  - T1021.004: SSH
+  - T1021.006: Windows Remote Management
+
+  DETECTION STRATEGY:
+  1. Monitor named pipes (PSEXESVC, PAExec, RemCom)
+  2. Detect remote process execution via services.exe parent
+  3. Track RDP client connections
+  4. Monitor WinRM/PSRemoting activity
+  5. Detect SSH connections
+
+  REFERENCES:
+  - https://attack.mitre.org/techniques/T1021/
+  - JPCERT Lateral Movement Research
+  - https://jpcertcc.github.io/ToolAnalysisResultSheet/
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         PSExec and Alternatives (T1021.002)
+         ====================================================================== -->
+
+    <RuleGroup name="T1021.002_PSExec" groupRelation="or">
+
+      <!-- Event ID 17/18: Named Pipes -->
+      <PipeEvent onmatch="include">
+        <!-- PSExec -->
+        <PipeName condition="begin with">\\PSEXESVC</PipeName>
+
+        <!-- PAExec (alternative) -->
+        <PipeName condition="contains">paexec</PipeName>
+
+        <!-- RemCom (alternative) -->
+        <PipeName condition="contains">remcom</PipeName>
+
+        <!-- CSExec (alternative) -->
+        <PipeName condition="contains">csexec</PipeName>
+
+        <!-- WinExe -->
+        <PipeName condition="contains">winexesvc</PipeName>
+      </PipeEvent>
+
+      <!-- Event ID 1: Process Creation via Services -->
+      <ProcessCreate onmatch="include">
+        <!-- Command execution from services.exe (remote service creation) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\services.exe</ParentImage>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+          <Image condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        </Rule>
+
+        <!-- PSExec execution patterns -->
+        <CommandLine condition="contains">psexec</CommandLine>
+        <CommandLine condition="contains">paexec</CommandLine>
+
+        <!-- SC.exe creating remote services -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains">\\</CommandLine>
+          <CommandLine condition="contains">create</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+      <!-- Event ID 13: Service creation in registry -->
+      <RegistryEvent onmatch="include">
+        <Rule groupRelation="and">
+          <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+          <TargetObject condition="contains">\ImagePath</TargetObject>
+          <Details condition="contains">\ADMIN$\</Details>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+          <TargetObject condition="contains">PSEXESVC</TargetObject>
+        </Rule>
+      </RegistryEvent>
+
+      <!-- Event ID 3: SMB connections (port 445) -->
+      <NetworkConnect onmatch="include">
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">445</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         RDP Client Activity (T1021.001)
+         ====================================================================== -->
+
+    <RuleGroup name="T1021.001_RDP" groupRelation="or">
+
+      <!-- Event ID 1: RDP client execution -->
+      <ProcessCreate onmatch="include">
+        <!-- RDP client -->
+        <Image condition="end with">\mstsc.exe</Image>
+
+        <!-- RDP clipboard process (indicator of active RDP session) -->
+        <Image condition="end with">\rdpclip.exe</Image>
+
+        <!-- Third-party RDP clients -->
+        <CommandLine condition="contains">-rdp:</CommandLine>
+        <CommandLine condition="contains">/rdp:</CommandLine>
+      </ProcessCreate>
+
+      <!-- Event ID 3: RDP network connections -->
+      <NetworkConnect onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\mstsc.exe</Image>
+          <DestinationPort condition="is">3389</DestinationPort>
+        </Rule>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         WinRM / PowerShell Remoting (T1021.006)
+         ====================================================================== -->
+
+    <RuleGroup name="T1021.006_WinRM" groupRelation="or">
+
+      <!-- Event ID 1: WinRM processes -->
+      <ProcessCreate onmatch="include">
+        <!-- WinRS.exe (Windows Remote Shell) -->
+        <Image condition="end with">\winrs.exe</Image>
+
+        <!-- WSMan PowerShell provider host -->
+        <Image condition="end with">\wsmprovhost.exe</Image>
+
+        <!-- Invoke-Command or Enter-PSSession indicators -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-Command</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Enter-PSSession</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+      <!-- Event ID 3: WinRM network connections -->
+      <NetworkConnect onmatch="include">
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">5985</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">5986</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         DCOM Lateral Movement (T1021.003)
+         ====================================================================== -->
+
+    <RuleGroup name="T1021.003_DCOM" groupRelation="or">
+
+      <!-- Event ID 1: DCOM execution patterns -->
+      <ProcessCreate onmatch="include">
+        <!-- MMC20.Application (common DCOM vector) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mmc.exe</Image>
+          <CommandLine condition="contains">-Embedding</CommandLine>
+        </Rule>
+
+        <!-- ShellBrowserWindow (DCOM exec) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\svchost.exe</ParentImage>
+          <CommandLine condition="contains">/Automation</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+      <!-- Event ID 3: DCOM network activity (RPC) -->
+      <NetworkConnect onmatch="include">
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">135</DestinationPort>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         SSH Connections (T1021.004)
+         ====================================================================== -->
+
+    <RuleGroup name="T1021.004_SSH" groupRelation="or">
+
+      <!-- Event ID 1: SSH client execution -->
+      <ProcessCreate onmatch="include">
+        <!-- Windows OpenSSH -->
+        <Image condition="end with">\ssh.exe</Image>
+
+        <!-- PuTTY -->
+        <Image condition="end with">\putty.exe</Image>
+        <Image condition="end with">\plink.exe</Image>
+
+        <!-- Other SSH clients -->
+        <CommandLine condition="contains">ssh </CommandLine>
+      </ProcessCreate>
+
+      <!-- Event ID 3: SSH connections -->
+      <NetworkConnect onmatch="include">
+        <DestinationPort condition="is">22</DestinationPort>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Administrative Share Access
+         ====================================================================== -->
+
+    <RuleGroup name="T1021_Admin_Shares" groupRelation="or">
+
+      <!-- Event ID 11: File creation on admin shares -->
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\C$\</TargetFilename>
+        <TargetFilename condition="contains">\ADMIN$\</TargetFilename>
+        <TargetFilename condition="contains">\IPC$\</TargetFilename>
+      </FileCreate>
+
+      <!-- Event ID 1: Net use commands for share mounting -->
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\net.exe</Image>
+          <CommandLine condition="contains">use</CommandLine>
+          <CommandLine condition="contains">\C$</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\net.exe</Image>
+          <CommandLine condition="contains">use</CommandLine>
+          <CommandLine condition="contains">\ADMIN$</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Remote Task Scheduling
+         ====================================================================== -->
+
+    <RuleGroup name="T1021_Remote_Tasks" groupRelation="or">
+
+      <!-- Event ID 1: Remote scheduled task creation -->
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/s </CommandLine>
+          <CommandLine condition="contains">/create</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\at.exe</Image>
+          <CommandLine condition="contains">\\</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

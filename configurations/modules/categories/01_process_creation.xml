@@ -1,0 +1,276 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  CATEGORY MODULE: Event ID 1 - Process Creation
+  ==============================================================================
+
+  Event Type: Process Creation (Event ID 1)
+  Purpose: Comprehensive process execution monitoring
+  Performance Impact: HIGH (most common event)
+  Expected Volume: 1000-5000 events/day per workstation
+
+  DESCRIPTION:
+  Monitors all process creation with intelligent filtering to reduce noise
+  while maintaining visibility into suspicious execution patterns.
+
+  DETECTION FOCUS:
+  - Suspicious command-line patterns
+  - Execution from unusual locations
+  - Unsigned or suspicious parent-child relationships
+  - Living-off-the-land binaries (LOLBins)
+  - Script interpreters with suspicious flags
+
+  USAGE:
+  Merge with other modules using Generate-ModularConfig.ps1:
+
+  .\Generate-ModularConfig.ps1 -CategoryModules @("categories\01_process_creation.xml")
+
+  Or use with technique modules for comprehensive coverage:
+
+  .\Generate-ModularConfig.ps1 `
+      -TechniqueModules @("techniques\T1003_credential_dumping.xml") `
+      -CategoryModules @("categories\01_process_creation.xml")
+
+  TUNING:
+  - For high-volume environments: Increase exclusions
+  - For high-security: Reduce or remove exclusions
+  - Monitor log volume and adjust accordingly
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Process Creation - Comprehensive Monitoring
+         ====================================================================== -->
+
+    <RuleGroup name="ProcessCreate_Comprehensive" groupRelation="or">
+
+      <ProcessCreate onmatch="exclude">
+
+        <!-- Common system processes (noise reduction) -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+
+        <!-- Search indexing -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchProtocolHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchFilterHost.exe</Image>
+
+        <!-- Windows services (legitimate parent only) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\services.exe</ParentImage>
+          <CommandLine condition="contains">WpnService</CommandLine>
+        </Rule>
+
+        <!-- DllHost (legitimate only) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\dllhost.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- RuntimeBroker (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\RuntimeBroker.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- Taskhostw (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\taskhostw.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- Windows telemetry (if allowed) -->
+        <Image condition="is">C:\Windows\System32\CompatTelRunner.exe</Image>
+        <Image condition="is">C:\Windows\System32\DeviceCensus.exe</Image>
+
+        <!-- Windows Update -->
+        <Image condition="is">C:\Windows\System32\UsoClient.exe</Image>
+        <Image condition="is">C:\Windows\System32\wuauclt.exe</Image>
+        <Image condition="is">C:\Windows\System32\TiWorker.exe</Image>
+
+      </ProcessCreate>
+
+      <!-- INCLUDE: Suspicious patterns (catches what exclusions might miss) -->
+      <ProcessCreate onmatch="include">
+
+        <!-- Execution from suspicious locations -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Users\</Image>
+          <Image condition="contains">\AppData\Local\Temp\</Image>
+          <Image condition="end with">.exe</Image>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Users\</Image>
+          <Image condition="contains">\Downloads\</Image>
+          <Image condition="end with">.exe</Image>
+        </Rule>
+
+        <!-- Execution from archive extraction paths -->
+        <Image condition="contains">\7zO</Image>
+        <Image condition="contains">\Rar$</Image>
+
+        <!-- Scripts from temp directories -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Temp\</Image>
+          <Image condition="end with">.bat</Image>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="contains">\Temp\</Image>
+          <Image condition="end with">.cmd</Image>
+        </Rule>
+
+        <!-- PowerShell with encoded commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-enc</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-EncodedCommand</CommandLine>
+        </Rule>
+
+        <!-- PowerShell execution policy bypass -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-ep bypass</CommandLine>
+        </Rule>
+
+        <!-- PowerShell hidden window -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-w hidden</CommandLine>
+        </Rule>
+
+        <!-- PowerShell from Office -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\winword.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\excel.exe</ParentImage>
+        </Rule>
+
+        <!-- cmd.exe from Office -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\winword.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\excel.exe</ParentImage>
+        </Rule>
+
+        <!-- LOLBins: regsvr32 -->
+        <Image condition="end with">\regsvr32.exe</Image>
+
+        <!-- LOLBins: rundll32 -->
+        <Image condition="end with">\rundll32.exe</Image>
+
+        <!-- LOLBins: mshta -->
+        <Image condition="end with">\mshta.exe</Image>
+
+        <!-- LOLBins: certutil -->
+        <Image condition="end with">\certutil.exe</Image>
+
+        <!-- LOLBins: bitsadmin -->
+        <Image condition="end with">\bitsadmin.exe</Image>
+
+        <!-- Script hosts -->
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+
+        <!-- InstallUtil (can be used to execute code) -->
+        <Image condition="end with">\InstallUtil.exe</Image>
+
+        <!-- RegAsm / RegSvcs -->
+        <Image condition="end with">\regasm.exe</Image>
+        <Image condition="end with">\regsvcs.exe</Image>
+
+        <!-- MSBuild (can execute malicious builds) -->
+        <Image condition="end with">\msbuild.exe</Image>
+
+        <!-- Suspicious process names -->
+        <Image condition="contains">mimikatz</Image>
+        <CommandLine condition="contains">mimikatz</CommandLine>
+
+        <Image condition="contains">procdump</Image>
+        <CommandLine condition="contains">procdump</CommandLine>
+
+        <!-- Renamed common tools -->
+        <OriginalFileName condition="contains">procdump</OriginalFileName>
+
+        <!-- Network tools from unusual locations -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\net.exe</Image>
+          <Image condition="is not">C:\Windows\System32\net.exe</Image>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\net1.exe</Image>
+          <Image condition="is not">C:\Windows\System32\net1.exe</Image>
+        </Rule>
+
+        <!-- Credential access patterns -->
+        <CommandLine condition="contains">sekurlsa</CommandLine>
+        <CommandLine condition="contains">lsadump</CommandLine>
+        <CommandLine condition="contains">comsvcs.dll,MiniDump</CommandLine>
+
+        <!-- Obfuscation indicators -->
+        <CommandLine condition="contains">^</CommandLine>
+        <CommandLine condition="contains">FromBase64String</CommandLine>
+
+        <!-- Remote execution -->
+        <Image condition="end with">\psexec.exe</Image>
+        <Image condition="end with">\psexec64.exe</Image>
+        <Image condition="end with">\paexec.exe</Image>
+        <Image condition="end with">\winrs.exe</Image>
+
+        <!-- WMI execution -->
+        <Image condition="end with">\wmic.exe</Image>
+        <Image condition="end with">\scrcons.exe</Image>
+
+        <!-- Scheduled tasks from remote -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/s </CommandLine>
+        </Rule>
+
+        <!-- Service creation from command line -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains">create</CommandLine>
+        </Rule>
+
+        <!-- Defense evasion -->
+        <CommandLine condition="contains">Set-MpPreference</CommandLine>
+        <CommandLine condition="contains">DisableRealtimeMonitoring</CommandLine>
+        <CommandLine condition="contains">vssadmin delete shadows</CommandLine>
+        <CommandLine condition="contains">wevtutil cl</CommandLine>
+
+        <!-- Discovery commands -->
+        <CommandLine condition="contains">net user /domain</CommandLine>
+        <CommandLine condition="contains">net group /domain</CommandLine>
+        <CommandLine condition="contains">nltest /domain_trusts</CommandLine>
+
+        <!-- Unsigned executables from user directories -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Users\</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

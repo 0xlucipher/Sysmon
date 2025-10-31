@@ -1,0 +1,443 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  EXAMPLE CONFIGURATION: Windows Server
+  ==============================================================================
+
+  Target: Windows Server 2016/2019/2022
+  Server Roles: General purpose (file, web, app server)
+  Profile: Balanced security with server-specific tuning
+  Expected CPU: <5%
+  Expected Daily Logs: 400-800MB
+
+  DESCRIPTION:
+  Optimized configuration for Windows Servers running common server roles:
+  - File servers
+  - Web servers (IIS)
+  - Application servers
+  - Database servers
+
+  TUNING FOR SERVER ENVIRONMENTS:
+  - Reduced noise from legitimate server processes
+  - Enhanced lateral movement detection
+  - Service account monitoring
+  - Remote administration tracking
+  - Critical server process protection
+
+  EXCLUSIONS:
+  - SQL Server processes (if applicable)
+  - IIS worker processes (with conditions)
+  - Backup software
+  - Management agents
+  - Legitimate remote administration
+
+  DEPLOYMENT:
+  sysmon64.exe -accepteula -i server-config.xml
+
+  UPDATE:
+  sysmon64.exe -c server-config.xml
+
+  ==============================================================================
+-->
+
+  <HashAlgorithms>SHA256,IMPHASH</HashAlgorithms>
+  <CheckRevocation/>
+  <DnsLookup>False</DnsLookup>
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         Process Creation - Server Focus
+         ====================================================================== -->
+
+    <RuleGroup name="ServerProcessCreate" groupRelation="or">
+
+      <ProcessCreate onmatch="exclude">
+
+        <!-- System processes -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+
+        <!-- SQL Server (if deployed) -->
+        <!-- Uncomment if running SQL Server -->
+        <!--
+        <Image condition="begin with">C:\Program Files\Microsoft SQL Server\</Image>
+        -->
+
+        <!-- IIS Worker Processes (legitimate app pools only) -->
+        <!-- Monitor suspicious app pools separately -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\inetsrv\w3wp.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+
+        <!-- Backup software (customize for your solution) -->
+        <!--
+        <Image condition="contains">\Veeam\</Image>
+        <Image condition="contains">\Backup\</Image>
+        -->
+
+        <!-- Management agents (SCCM, monitoring, etc.) -->
+        <!--
+        <Image condition="begin with">C:\Windows\CCM\</Image>
+        -->
+
+      </ProcessCreate>
+
+      <ProcessCreate onmatch="include">
+
+        <!-- PowerShell with suspicious flags (common in attacks) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-enc</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-w hidden</CommandLine>
+        </Rule>
+
+        <!-- PowerShell from unusual parents -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\w3wp.exe</ParentImage>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\sqlservr.exe</ParentImage>
+        </Rule>
+
+        <!-- cmd.exe from web server -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\w3wp.exe</ParentImage>
+        </Rule>
+
+        <!-- Lateral movement tools -->
+        <Image condition="contains">psexec</Image>
+        <Image condition="end with">\winrs.exe</Image>
+
+        <!-- WMI execution -->
+        <Image condition="end with">\wmic.exe</Image>
+
+        <!-- Remote service creation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains">create</CommandLine>
+        </Rule>
+
+        <!-- Remote scheduled tasks -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/s </CommandLine>
+        </Rule>
+
+        <!-- Credential dumping tools -->
+        <CommandLine condition="contains">mimikatz</CommandLine>
+        <CommandLine condition="contains">procdump</CommandLine>
+        <CommandLine condition="contains">lsass</CommandLine>
+
+        <!-- LOLBins -->
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+        <Image condition="end with">\mshta.exe</Image>
+
+        <!-- Defense evasion -->
+        <CommandLine condition="contains">Set-MpPreference</CommandLine>
+        <CommandLine condition="contains">vssadmin delete shadows</CommandLine>
+
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Network Connections - Server Focus
+         ====================================================================== -->
+
+    <RuleGroup name="ServerNetwork" groupRelation="or">
+
+      <NetworkConnect onmatch="exclude">
+
+        <!-- Localhost -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+
+        <!-- Multicast -->
+        <DestinationIp condition="begin with">224.0.0.</DestinationIp>
+
+        <!-- Link-local -->
+        <DestinationIp condition="begin with">169.254.</DestinationIp>
+
+        <!-- Internal network (customize for your environment) -->
+        <!-- Uncomment and adjust for your internal subnets -->
+        <!--
+        <DestinationIp condition="begin with">10.</DestinationIp>
+        <DestinationIp condition="begin with">192.168.</DestinationIp>
+        -->
+
+        <!-- SVCHOST to Microsoft -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+
+        <!-- SQL Server to internal database servers (if applicable) -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\sqlservr.exe</Image>
+          <DestinationIp condition="is">10.0.10.50</DestinationIp>
+        </Rule>
+        -->
+
+      </NetworkConnect>
+
+      <NetworkConnect onmatch="include">
+
+        <!-- PowerShell making external connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- cmd.exe making connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- Script hosts -->
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+
+        <!-- LOLBins -->
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+
+        <!-- Lateral movement ports -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">445</DestinationPort>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+
+        <DestinationPort condition="is">3389</DestinationPort> <!-- RDP -->
+        <DestinationPort condition="is">5985</DestinationPort> <!-- WinRM -->
+        <DestinationPort condition="is">5986</DestinationPort> <!-- WinRM HTTPS -->
+
+        <!-- Suspicious C2 ports -->
+        <DestinationPort condition="is">4444</DestinationPort>
+        <DestinationPort condition="is">8080</DestinationPort>
+
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Process Access - Critical Server Processes
+         ====================================================================== -->
+
+    <RuleGroup name="ServerProcessAccess" groupRelation="or">
+
+      <ProcessAccess onmatch="include">
+
+        <!-- LSASS (critical on servers - many service accounts) -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+
+        <!-- Other critical processes -->
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+
+        <!-- SQL Server process (if applicable) -->
+        <!--
+        <TargetImage condition="end with">\sqlservr.exe</TargetImage>
+        -->
+
+      </ProcessAccess>
+
+      <ProcessAccess onmatch="exclude">
+
+        <!-- Legitimate system access -->
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+
+        <!-- Task Manager -->
+        <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+
+        <!-- Backup software -->
+        <!--
+        <SourceImage condition="contains">\Backup\</SourceImage>
+        -->
+
+      </ProcessAccess>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Registry - Server Persistence and Config Changes
+         ====================================================================== -->
+
+    <RuleGroup name="ServerRegistry" groupRelation="or">
+
+      <RegistryEvent onmatch="include">
+
+        <!-- Persistence -->
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+
+        <!-- Security settings -->
+        <TargetObject condition="contains">\Windows Defender\</TargetObject>
+        <TargetObject condition="contains">\FirewallPolicy\</TargetObject>
+        <TargetObject condition="contains">\Policies\System\EnableLUA</TargetObject>
+
+        <!-- LSA -->
+        <TargetObject condition="contains">\Control\Lsa\</TargetObject>
+        <TargetObject condition="contains">\SecurityProviders\</TargetObject>
+
+        <!-- Scheduled tasks -->
+        <TargetObject condition="contains">\Schedule\TaskCache\</TargetObject>
+
+      </RegistryEvent>
+
+      <RegistryEvent onmatch="exclude">
+
+        <!-- Noisy but harmless -->
+        <TargetObject condition="contains">\MuiCache\</TargetObject>
+        <TargetObject condition="contains">\RecentDocs\</TargetObject>
+
+      </RegistryEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         File Creation - Web Shells and Suspicious Files
+         ====================================================================== -->
+
+    <RuleGroup name="ServerFileCreate" groupRelation="or">
+
+      <FileCreate onmatch="include">
+
+        <!-- Web shells (critical for web servers) -->
+        <TargetFilename condition="end with">.asp</TargetFilename>
+        <TargetFilename condition="end with">.aspx</TargetFilename>
+        <TargetFilename condition="end with">.php</TargetFilename>
+        <TargetFilename condition="end with">.jsp</TargetFilename>
+
+        <!-- Scripts in web directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\inetpub\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+
+        <!-- Executables in web directories (very suspicious) -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\inetpub\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+
+        <!-- Scripts in temp directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+
+        <!-- System directory modifications (rare on servers) -->
+        <TargetFilename condition="begin with">C:\Windows\System32\</TargetFilename>
+
+      </FileCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         DNS Queries - C2 and Tunneling Detection
+         ====================================================================== -->
+
+    <RuleGroup name="ServerDNS" groupRelation="or">
+
+      <DnsQuery onmatch="exclude">
+
+        <!-- Internal domain -->
+        <QueryName condition="end with">.local</QueryName>
+
+        <!-- Microsoft services -->
+        <QueryName condition="end with">microsoft.com</QueryName>
+        <QueryName condition="end with">windows.com</QueryName>
+
+      </DnsQuery>
+
+      <DnsQuery onmatch="include">
+
+        <!-- Suspicious TLDs -->
+        <QueryName condition="end with">.tk</QueryName>
+        <QueryName condition="end with">.xyz</QueryName>
+        <QueryName condition="end with">duckdns.org</QueryName>
+        <QueryName condition="end with">ngrok.io</QueryName>
+
+        <!-- DGA-like (long random subdomains) -->
+        <!-- Requires SIEM correlation -->
+
+      </DnsQuery>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Named Pipes - Lateral Movement Detection
+         ====================================================================== -->
+
+    <RuleGroup name="ServerPipes" groupRelation="or">
+
+      <PipeEvent onmatch="include">
+
+        <!-- PSExec and alternatives -->
+        <PipeName condition="contains">PSEXESVC</PipeName>
+        <PipeName condition="contains">paexec</PipeName>
+        <PipeName condition="contains">remcom</PipeName>
+
+        <!-- Cobalt Strike -->
+        <PipeName condition="contains">msagent_</PipeName>
+        <PipeName condition="contains">MSSE-</PipeName>
+        <PipeName condition="contains">postex_</PipeName>
+
+      </PipeEvent>
+
+      <PipeEvent onmatch="exclude">
+
+        <!-- Legitimate system pipes -->
+        <PipeName condition="begin with">\\lsass</PipeName>
+        <PipeName condition="begin with">\\samr</PipeName>
+        <PipeName condition="begin with">\\winreg</PipeName>
+
+      </PipeEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         Always Log Critical Events
+         ====================================================================== -->
+
+    <RuleGroup name="AlwaysLog" groupRelation="or">
+      <SysmonStatus onmatch="include"/>
+      <DriverLoad onmatch="exclude">
+        <Signed condition="is">true</Signed>
+        <Signature condition="is">Microsoft Windows</Signature>
+      </DriverLoad>
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+      </CreateRemoteThread>
+      <RawAccessRead onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+      </RawAccessRead>
+      <ProcessTampering onmatch="include"/>
+      <WmiEvent onmatch="include"/>
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>

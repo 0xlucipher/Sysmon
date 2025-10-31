@@ -1,0 +1,180 @@
+<Sysmon schemaversion="4.90">
+<!--
+  ==============================================================================
+  TECHNIQUE MODULE: T1047 - Windows Management Instrumentation
+  ==============================================================================
+
+  MITRE ATT&CK: T1047
+  Tactic: Execution
+  Priority: HIGH
+  Expected FP Rate: Low-Medium
+  Estimated Events: 50-200/day
+
+  DESCRIPTION:
+  Detects WMI abuse for:
+  - Remote command execution
+  - Persistence via WMI event subscriptions
+  - Lateral movement
+  - Process execution
+
+  DETECTION STRATEGY:
+  1. Monitor WMI process creation (wmic.exe, scrcons.exe)
+  2. Detect WMI event subscriptions (Event IDs 19-21)
+  3. Track WMI remote execution patterns
+  4. Monitor PowerShell WMI cmdlets
+
+  REFERENCES:
+  - https://attack.mitre.org/techniques/T1047/
+  - https://www.fireeye.com/content/dam/fireeye-www/global/en/current-threats/pdfs/wp-windows-management-instrumentation.pdf
+
+  ==============================================================================
+-->
+
+  <EventFiltering>
+
+    <!-- ======================================================================
+         WMI Command Execution
+         ====================================================================== -->
+
+    <RuleGroup name="T1047_WMI_Execution" groupRelation="or">
+
+      <!-- Event ID 1: WM IC.exe execution -->
+      <ProcessCreate onmatch="include">
+        <!-- WMIC.exe with process call create -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <CommandLine condition="contains">process call create</CommandLine>
+        </Rule>
+
+        <!-- WMIC with remote node -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <CommandLine condition="contains">/node:</CommandLine>
+        </Rule>
+
+        <!-- WMIC suspicious usage -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <CommandLine condition="contains">shadowcopy delete</CommandLine>
+        </Rule>
+
+        <!-- WMI scripting host -->
+        <Image condition="end with">\scrcons.exe</Image>
+
+        <!-- WMI Provider Host executing suspicious commands -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\wmiprvse.exe</ParentImage>
+          <Image condition="is not">C:\Windows\System32\wbem\mofcomp.exe</Image>
+          <Image condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        </Rule>
+      </ProcessCreate>
+
+      <!-- Event ID 1: PowerShell WMI cmdlets -->
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Get-WmiObject</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-WmiMethod</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Set-WmiInstance</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Register-WmiEvent</CommandLine>
+        </Rule>
+
+        <!-- CIM cmdlets (modern WMI) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-CimMethod</CommandLine>
+        </Rule>
+
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-CimInstance</CommandLine>
+        </Rule>
+      </ProcessCreate>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         WMI Event Subscriptions (Persistence)
+         ====================================================================== -->
+
+    <RuleGroup name="T1047_WMI_Persistence" groupRelation="or">
+
+      <!-- Event ID 19: WMI Event Filter -->
+      <WmiEvent onmatch="include">
+        <!-- All WMI event filter activity -->
+        <EventType condition="is">WmiFilterEvent</EventType>
+      </WmiEvent>
+
+      <!-- Event ID 20: WMI Event Consumer -->
+      <WmiEvent onmatch="include">
+        <!-- All WMI consumer activity -->
+        <EventType condition="is">WmiConsumerEvent</EventType>
+      </WmiEvent>
+
+      <!-- Event ID 21: WMI Event Consumer To Filter Binding -->
+      <WmiEvent onmatch="include">
+        <!-- All WMI consumer-to-filter bindings -->
+        <EventType condition="is">WmiBindingEvent</EventType>
+      </WmiEvent>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         WMI Network Activity
+         ====================================================================== -->
+
+    <RuleGroup name="T1047_WMI_Network" groupRelation="or">
+
+      <!-- Event ID 3: WMIC remote connections -->
+      <NetworkConnect onmatch="include">
+        <!-- WMIC network connections (typically port 135 RPC) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+
+        <!-- WMI Provider Host remote connections -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmiprvse.exe</Image>
+          <DestinationPort condition="is">135</DestinationPort>
+        </Rule>
+      </NetworkConnect>
+
+    </RuleGroup>
+
+
+    <!-- ======================================================================
+         WMI Repository Changes
+         ====================================================================== -->
+
+    <RuleGroup name="T1047_WMI_Repository" groupRelation="or">
+
+      <!-- Event ID 1: MOF compiler (WMI repository changes) -->
+      <ProcessCreate onmatch="include">
+        <Image condition="end with">\mofcomp.exe</Image>
+      </ProcessCreate>
+
+      <!-- Event ID 11: MOF file creation -->
+      <FileCreate onmatch="include">
+        <TargetFilename condition="end with">.mof</TargetFilename>
+      </FileCreate>
+
+    </RuleGroup>
+
+  </EventFiltering>
+
+</Sysmon>
