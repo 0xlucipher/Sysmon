@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Deletion of backup files and shadow copy storage
+    techniques: T1490
+    sigma: 06125661-3814-4e03-bfa2-1e4411c60ac3
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_delete_detected/t1490_backups" groupRelation="or">
+      <FileDeleteDetected onmatch="include">
+        <TargetFilename condition="end with">.bak</TargetFilename>
+        <TargetFilename condition="end with">.backup</TargetFilename>
+        <TargetFilename condition="end with">.vbk</TargetFilename>
+        <TargetFilename condition="end with">.vib</TargetFilename>
+        <TargetFilename condition="contains">\System Volume Information\</TargetFilename>
+      </FileDeleteDetected>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

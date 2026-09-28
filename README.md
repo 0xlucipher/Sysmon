@@ -110,7 +110,8 @@ modules/<event>/<name>.xml   one Sysmon event filter per file, with metadata
 profiles/<name>.toml         which modules a profile uses, and a mode per event
 tools/sysmongen.py           builds dist/ from modules + profiles
 tools/sysmonlint.py          static validator (event types, fields, conditions, risky exclusions)
-dist/                        generated configs + catalog.json. Do not edit by hand.
+dist/                        generated configs, catalog.json, coverage.md. Do not edit by hand.
+data/                        pinned ATT&CK + SigmaHQ indexes the build validates against
 testing/                     loads every config into real Sysmon in CI
 deployment/                  install / update / remove scripts
 documentation/               design, audit, detection notes
@@ -209,47 +210,31 @@ If experiencing performance issues:
 
 ## MITRE ATT&CK Coverage
 
-This configuration provides detection coverage for **200+ techniques** across all ATT&CK tactics:
+The coverage matrix is generated from module metadata on every build:
+**[dist/coverage.md](dist/coverage.md)** (also in `dist/catalog.json`). For each ATT&CK
+technique it shows:
 
-### Coverage by Tactic
+- which Sysmon events carry its telemetry;
+- how each profile collects those events (logged in full, or through include rules);
+- which [SigmaHQ](https://github.com/SigmaHQ/sigma) detections read that telemetry;
+- whether a replayed attack has proven it (phase 4).
 
-| Tactic | Techniques Covered | Coverage % | Priority Techniques |
-|--------|-------------------|------------|---------------------|
-| **Reconnaissance** | 8/10 | 80% | T1592, T1595, T1596 |
-| **Resource Development** | 5/7 | 71% | T1583, T1584, T1587 |
-| **Initial Access** | 9/9 | 100% | T1566, T1190, T1133 |
-| **Execution** | 12/14 | 86% | T1059, T1047, T1053 |
-| **Persistence** | 18/19 | 95% | T1547, T1053, T1543 |
-| **Privilege Escalation** | 13/14 | 93% | T1055, T1068, T1134 |
-| **Defense Evasion** | 38/42 | 90% | T1055, T1562, T1070 |
-| **Credential Access** | 15/15 | 100% | T1003, T1558, T1110 |
-| **Discovery** | 24/30 | 80% | T1083, T1057, T1082 |
-| **Lateral Movement** | 9/9 | 100% | T1021, T1047, T1550 |
-| **Collection** | 15/17 | 88% | T1005, T1039, T1113 |
-| **Command & Control** | 16/16 | 100% | T1071, T1573, T1090 |
-| **Exfiltration** | 8/9 | 89% | T1041, T1048, T1567 |
-| **Impact** | 10/13 | 77% | T1486, T1490, T1561 |
+Techniques use **ATT&CK v19** IDs. v19 split Defense Evasion into *Stealth* and
+*Defense Impairment*, so for example `T1562.001` is now `T1685` and `T1070.001` is
+now `T1685.005`. The build rejects revoked IDs and names the replacement. ATT&CK
+and Sigma are pinned in `data/versions.json`, and CI checks `data/` against those
+exact releases.
 
-**Total: 200/224 techniques = 89.3% coverage**
+Phase 3 focuses on about 20 of the most prevalent Windows endpoint techniques in
+Red Canary's Threat Detection Report: PowerShell, cmd, ClickFix (paste-and-run),
+WMI, Rundll32/Regsvr32/Mshta, obfuscation, masquerading, disabling security
+tools, log clearing, LSASS and NTDS credential theft, scheduled tasks, Run keys,
+services, process injection, ingress tool transfer, SMB/WinRM lateral movement
+and inhibiting recovery.
 
-### Viewing MITRE Mapping
-
-```powershell
-# Generate coverage report
-.\tools\Update-MitreMapping.ps1 -GenerateReport -OutputFormat HTML
-
-# View techniques by priority
-Get-Content .\documentation\mitre-mapping-matrix.csv | ConvertFrom-Csv | Where-Object {$_.Priority -eq "Critical"}
-```
-
-### Coverage Gaps
-
-Techniques **not** detectable via Sysmon (require network/cloud logging):
-- **T1071.001**: C2 over HTTPS (requires TLS inspection)
-- **T1567**: Cloud exfiltration (requires cloud logs)
-- **T1199**: Supply chain compromise (requires vendor monitoring)
-
-See [documentation/mitre-mapping-matrix.csv](documentation/mitre-mapping-matrix.csv) for complete mapping.
+Sysmon cannot see everything. Cloud and identity techniques (Red Canary's #1 is
+Cloud Accounts), encrypted C2 content and anything that happens off the endpoint
+need other log sources.
 
 ---
 

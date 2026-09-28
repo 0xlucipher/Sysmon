@@ -150,3 +150,59 @@ def test_output_is_deterministic(repo):
 
 def test_repository_dist_is_up_to_date():
     assert sysmongen.main(["build", "--check"]) == 0
+
+
+# ---------------------------------------------------------------- reference data
+
+def ref(**over):
+    base = dict(attack_version="v0", sigma_release="r0",
+                techniques={"T1218.005": {"name": "Mshta", "tactics": ["stealth"]},
+                            "T1562.001": {"name": "Old", "tactics": [], "revoked_by": "T1685"},
+                            "T1685": {"name": "Disable or Modify Tools", "tactics": []}},
+                sigma={"11111111-1111-1111-1111-111111111111":
+                       {"title": "proc rule", "category": "process_creation", "path": "a.yml",
+                        "level": "high"},
+                       "22222222-2222-2222-2222-222222222222":
+                       {"title": "dns rule", "category": "dns_query", "path": "b.yml",
+                        "level": "high"}})
+    base.update(over)
+    return sysmongen.RefData(**base)
+
+
+def test_references_accept_valid_ids(repo):
+    write_module(repo, "process_create/ok", "ProcessCreate", "include",
+                 '<Image condition="end with">\\x.exe</Image>',
+                 meta="title: t\ntechniques: T1218.005\nsigma: 11111111-1111-1111-1111-111111111111")
+    sysmongen.validate_references(
+        {k: v for k, v in sysmongen.load_modules(repo / "modules").items() if k.endswith("ok")},
+        ref())
+
+
+@pytest.mark.parametrize("meta, message", [
+    ("techniques: T9999", "unknown ATT&CK technique T9999"),
+    ("techniques: T1562.001", "use T1685"),
+    ("sigma: 33333333-3333-3333-3333-333333333333", "not in SigmaHQ"),
+    ("sigma: 22222222-2222-2222-2222-222222222222", "reads 'dns_query'"),
+])
+def test_references_reject_bad_ids(repo, meta, message):
+    write_module(repo, "process_create/bad", "ProcessCreate", "include",
+                 '<Image condition="end with">\\x.exe</Image>', meta=f"title: t\n{meta}")
+    mods = {k: v for k, v in sysmongen.load_modules(repo / "modules").items() if k.endswith("bad")}
+    with pytest.raises(sysmongen.BuildError, match=message):
+        sysmongen.validate_references(mods, ref())
+
+
+def test_coverage_reports_all_and_rules_per_profile(repo):
+    write_module(repo, "dns_query/mshta", "DnsQuery", "include",
+                 '<Image condition="end with">\\mshta.exe</Image>',
+                 meta="title: t\ntechniques: T1218.005")
+    write_profile(repo, "p", 'modules = ["process_create/tech", "dns_query/mshta"]\n'
+                             '[events]\nProcessCreate = "all"\nDnsQuery = "selective"\n')
+    write_profile(repo, "q", 'modules = []\n[events]\nDnsQuery = "all"\n')
+    modules = sysmongen.load_modules(repo / "modules")
+    profiles = [sysmongen.load_profile(n, repo / "profiles") for n in ("p", "q")]
+    cov = sysmongen.coverage(modules, profiles)
+    entry = cov["T1218.005"]
+    assert entry["events"] == ["DnsQuery", "ProcessCreate"]
+    assert entry["profiles"] == {"p": ["all", "rules"], "q": ["all"]}
+    assert "T1003.001" in cov and cov["T1003.001"]["profiles"]["p"] == []

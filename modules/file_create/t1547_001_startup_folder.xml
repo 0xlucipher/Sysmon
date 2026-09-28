@@ -1,0 +1,16 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Files written to Startup folders
+    techniques: T1547.001
+    sigma: 28208707-fe31-437f-9a7f-4b1108b94d2e, 92fa78e7-4d39-45f1-91a3-8b23f3f1088d, 2aa0a6b4-a865-495b-ab51-c28249537b75
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_create/t1547_001_startup_folder" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\Microsoft\Windows\Start Menu\Programs\Startup\</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Paste-and-run (ClickFix): shells launched from the Run dialog
+    techniques: T1204.004
+    sigma: d487ed4a-fd24-436d-a0b2-f4e95f7b2635, 3ae9974a-eb09-4044-8e70-8980a50c12c8
+    volume: unmeasured
+    source: original
+    notes: ClickFix lures users into pasting a command into Win+R; the command often ends with a "#" comment disguised as a CAPTCHA message.
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1204_004_clickfix" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\explorer.exe</ParentImage>
+          <Image condition="contains any">\powershell.exe;\pwsh.exe;\mshta.exe;\cmd.exe;\curl.exe</Image>
+          <CommandLine condition="contains any">http;-enc;iex;verif;captcha;#</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

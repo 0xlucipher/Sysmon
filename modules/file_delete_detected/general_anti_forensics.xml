@@ -1,0 +1,16 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Deletion of forensic artefacts (Prefetch, Recycle Bin)
+    techniques: T1070.004
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_delete_detected/general_anti_forensics" groupRelation="or">
+      <FileDeleteDetected onmatch="include">
+        <TargetFilename condition="contains">\Windows\Prefetch\</TargetFilename>
+        <TargetFilename condition="contains">\$Recycle.Bin\</TargetFilename>
+      </FileDeleteDetected>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: DLLs used to dump credentials (comsvcs MiniDump, SAM and vault access)
+    techniques: T1003.001, T1003.002, T1555.004
+    sigma: 8cde342c-ba48-4b74-b615-172c330f2e93, bdc64095-d59a-42a2-8588-71fd9c9d9abc
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="image_load/t1003_001_lsass_dump_dlls" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <ImageLoaded condition="end with">\comsvcs.dll</ImageLoaded>
+        <ImageLoaded condition="end with">\samlib.dll</ImageLoaded>
+        <ImageLoaded condition="end with">\vaultcli.dll</ImageLoaded>
+        <ImageLoaded condition="end with">\wdigest.dll</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

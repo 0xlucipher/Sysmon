@@ -2,6 +2,7 @@
   <!--
   title: T1021 remote services: ProcessCreate include
   techniques: T1021.001, T1021.002, T1021.003, T1021.004, T1021.006
+  sigma: 5cc2cda8-f261-4d88-a2de-e9e193c86716, 734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8, 3abd6094-7027-475f-9630-8ab9be7b9725
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1021_remote_services.xml
   status: migrated in phase 2; review in phase 3

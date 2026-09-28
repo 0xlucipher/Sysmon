@@ -1,0 +1,24 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: PowerShell engine loaded by a process that is not PowerShell (unmanaged PowerShell)
+    techniques: T1059.001
+    sigma: 092bc4b9-3d1d-43b4-a6b4-8c8acd83522f, bb2ba6fb-95d4-4a25-89fc-30bb736c021a
+    volume: unmeasured
+    source: original
+    notes: Catches PowerShell run in-process by tools such as PowerPick and C2 implants.
+  -->
+  <EventFiltering>
+    <RuleGroup name="image_load/t1059_001_powershell_unmanaged" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <Rule groupRelation="and">
+          <ImageLoaded condition="end with">\System.Management.Automation.dll</ImageLoaded>
+          <Image condition="excludes all">\powershell.exe;\pwsh.exe;\powershell_ise.exe;\WindowsPowerShell\;\PowerShell\7\</Image>
+        </Rule>
+        <Rule groupRelation="and">
+          <ImageLoaded condition="end with">\System.Management.Automation.ni.dll</ImageLoaded>
+          <Image condition="excludes all">\powershell.exe;\pwsh.exe;\powershell_ise.exe;\WindowsPowerShell\;\PowerShell\7\</Image>
+        </Rule>
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

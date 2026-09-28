@@ -1,7 +1,8 @@
 <Sysmon schemaversion="4.90">
   <!--
   title: T1055 process injection: CreateRemoteThread include
-  techniques: T1055.003, T1055.004
+  techniques: T1055, T1055.003, T1055.004
+  sigma: f239b326-2f41-4d6b-9dfa-c846a60ef505, 6309645e-122d-4c5b-bb2b-22e4f9c2fa42, 02d1d718-dd13-41af-989d-ea85c7fab93f
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1055_process_injection.xml
   status: migrated in phase 2; review in phase 3

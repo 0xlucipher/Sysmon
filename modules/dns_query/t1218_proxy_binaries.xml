@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: DNS lookups by signed-binary proxies that rarely need the network
+    techniques: T1218.010, T1218.005, T1218.011
+    sigma: 36e037c4-c228-4866-b6a3-48eb292b9955
+    volume: unmeasured
+    source: original
+    notes: DnsQuery is selective in balanced, so these rules are what records the lookups.
+  -->
+  <EventFiltering>
+    <RuleGroup name="dns_query/t1218_proxy_binaries" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\mshta.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+      </DnsQuery>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

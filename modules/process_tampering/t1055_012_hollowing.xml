@@ -1,0 +1,17 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Process image replaced in memory (hollowing, herpaderping)
+    techniques: T1055.012
+    sigma: c4b890e5-8d8c-4496-8c66-c805753817cd
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_tampering/t1055_012_hollowing" groupRelation="or">
+      <ProcessTampering onmatch="include">
+        <Type condition="is">Image is replaced</Type>
+        <Type condition="is">Image is locked for access</Type>
+      </ProcessTampering>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

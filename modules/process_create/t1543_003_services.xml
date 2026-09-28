@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Service creation or binary-path changes with sc.exe / New-Service
+    techniques: T1543.003
+    sigma: 17a1be64-8d88-40bf-b5ff-a4f7a50ebcc8, 138d3531-8793-4f50-a2cd-f291b2863d78
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1543_003_services" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains any"> create ; config </CommandLine>
+          <CommandLine condition="contains">binpath</CommandLine>
+        </Rule>
+        <CommandLine condition="contains">New-Service</CommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

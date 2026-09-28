@@ -1,0 +1,24 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: NTDS.dit extraction via ntdsutil, shadow copies or copy tools
+    techniques: T1003.003
+    sigma: 8bc64091-6875-4881-aaf9-7bd25b5dda08, a58353df-af43-4753-bad0-cd83ef35eef5, e7be6119-fc37-43f0-ad4f-1f3f99be2f9f
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1003_003_ntds" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\ntdsutil.exe</Image>
+          <CommandLine condition="contains any">ifm;snapshot</CommandLine>
+        </Rule>
+        <CommandLine condition="contains">\ntds.dit</CommandLine>
+        <Rule groupRelation="and">
+          <Image condition="end with">\vssadmin.exe</Image>
+          <CommandLine condition="contains">create shadow</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

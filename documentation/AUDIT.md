@@ -2,7 +2,7 @@
 
 This audit compares the repository to [DESIGN.md](DESIGN.md), as of the start
 of phase 1. **Verdicts:** keep · fix · rebuild · delete.
-✅ = fixed in phase 1. ✅² = fixed in phase 2.
+✅ = fixed in phase 1. ✅² = fixed in phase 2. ✅³ = fixed in phase 3.
 
 ## Summary
 
@@ -73,7 +73,7 @@ Phase 2 replaced them with modules, profiles and a generator.
 |---|---|---|
 | `VALIDATION-REPORT.md`, `FIXES.md` | Claim validation that never covered loading into Sysmon. | delete (phase 4) |
 | `README.md` | Very long. "Ultimate" / "production-ready" claims. Advertises compliance modules that don't exist. | rewrite (phase 4) |
-| `documentation/mitre-mapping-matrix.csv` | Hand-written. 67 of 119 technique rows have no module behind them. | delete → generated from module metadata (phase 3) |
+| `documentation/mitre-mapping-matrix.csv` | Hand-written. 67 of 119 technique rows have no module behind them. | ✅³ deleted → generated `dist/coverage.md` |
 | `documentation/detection-logic-explained.md` | Good explanatory content. | keep, link from modules |
 | Placeholder URLs | `yourusername/sysmon-ultimate` in installer and CHANGELOG. | fix (phase 4 with rename) |
 | `LICENSE` | MIT, copyright "Sysmon Ultimate … Contributors". | fix copyright holder |
@@ -101,6 +101,16 @@ FileDeleteDetected (no archive), per DESIGN #13. Include rules for events that
 already log everything (ProcessCreate, NetworkConnect, CreateRemoteThread,
 RawAccessRead, WmiEvent) are skipped, so those events carry no technique tags yet.
 That is a phase 3 topic.
+
+## Phase 3 findings
+
+| Area | Finding | Fix |
+|---|---|---|
+| ATT&CK IDs | ATT&CK v19 (April 2026) revoked `T1562.001` (→ `T1685`), `T1562.004` (→ `T1686`) and `T1070.001` (→ `T1685.005`); modules used the old IDs. | ✅³ modules retagged; build rejects revoked IDs |
+| Named-pipe rules | `begin with \\PSEXESVC`, `\\PSHost`, `\\WMIC` used a double backslash. Sysmon logs `\PSEXESVC`, so these never matched. | ✅³ single backslash |
+| `baseline_include` modules | One module per event mixing unrelated techniques; no Sigma links. | ✅³ split into 41 technique and `general_*` modules; rule-by-rule diff shows no include rule lost |
+| `extended_*` modules | Unreviewed, unused. | ✅³ deleted |
+| README coverage claims | "200/224 techniques = 89.3%", plus a non-existent `Update-MitreMapping.ps1`. | ✅³ replaced by the generated matrix |
 
 ## Coverage gap (vs. design Q8)
 

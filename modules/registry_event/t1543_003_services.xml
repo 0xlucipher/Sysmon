@@ -1,0 +1,16 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Service creation and modification in the registry
+    techniques: T1543.003
+    sigma: a07f0359-4c90-4dc4-a681-8ffea40b4f47, 612e47e9-8a59-43a6-b404-f48683f45bd6, 4a5f5a5e-ac01-474b-9b4e-d61298c9df1d
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/t1543_003_services" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

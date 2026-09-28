@@ -57,7 +57,8 @@ tools/sysmongen.py           generator: modules + profile -> dist/
 tools/sysmonlint.py          static validator
 tests/                       unit tests for tools
 testing/                     Windows load test and rejection probes
-dist/                        generated configs + catalog.json (committed; CI checks it is current)
+dist/                        generated configs, catalog.json, coverage.md (committed; CI checks it is current)
+data/                        pinned ATT&CK and SigmaHQ indexes the build validates against
 deployment/                  on-host PowerShell (install/update)
 atomics/<technique>.yml      (phase 4) which Atomic tests prove which module
 ```
@@ -73,6 +74,20 @@ The generator refuses combinations that would silently change meaning. For
 example, include rules added to an `all` event would turn "log everything" into
 "log only matches"; the generator skips them and reports it. See
 [modules/README.md](../modules/README.md).
+
+### ATT&CK and Sigma references
+
+Module metadata names ATT&CK techniques and SigmaHQ rules. Both are validated
+at build time against pinned indexes in `data/` (ATT&CK v19.2, SigmaHQ
+r2026-07-01), which CI rebuilds from those tags. ATT&CK v19 (April 2026) split
+Defense Evasion into Stealth and Defense
+Impairment (TA0112), revoking and renumbering several techniques. The build
+rejects revoked IDs and names the replacement.
+
+Coverage (`dist/coverage.md`) is derived, never hand-written. In `balanced`,
+ProcessCreate and NetworkConnect are logged in full, so technique modules for
+them contribute Sigma links and ready-made rules for selective profiles rather
+than filters (DESIGN #27).
 
 ### Schemas
 

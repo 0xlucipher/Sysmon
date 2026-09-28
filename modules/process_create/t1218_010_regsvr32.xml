@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Regsvr32 scriptlet execution (Squiblydoo) and loads from user-writable paths
+    techniques: T1218.010
+    sigma: 327ff235-94eb-4f06-b9de-aaee571324be, 2dd2c217-bf68-437a-b57c-fe9fd01d5de8, 6f0947a4-1c5e-4e0d-8ac7-53159b8f23ca
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1218_010_regsvr32" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">REGSVR32.EXE</OriginalFileName>
+          <CommandLine condition="contains any">/i:;-i:;scrobj;http:;https:;\AppData\;\Users\Public\;\Temp\</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

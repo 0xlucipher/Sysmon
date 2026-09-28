@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Mshta running remote or inline script
+    techniques: T1218.005
+    sigma: b98d0db6-511d-45de-ad02-e82a98729620, 67f113fa-e23d-4271-befa-30113b3e08b1, 03cc0c25-389f-4bf8-b48d-11878079f1ca
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1218_005_mshta" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">MSHTA.EXE</OriginalFileName>
+          <CommandLine condition="contains any">http:;https:;javascript:;vbscript:</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

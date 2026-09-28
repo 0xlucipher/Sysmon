@@ -1,0 +1,27 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Downloads with built-in tools (certutil, bitsadmin, curl)
+    techniques: T1105
+    sigma: 13e6fe51-d478-4c7e-b0f2-6da9b400a829, 2ddef153-167b-4e89-86b6-757a9e65dcac, 21dd6d38-2b18-4453-9404-a0fe4a0cc288
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1105_ingress_tool_transfer" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">CertUtil.exe</OriginalFileName>
+          <CommandLine condition="contains any">urlcache;verifyctl</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\bitsadmin.exe</Image>
+          <CommandLine condition="contains any">/transfer;/addfile</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\curl.exe</Image>
+          <CommandLine condition="contains any"> -o ; --output ; -O </CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

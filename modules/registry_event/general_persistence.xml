@@ -1,0 +1,25 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Other registry persistence locations (Winlogon, IFEO, AppInit, Active Setup, COM, Office, browser extensions, GPO scripts)
+    techniques: T1547.004, T1546.012, T1546.010, T1547.014, T1546.015, T1137, T1176.001, T1484.001
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+    notes: Broad: CLSID and Office keys are noisy. Candidates for narrowing once volume is measured (phase 4).
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/general_persistence" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows NT\CurrentVersion\Winlogon</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Active Setup\Installed Components</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
+        <TargetObject condition="contains">\Software\Classes\CLSID\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains">\Software\Google\Chrome\Extensions</TargetObject>
+        <TargetObject condition="contains">\Software\Mozilla\Firefox\Extensions</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (phase 3)
+- ATT&CK v19.2 and SigmaHQ r2026-07-01 reference indexes in `data/`, rebuilt and
+  checked in CI (`tools/refdata.py`). The build rejects unknown or revoked
+  technique IDs and Sigma rules whose log source the module's event can't produce.
+- Technique modules for the 20 priority techniques (PowerShell, cmd, ClickFix,
+  WMI, Rundll32/Regsvr32/Mshta, obfuscation, masquerading, T1685 disable tools,
+  T1685.005 log clearing, LSASS, NTDS, scheduled tasks, Run keys, services,
+  injection, ingress tool transfer, SMB/WinRM, inhibit recovery), each linked to
+  SigmaHQ detections.
+- Generated ATT&CK coverage matrix: `dist/coverage.md` and `catalog.json`.
+
+### Changed (phase 3)
+- `baseline_include` modules split into technique and `general_*` modules.
+- Retagged to ATT&CK v19 IDs (T1562.001 → T1685, T1562.004 → T1686, T1070.001 → T1685.005).
+
+### Removed (phase 3)
+- `extended_*` modules and the hand-written `documentation/mitre-mapping-matrix.csv`.
+
+### Fixed (phase 3)
+- Named-pipe rules with a doubled backslash that never matched.
+
 ### Changed
 - Configurations are generated from single-filter modules (`modules/`) and
   profiles (`profiles/*.toml`) by `tools/sysmongen.py` into `dist/`. The five

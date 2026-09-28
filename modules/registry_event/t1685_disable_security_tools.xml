@@ -1,0 +1,18 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Changes to Microsoft Defender settings and policy
+    techniques: T1685
+    sigma: 0eb46774-f1ab-4a74-8238-1155855f2263, a982fc9c-6333-4ffb-a51d-addb04e8b529, 93d298a1-d28f-47f1-a468-d971e7796679, e1aa95de-610a-427d-b9e7-9b46cfafbe6a
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/t1685_disable_security_tools" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows Defender\</TargetObject>
+        <TargetObject condition="contains">\SOFTWARE\Policies\Microsoft\Windows Defender\</TargetObject>
+        <TargetObject condition="contains">\SYSTEM\CurrentControlSet\Services\WinDefend\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

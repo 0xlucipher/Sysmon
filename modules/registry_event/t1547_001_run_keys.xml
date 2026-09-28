@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Run / RunOnce keys and startup-approved entries
+    techniques: T1547.001
+    sigma: 02ee49e2-e294-4d0f-9278-f5b3212fc588, b7916c2a-fa2f-4795-9477-32b731f70f11
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/t1547_001_run_keys" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\RunServices</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\RunServicesOnce</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,5 +1,9 @@
 {
   "format": 1,
+  "references": {
+    "attack": "v19.2",
+    "sigma": "r2026-07-01"
+  },
   "schemas": [
     "4.90",
     "4.91"
@@ -123,9 +127,15 @@
       "event": "CreateRemoteThread",
       "onmatch": "include",
       "rules": 15,
+      "sigma": [
+        "f239b326-2f41-4d6b-9dfa-c846a60ef505",
+        "6309645e-122d-4c5b-bb2b-22e4f9c2fa42",
+        "02d1d718-dd13-41af-989d-ea85c7fab93f"
+      ],
       "source": "migrated from configurations/modules/techniques/T1055_process_injection.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
+        "T1055",
         "T1055.003",
         "T1055.004"
       ],
@@ -141,17 +151,6 @@
       "source": "migrated from configurations/sysmon-base.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Baseline DnsQuery exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "dns_query/baseline_include",
-      "path": "modules/dns_query/baseline_include.xml",
-      "event": "DnsQuery",
-      "onmatch": "include",
-      "rules": 19,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline DnsQuery include rules",
       "volume": "unmeasured"
     },
     {
@@ -177,6 +176,26 @@
       "volume": "unmeasured"
     },
     {
+      "id": "dns_query/general_c2_infrastructure",
+      "path": "modules/dns_query/general_c2_infrastructure.xml",
+      "event": "DnsQuery",
+      "onmatch": "include",
+      "rules": 18,
+      "sigma": [
+        "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
+        "a1d9eec5-33b2-4177-8d24-27fe754d0812"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1568",
+        "T1572",
+        "T1090.003",
+        "T1496.001"
+      ],
+      "title": "Dynamic DNS, tunnelling services, Tor and mining pools",
+      "volume": "unmeasured"
+    },
+    {
       "id": "dns_query/noise_global",
       "path": "modules/dns_query/noise_global.xml",
       "event": "DnsQuery",
@@ -185,6 +204,25 @@
       "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Noise: common Windows DnsQuery activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "dns_query/t1218_proxy_binaries",
+      "path": "modules/dns_query/t1218_proxy_binaries.xml",
+      "event": "DnsQuery",
+      "onmatch": "include",
+      "rules": 3,
+      "notes": "DnsQuery is selective in balanced, so these rules are what records the lookups.",
+      "sigma": [
+        "36e037c4-c228-4866-b6a3-48eb292b9955"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1218.010",
+        "T1218.005",
+        "T1218.011"
+      ],
+      "title": "DNS lookups by signed-binary proxies that rarely need the network",
       "volume": "unmeasured"
     },
     {
@@ -221,17 +259,6 @@
       "volume": "unmeasured"
     },
     {
-      "id": "file_create/baseline_include",
-      "path": "modules/file_create/baseline_include.xml",
-      "event": "FileCreate",
-      "onmatch": "include",
-      "rules": 16,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline FileCreate include rules",
-      "volume": "unmeasured"
-    },
-    {
       "id": "file_create/dc_include",
       "path": "modules/file_create/dc_include.xml",
       "event": "FileCreate",
@@ -240,6 +267,24 @@
       "source": "migrated from examples/domain-controller-config.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Domain controller FileCreate include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/general_user_writable_payloads",
+      "path": "modules/file_create/general_user_writable_payloads.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 15,
+      "notes": "ISO/IMG containers bypass Mark-of-the-Web; .hta files are a common phishing payload.",
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1105",
+        "T1204.002",
+        "T1553.005",
+        "T1505.003",
+        "T1564"
+      ],
+      "title": "Executables, scripts and disk images written to user-writable locations; web shells",
       "volume": "unmeasured"
     },
     {
@@ -276,11 +321,50 @@
       "volume": "unmeasured"
     },
     {
+      "id": "file_create/t1003_001_dump_files",
+      "path": "modules/file_create/t1003_001_dump_files.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "6902955a-01b7-432c-b32a-6f5f81d8f625",
+        "8fbf3271-1ef6-4e94-8210-03c2317947f6",
+        "93d94efc-d7ad-4161-ad7d-1638c4f908d8"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1003.001"
+      ],
+      "title": "Memory dump files and credential-dumper artefacts",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1003_003_ntds",
+      "path": "modules/file_create/t1003_003_ntds.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "11b1ed55-154d-4e82-8ad7-83739298f720",
+        "4e7050dd-e548-483f-b7d6-527ab4fa784d",
+        "3a8da4e0-36c1-40d2-8b29-b3e890d5172a"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1003.003"
+      ],
+      "title": "Copies of ntds.dit written anywhere",
+      "volume": "unmeasured"
+    },
+    {
       "id": "file_create/t1003_credential_dumping",
       "path": "modules/file_create/t1003_credential_dumping.xml",
       "event": "FileCreate",
       "onmatch": "include",
       "rules": 5,
+      "sigma": [
+        "8fbf3271-1ef6-4e94-8210-03c2317947f6"
+      ],
       "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -297,10 +381,14 @@
       "event": "FileCreate",
       "onmatch": "include",
       "rules": 3,
+      "sigma": [
+        "304afd73-55a5-4bb9-8c21-0b1fc84ea9e4",
+        "4aafb0fa-bff5-4b9d-b99e-8093e659c65f"
+      ],
       "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
-        "T1021"
+        "T1021.002"
       ],
       "title": "T1021 remote services: FileCreate include",
       "volume": "unmeasured"
@@ -311,6 +399,9 @@
       "event": "FileCreate",
       "onmatch": "include",
       "rules": 1,
+      "sigma": [
+        "8d5aca11-22b3-4f22-b7ba-90e60533e1fb"
+      ],
       "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -325,10 +416,13 @@
       "event": "FileCreate",
       "onmatch": "include",
       "rules": 2,
+      "sigma": [
+        "80e1f67a-4596-4351-98f5-a9c3efabac95"
+      ],
       "source": "migrated from configurations/modules/techniques/T1053_scheduled_task.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
-        "T1053"
+        "T1053.005"
       ],
       "title": "T1053 scheduled tasks: FileCreate include",
       "volume": "unmeasured"
@@ -345,6 +439,24 @@
         "T1059"
       ],
       "title": "T1059 command and scripting interpreters: FileCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1547_001_startup_folder",
+      "path": "modules/file_create/t1547_001_startup_folder.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "28208707-fe31-437f-9a7f-4b1108b94d2e",
+        "92fa78e7-4d39-45f1-91a3-8b23f3f1088d",
+        "2aa0a6b4-a865-495b-ab51-c28249537b75"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1547.001"
+      ],
+      "title": "Files written to Startup folders",
       "volume": "unmeasured"
     },
     {
@@ -428,17 +540,6 @@
       "volume": "unmeasured"
     },
     {
-      "id": "file_delete_detected/baseline_include",
-      "path": "modules/file_delete_detected/baseline_include.xml",
-      "event": "FileDeleteDetected",
-      "onmatch": "include",
-      "rules": 11,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline FileDeleteDetected include rules",
-      "volume": "unmeasured"
-    },
-    {
       "id": "file_delete_detected/dc_include",
       "path": "modules/file_delete_detected/dc_include.xml",
       "event": "FileDeleteDetected",
@@ -450,14 +551,63 @@
       "volume": "unmeasured"
     },
     {
-      "id": "file_executable_detected/baseline_include",
-      "path": "modules/file_executable_detected/baseline_include.xml",
+      "id": "file_delete_detected/general_anti_forensics",
+      "path": "modules/file_delete_detected/general_anti_forensics.xml",
+      "event": "FileDeleteDetected",
+      "onmatch": "include",
+      "rules": 2,
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1070.004"
+      ],
+      "title": "Deletion of forensic artefacts (Prefetch, Recycle Bin)",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_delete_detected/t1490_backups",
+      "path": "modules/file_delete_detected/t1490_backups.xml",
+      "event": "FileDeleteDetected",
+      "onmatch": "include",
+      "rules": 5,
+      "sigma": [
+        "06125661-3814-4e03-bfa2-1e4411c60ac3"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1490"
+      ],
+      "title": "Deletion of backup files and shadow copy storage",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_delete_detected/t1685_005_log_files",
+      "path": "modules/file_delete_detected/t1685_005_log_files.xml",
+      "event": "FileDeleteDetected",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "63c779ba-f638-40a0-a593-ddd45e8b1ddc"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1685.005",
+        "T1070.004"
+      ],
+      "title": "Deletion of event log files",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_executable_detected/t1105_dropped_executables",
+      "path": "modules/file_executable_detected/t1105_dropped_executables.xml",
       "event": "FileExecutableDetected",
       "onmatch": "include",
       "rules": 3,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline FileExecutableDetected include rules",
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1105",
+        "T1204.002"
+      ],
+      "title": "Executables written to Temp and Downloads",
       "volume": "unmeasured"
     },
     {
@@ -472,14 +622,18 @@
       "volume": "unmeasured"
     },
     {
-      "id": "image_load/baseline_include",
-      "path": "modules/image_load/baseline_include.xml",
+      "id": "image_load/general_user_writable_dlls",
+      "path": "modules/image_load/general_user_writable_dlls.xml",
       "event": "ImageLoad",
       "onmatch": "include",
-      "rules": 10,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline ImageLoad include rules",
+      "rules": 6,
+      "notes": "Broad on user profiles; volume to be measured in phase 4.",
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1574.001",
+        "T1547.005"
+      ],
+      "title": "DLLs loaded from user-writable paths, and unsigned DLLs in LSASS/CSRSS",
       "volume": "unmeasured"
     },
     {
@@ -494,17 +648,57 @@
       "volume": "unmeasured"
     },
     {
+      "id": "image_load/t1003_001_lsass_dump_dlls",
+      "path": "modules/image_load/t1003_001_lsass_dump_dlls.xml",
+      "event": "ImageLoad",
+      "onmatch": "include",
+      "rules": 4,
+      "sigma": [
+        "8cde342c-ba48-4b74-b615-172c330f2e93",
+        "bdc64095-d59a-42a2-8588-71fd9c9d9abc"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1003.001",
+        "T1003.002",
+        "T1555.004"
+      ],
+      "title": "DLLs used to dump credentials (comsvcs MiniDump, SAM and vault access)",
+      "volume": "unmeasured"
+    },
+    {
       "id": "image_load/t1055_process_injection",
       "path": "modules/image_load/t1055_process_injection.xml",
       "event": "ImageLoad",
       "onmatch": "include",
       "rules": 11,
+      "sigma": [
+        "4508a70e-97ef-4300-b62b-ff27992990ea"
+      ],
       "source": "migrated from configurations/modules/techniques/T1055_process_injection.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
         "T1055"
       ],
       "title": "T1055 process injection: ImageLoad include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "image_load/t1059_001_powershell_unmanaged",
+      "path": "modules/image_load/t1059_001_powershell_unmanaged.xml",
+      "event": "ImageLoad",
+      "onmatch": "include",
+      "rules": 2,
+      "notes": "Catches PowerShell run in-process by tools such as PowerPick and C2 implants.",
+      "sigma": [
+        "092bc4b9-3d1d-43b4-a6b4-8c8acd83522f",
+        "bb2ba6fb-95d4-4a25-89fc-30bb736c021a"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1059.001"
+      ],
+      "title": "PowerShell engine loaded by a process that is not PowerShell (unmanaged PowerShell)",
       "volume": "unmeasured"
     },
     {
@@ -538,28 +732,6 @@
       "source": "migrated from examples/domain-controller-config.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Domain controller NetworkConnect include rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "network_connect/extended_exclude",
-      "path": "modules/network_connect/extended_exclude.xml",
-      "event": "NetworkConnect",
-      "onmatch": "exclude",
-      "rules": 12,
-      "source": "migrated from configurations/modules/categories/03_network_connections.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended NetworkConnect exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "network_connect/extended_include",
-      "path": "modules/network_connect/extended_include.xml",
-      "event": "NetworkConnect",
-      "onmatch": "include",
-      "rules": 42,
-      "source": "migrated from configurations/modules/categories/03_network_connections.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended NetworkConnect include rules",
       "volume": "unmeasured"
     },
     {
@@ -601,6 +773,9 @@
       "event": "NetworkConnect",
       "onmatch": "include",
       "rules": 6,
+      "sigma": [
+        "c539afac-c12a-46ed-b1bd-5a5567c9f045"
+      ],
       "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -633,6 +808,9 @@
       "event": "NetworkConnect",
       "onmatch": "include",
       "rules": 3,
+      "sigma": [
+        "992a6cae-db6a-43c8-9cec-76d7195c96fc"
+      ],
       "source": "migrated from configurations/modules/techniques/T1059_command_scripting.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -650,17 +828,6 @@
       "source": "migrated from configurations/sysmon-base.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Baseline PipeEvent exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "pipe_event/baseline_include",
-      "path": "modules/pipe_event/baseline_include.xml",
-      "event": "PipeEvent",
-      "onmatch": "include",
-      "rules": 14,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline PipeEvent include rules",
       "volume": "unmeasured"
     },
     {
@@ -697,17 +864,60 @@
       "volume": "unmeasured"
     },
     {
+      "id": "pipe_event/t1021_002_remote_exec",
+      "path": "modules/pipe_event/t1021_002_remote_exec.xml",
+      "event": "PipeEvent",
+      "onmatch": "include",
+      "rules": 4,
+      "notes": "Pipe names are logged with a single leading backslash.",
+      "sigma": [
+        "f6451de4-df0a-41fa-8d72-b39f54a08db5",
+        "d36f87ea-c403-44d2-aa79-1a0ac7c24456",
+        "f318b911-ea88-43f4-9281-0de23ede628e"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1021.002",
+        "T1569.002",
+        "T1021.006",
+        "T1047"
+      ],
+      "title": "PsExec-style remote execution pipes, PowerShell remoting and WMI pipes",
+      "volume": "unmeasured"
+    },
+    {
       "id": "pipe_event/t1021_remote_services",
       "path": "modules/pipe_event/t1021_remote_services.xml",
       "event": "PipeEvent",
       "onmatch": "include",
       "rules": 5,
+      "sigma": [
+        "41504465-5e3a-4a5b-a5b4-2a0baadd4463"
+      ],
       "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
         "T1021.002"
       ],
       "title": "T1021 remote services: PipeEvent include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/t1055_c2_frameworks",
+      "path": "modules/pipe_event/t1055_c2_frameworks.xml",
+      "event": "PipeEvent",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "d5601f8c-b26f-4ab0-9035-69e11a8d4ad2",
+        "85adeb13-4fc9-4e68-8a4a-c7cb2c336eb7",
+        "fe3ac066-98bb-432a-b1e7-a5229cb39d4a"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1055"
+      ],
+      "title": "Default named pipes of Cobalt Strike, Meterpreter and similar implants",
       "volume": "unmeasured"
     },
     {
@@ -719,17 +929,6 @@
       "source": "migrated from configurations/sysmon-base.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Baseline ProcessAccess exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "process_access/baseline_include",
-      "path": "modules/process_access/baseline_include.xml",
-      "event": "ProcessAccess",
-      "onmatch": "include",
-      "rules": 10,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Baseline ProcessAccess include rules",
       "volume": "unmeasured"
     },
     {
@@ -755,28 +954,6 @@
       "volume": "unmeasured"
     },
     {
-      "id": "process_access/extended_exclude",
-      "path": "modules/process_access/extended_exclude.xml",
-      "event": "ProcessAccess",
-      "onmatch": "exclude",
-      "rules": 14,
-      "source": "migrated from configurations/modules/categories/10_process_access.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended ProcessAccess exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "process_access/extended_include",
-      "path": "modules/process_access/extended_include.xml",
-      "event": "ProcessAccess",
-      "onmatch": "include",
-      "rules": 32,
-      "source": "migrated from configurations/modules/categories/10_process_access.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended ProcessAccess include rules",
-      "volume": "unmeasured"
-    },
-    {
       "id": "process_access/noise_global",
       "path": "modules/process_access/noise_global.xml",
       "event": "ProcessAccess",
@@ -788,11 +965,36 @@
       "volume": "unmeasured"
     },
     {
+      "id": "process_access/t1003_001_lsass_any",
+      "path": "modules/process_access/t1003_001_lsass_any.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 4,
+      "sigma": [
+        "5ef9853e-4d0e-4a70-846f-a9ca37d876da",
+        "9bd012ee-0dff-44d7-84a0-aa698cfd87a3",
+        "a49fa4d5-11db-418c-8473-1e014a8dd462",
+        "4be8b654-0c01-4c9d-a10c-6b28467fc651"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1003.001"
+      ],
+      "title": "Any access to LSASS and other core security processes (after exclusions)",
+      "volume": "unmeasured"
+    },
+    {
       "id": "process_access/t1003_credential_dumping",
       "path": "modules/process_access/t1003_credential_dumping.xml",
       "event": "ProcessAccess",
       "onmatch": "include",
       "rules": 7,
+      "sigma": [
+        "9bd012ee-0dff-44d7-84a0-aa698cfd87a3",
+        "a49fa4d5-11db-418c-8473-1e014a8dd462",
+        "b1bd3a59-c1fd-4860-9f40-4dd161a7d1f5",
+        "472159c5-31b9-4f56-b794-b766faa8b0a7"
+      ],
       "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -815,6 +1017,20 @@
         "T1055.012"
       ],
       "title": "T1055 process injection: ProcessAccess include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/t1055_suspicious_access",
+      "path": "modules/process_access/t1055_suspicious_access.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 2,
+      "notes": "UNKNOWN in CallTrace means code running from memory that is not backed by a file on disk.",
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1055"
+      ],
+      "title": "Full-access handles and unknown call stacks (injection precursors)",
       "volume": "unmeasured"
     },
     {
@@ -851,28 +1067,6 @@
       "volume": "unmeasured"
     },
     {
-      "id": "process_create/extended_exclude",
-      "path": "modules/process_create/extended_exclude.xml",
-      "event": "ProcessCreate",
-      "onmatch": "exclude",
-      "rules": 13,
-      "source": "migrated from configurations/modules/categories/01_process_creation.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended ProcessCreate exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "process_create/extended_include",
-      "path": "modules/process_create/extended_include.xml",
-      "event": "ProcessCreate",
-      "onmatch": "include",
-      "rules": 52,
-      "source": "migrated from configurations/modules/categories/01_process_creation.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended ProcessCreate include rules",
-      "volume": "unmeasured"
-    },
-    {
       "id": "process_create/noise_common_software",
       "path": "modules/process_create/noise_common_software.xml",
       "event": "ProcessCreate",
@@ -906,11 +1100,52 @@
       "volume": "unmeasured"
     },
     {
+      "id": "process_create/t1003_001_lsass_dump_tools",
+      "path": "modules/process_create/t1003_001_lsass_dump_tools.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "646ea171-dded-4578-8a4d-65e9822892e3",
+        "5afee48e-67dd-4e03-a783-f74259dcf998"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1003.001"
+      ],
+      "title": "LSASS dumping with built-in or common tools",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1003_003_ntds",
+      "path": "modules/process_create/t1003_003_ntds.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 3,
+      "sigma": [
+        "8bc64091-6875-4881-aaf9-7bd25b5dda08",
+        "a58353df-af43-4753-bad0-cd83ef35eef5",
+        "e7be6119-fc37-43f0-ad4f-1f3f99be2f9f"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1003.003"
+      ],
+      "title": "NTDS.dit extraction via ntdsutil, shadow copies or copy tools",
+      "volume": "unmeasured"
+    },
+    {
       "id": "process_create/t1003_credential_dumping",
       "path": "modules/process_create/t1003_credential_dumping.xml",
       "event": "ProcessCreate",
       "onmatch": "include",
       "rules": 30,
+      "sigma": [
+        "5afee48e-67dd-4e03-a783-f74259dcf998",
+        "646ea171-dded-4578-8a4d-65e9822892e3",
+        "2704ab9e-afe2-4854-a3b1-0c0706d03578",
+        "b1876533-4ed5-4a83-90f3-b8645840a413"
+      ],
       "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -928,6 +1163,11 @@
       "event": "ProcessCreate",
       "onmatch": "include",
       "rules": 22,
+      "sigma": [
+        "5cc2cda8-f261-4d88-a2de-e9e193c86716",
+        "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
+        "3abd6094-7027-475f-9630-8ab9be7b9725"
+      ],
       "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -941,11 +1181,55 @@
       "volume": "unmeasured"
     },
     {
+      "id": "process_create/t1027_obfuscation",
+      "path": "modules/process_create/t1027_obfuscation.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "notes": "The TVqQ... strings are a base64-encoded PE (\"MZ\") header on the command line.",
+      "sigma": [
+        "cc9cbe82-7bc0-4ef5-bc23-bbfb83947be7",
+        "22e58743-4ac8-4a9f-bf19-00a0428d8c5f",
+        "e32d4572-9826-4738-b651-95fa63747e8a"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1027",
+        "T1140"
+      ],
+      "title": "Decoding and obfuscation utilities (certutil decode, base64 blobs)",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1036_masquerading",
+      "path": "modules/process_create/t1036_masquerading.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "2569ed8c-1147-498a-9b8c-2ad3656b10ed",
+        "e22a6eb2-f8a5-44b5-8b44-a2dbd47b1144",
+        "3dfd06d2-eaf4-4532-9555-68aca59f57c4"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1036.005",
+        "T1036.003"
+      ],
+      "title": "System binary names running from the wrong directory, and renamed system tools",
+      "volume": "unmeasured"
+    },
+    {
       "id": "process_create/t1047_wmi",
       "path": "modules/process_create/t1047_wmi.xml",
       "event": "ProcessCreate",
       "onmatch": "include",
       "rules": 12,
+      "sigma": [
+        "3c89a1e8-0fba-449e-8f1b-8409d6267ec8",
+        "f6d1dd2f-b8ce-40ca-bc23-062efb686b34",
+        "8a582fe2-0882-4b89-a82a-da6b2dc32937"
+      ],
       "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -960,6 +1244,11 @@
       "event": "ProcessCreate",
       "onmatch": "include",
       "rules": 18,
+      "sigma": [
+        "f2c64357-b1d2-41b7-849f-34d2682c0fad",
+        "8a8379b8-780b-4dbf-b1e9-31c8d112fefb",
+        "39019a4e-317f-4ce3-ae63-309a8c6b53c5"
+      ],
       "source": "migrated from configurations/modules/techniques/T1053_scheduled_task.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -983,18 +1272,235 @@
       "volume": "unmeasured"
     },
     {
+      "id": "process_create/t1059_001_powershell",
+      "path": "modules/process_create/t1059_001_powershell.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 3,
+      "notes": "OriginalFileName catches renamed powershell.exe copies.",
+      "sigma": [
+        "e32d4572-9826-4738-b651-95fa63747e8a",
+        "f26c6093-6f14-4b12-800f-0fcb46f5ffd0",
+        "88f680b8-070e-402c-ae11-d2914f2257f1",
+        "d7bcd677-645d-4691-a8d4-7a5602b780d1"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1059.001",
+        "T1027.010"
+      ],
+      "title": "PowerShell with encoded, hidden or download-cradle command lines",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1059_003_cmd",
+      "path": "modules/process_create/t1059_003_cmd.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "a16980c2-0c56-4de0-9a79-17971979efdd",
+        "438025f9-5856-4663-83f7-52f878a70a50"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1059.003"
+      ],
+      "title": "cmd.exe launched by Office, script hosts or web servers",
+      "volume": "unmeasured"
+    },
+    {
       "id": "process_create/t1059_command_scripting",
       "path": "modules/process_create/t1059_command_scripting.xml",
       "event": "ProcessCreate",
       "onmatch": "include",
       "rules": 38,
+      "sigma": [
+        "cea72823-df4d-4567-950c-0b579eaf0846"
+      ],
       "source": "migrated from configurations/modules/techniques/T1059_command_scripting.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
-        "T1059.001",
-        "T1059.003"
+        "T1059.005",
+        "T1059.007"
       ],
       "title": "T1059 command and scripting interpreters: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1105_ingress_tool_transfer",
+      "path": "modules/process_create/t1105_ingress_tool_transfer.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 3,
+      "sigma": [
+        "13e6fe51-d478-4c7e-b0f2-6da9b400a829",
+        "2ddef153-167b-4e89-86b6-757a9e65dcac",
+        "21dd6d38-2b18-4453-9404-a0fe4a0cc288"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1105"
+      ],
+      "title": "Downloads with built-in tools (certutil, bitsadmin, curl)",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1204_004_clickfix",
+      "path": "modules/process_create/t1204_004_clickfix.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "notes": "ClickFix lures users into pasting a command into Win+R; the command often ends with a \"#\" comment disguised as a CAPTCHA message.",
+      "sigma": [
+        "d487ed4a-fd24-436d-a0b2-f4e95f7b2635",
+        "3ae9974a-eb09-4044-8e70-8980a50c12c8"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1204.004"
+      ],
+      "title": "Paste-and-run (ClickFix): shells launched from the Run dialog",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1218_005_mshta",
+      "path": "modules/process_create/t1218_005_mshta.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "b98d0db6-511d-45de-ad02-e82a98729620",
+        "67f113fa-e23d-4271-befa-30113b3e08b1",
+        "03cc0c25-389f-4bf8-b48d-11878079f1ca"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1218.005"
+      ],
+      "title": "Mshta running remote or inline script",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1218_010_regsvr32",
+      "path": "modules/process_create/t1218_010_regsvr32.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "327ff235-94eb-4f06-b9de-aaee571324be",
+        "2dd2c217-bf68-437a-b57c-fe9fd01d5de8",
+        "6f0947a4-1c5e-4e0d-8ac7-53159b8f23ca"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1218.010"
+      ],
+      "title": "Regsvr32 scriptlet execution (Squiblydoo) and loads from user-writable paths",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1218_011_rundll32",
+      "path": "modules/process_create/t1218_011_rundll32.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "5bb68627-3198-40ca-b458-49f973db8752",
+        "2569ed8c-1147-498a-9b8c-2ad3656b10ed",
+        "ae9c6a7c-9521-42a6-915e-5aaa8689d529"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1218.011"
+      ],
+      "title": "Rundll32 loading DLLs from user-writable paths, URLs or without arguments",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1490_inhibit_recovery",
+      "path": "modules/process_create/t1490_inhibit_recovery.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 3,
+      "sigma": [
+        "c947b146-0abc-4c87-9c64-b17e9d7274a2",
+        "639c9081-f482-47d3-a0bd-ddee3d4ecd76",
+        "1444443e-6757-43e4-9ea4-c8fc705f79a2",
+        "21ff4ca9-f13a-41ad-b828-0077b2af2e40"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1490"
+      ],
+      "title": "Shadow copy, backup and recovery destruction (ransomware precursor)",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1543_003_services",
+      "path": "modules/process_create/t1543_003_services.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "17a1be64-8d88-40bf-b5ff-a4f7a50ebcc8",
+        "138d3531-8793-4f50-a2cd-f291b2863d78"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1543.003"
+      ],
+      "title": "Service creation or binary-path changes with sc.exe / New-Service",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1685_005_clear_event_logs",
+      "path": "modules/process_create/t1685_005_clear_event_logs.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "cc36992a-4671-4f21-a91d-6c2b72a2edf5"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1685.005",
+        "T1685.001"
+      ],
+      "title": "Event log clearing and logging changes via wevtutil / PowerShell",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1685_disable_security_tools",
+      "path": "modules/process_create/t1685_disable_security_tools.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "a7ee1722-c3c5-aeff-3212-c777e4733217",
+        "51cbac1e-eee3-4a90-b1b7-358efb81fa0a"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1685"
+      ],
+      "title": "Commands that disable Defender or stop security services",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_tampering/t1055_012_hollowing",
+      "path": "modules/process_tampering/t1055_012_hollowing.xml",
+      "event": "ProcessTampering",
+      "onmatch": "include",
+      "rules": 2,
+      "sigma": [
+        "c4b890e5-8d8c-4496-8c66-c805753817cd"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1055.012"
+      ],
+      "title": "Process image replaced in memory (hollowing, herpaderping)",
       "volume": "unmeasured"
     },
     {
@@ -1047,6 +1553,9 @@
       "event": "RawAccessRead",
       "onmatch": "include",
       "rules": 1,
+      "sigma": [
+        "db809f10-56ce-4420-8c86-d6a7d793c79c"
+      ],
       "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
@@ -1064,30 +1573,6 @@
       "source": "migrated from configurations/sysmon-base.xml",
       "status": "migrated in phase 2; review in phase 3",
       "title": "Baseline RegistryEvent exclude rules",
-      "volume": "unmeasured"
-    },
-    {
-      "id": "registry_event/baseline_include",
-      "path": "modules/registry_event/baseline_include.xml",
-      "event": "RegistryEvent",
-      "onmatch": "include",
-      "rules": 25,
-      "source": "migrated from configurations/sysmon-base.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "techniques": [
-        "T1003.001",
-        "T1484",
-        "T1546.010",
-        "T1546.012",
-        "T1546.015",
-        "T1547.001",
-        "T1547.004",
-        "T1547.005",
-        "T1548.002",
-        "T1562.001",
-        "T1562.004"
-      ],
-      "title": "Baseline RegistryEvent include rules",
       "volume": "unmeasured"
     },
     {
@@ -1113,25 +1598,53 @@
       "volume": "unmeasured"
     },
     {
-      "id": "registry_event/extended_exclude",
-      "path": "modules/registry_event/extended_exclude.xml",
+      "id": "registry_event/general_credential_config",
+      "path": "modules/registry_event/general_credential_config.xml",
       "event": "RegistryEvent",
-      "onmatch": "exclude",
-      "rules": 15,
-      "source": "migrated from configurations/modules/categories/13_registry_events.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended RegistryEvent exclude rules",
+      "onmatch": "include",
+      "rules": 2,
+      "notes": "WDigest UseLogonCredential=1 makes LSASS keep plaintext passwords.",
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1547.005",
+        "T1003.001"
+      ],
+      "title": "LSA, security packages and WDigest credential caching",
       "volume": "unmeasured"
     },
     {
-      "id": "registry_event/extended_include",
-      "path": "modules/registry_event/extended_include.xml",
+      "id": "registry_event/general_persistence",
+      "path": "modules/registry_event/general_persistence.xml",
       "event": "RegistryEvent",
       "onmatch": "include",
-      "rules": 56,
-      "source": "migrated from configurations/modules/categories/13_registry_events.xml",
-      "status": "migrated in phase 2; review in phase 3",
-      "title": "Extended RegistryEvent include rules",
+      "rules": 10,
+      "notes": "Broad: CLSID and Office keys are noisy. Candidates for narrowing once volume is measured (phase 4).",
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1547.004",
+        "T1546.012",
+        "T1546.010",
+        "T1547.014",
+        "T1546.015",
+        "T1137",
+        "T1176.001",
+        "T1484.001"
+      ],
+      "title": "Other registry persistence locations (Winlogon, IFEO, AppInit, Active Setup, COM, Office, browser extensions, GPO scripts)",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/general_privilege_config",
+      "path": "modules/registry_event/general_privilege_config.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 2,
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1548.002",
+        "T1021.001"
+      ],
+      "title": "UAC policy and Remote Desktop configuration",
       "volume": "unmeasured"
     },
     {
@@ -1200,13 +1713,105 @@
       "path": "modules/registry_event/t1053_scheduled_task.xml",
       "event": "RegistryEvent",
       "onmatch": "include",
-      "rules": 5,
+      "rules": 6,
+      "sigma": [
+        "4720b7df-40c3-48fd-bbdf-fd4b3c464f0d",
+        "5b16df71-8615-4f7f-ac9b-6c43c0509e61"
+      ],
       "source": "migrated from configurations/modules/techniques/T1053_scheduled_task.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
-        "T1053"
+        "T1053.005"
       ],
       "title": "T1053 scheduled tasks: RegistryEvent include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1204_004_clickfix_runmru",
+      "path": "modules/registry_event/t1204_004_clickfix_runmru.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 1,
+      "notes": "Low volume: only written when a user runs something from Win+R.",
+      "sigma": [
+        "7a1b4c5e-8f3d-4b9a-7c2e-1f4a5b8c6d9e",
+        "a7df0e9e-91a5-459a-a003-4cde67c2ff5d"
+      ],
+      "source": "original",
+      "techniques": [
+        "T1204.004"
+      ],
+      "title": "Commands typed into the Run dialog (RunMRU), the trace ClickFix leaves",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1543_003_services",
+      "path": "modules/registry_event/t1543_003_services.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "a07f0359-4c90-4dc4-a681-8ffea40b4f47",
+        "612e47e9-8a59-43a6-b404-f48683f45bd6",
+        "4a5f5a5e-ac01-474b-9b4e-d61298c9df1d"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1543.003"
+      ],
+      "title": "Service creation and modification in the registry",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1547_001_run_keys",
+      "path": "modules/registry_event/t1547_001_run_keys.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 5,
+      "sigma": [
+        "02ee49e2-e294-4d0f-9278-f5b3212fc588",
+        "b7916c2a-fa2f-4795-9477-32b731f70f11"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1547.001"
+      ],
+      "title": "Run / RunOnce keys and startup-approved entries",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1685_disable_security_tools",
+      "path": "modules/registry_event/t1685_disable_security_tools.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 3,
+      "sigma": [
+        "0eb46774-f1ab-4a74-8238-1155855f2263",
+        "a982fc9c-6333-4ffb-a51d-addb04e8b529",
+        "93d298a1-d28f-47f1-a468-d971e7796679",
+        "e1aa95de-610a-427d-b9e7-9b46cfafbe6a"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1685"
+      ],
+      "title": "Changes to Microsoft Defender settings and policy",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1686_firewall",
+      "path": "modules/registry_event/t1686_firewall.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 1,
+      "sigma": [
+        "974515da-6cc5-4c95-ae65-f97f9150ec7f"
+      ],
+      "source": "migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3",
+      "techniques": [
+        "T1686"
+      ],
+      "title": "Windows Firewall policy changes",
       "volume": "unmeasured"
     },
     {
@@ -1215,10 +1820,16 @@
       "event": "WmiEvent",
       "onmatch": "include",
       "rules": 3,
+      "sigma": [
+        "83844185-1c5b-45bc-bcf3-b5bf3084ca5b",
+        "fe21810c-2a8c-478f-8dd3-5a287fb2a0e0",
+        "0f06a3a5-6a09-413f-8743-e6cf35561297"
+      ],
       "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
       "status": "migrated in phase 2; review in phase 3",
       "techniques": [
-        "T1047"
+        "T1047",
+        "T1546.003"
       ],
       "title": "T1047 WMI execution and persistence: WmiEvent include",
       "volume": "unmeasured"
@@ -1266,48 +1877,81 @@
         "create_remote_thread/baseline_exclude",
         "create_remote_thread/t1055_process_injection",
         "dns_query/baseline_exclude",
-        "dns_query/baseline_include",
+        "dns_query/general_c2_infrastructure",
+        "dns_query/t1218_proxy_binaries",
         "driver_load/baseline_exclude",
         "file_create/baseline_exclude",
-        "file_create/baseline_include",
+        "file_create/general_user_writable_payloads",
+        "file_create/t1003_001_dump_files",
+        "file_create/t1003_003_ntds",
         "file_create/t1003_credential_dumping",
         "file_create/t1021_remote_services",
         "file_create/t1047_wmi",
         "file_create/t1053_scheduled_task",
         "file_create/t1059_command_scripting",
+        "file_create/t1547_001_startup_folder",
         "file_create_stream_hash/baseline_exclude",
         "file_create_time/baseline_exclude",
         "file_delete_detected/baseline_exclude",
-        "file_delete_detected/baseline_include",
-        "file_executable_detected/baseline_include",
+        "file_delete_detected/general_anti_forensics",
+        "file_delete_detected/t1490_backups",
+        "file_delete_detected/t1685_005_log_files",
+        "file_executable_detected/t1105_dropped_executables",
         "image_load/baseline_exclude",
-        "image_load/baseline_include",
+        "image_load/general_user_writable_dlls",
+        "image_load/t1003_001_lsass_dump_dlls",
         "image_load/t1055_process_injection",
+        "image_load/t1059_001_powershell_unmanaged",
         "network_connect/baseline_exclude",
         "network_connect/t1021_remote_services",
         "network_connect/t1047_wmi",
         "network_connect/t1059_command_scripting",
         "pipe_event/baseline_exclude",
-        "pipe_event/baseline_include",
+        "pipe_event/t1021_002_remote_exec",
         "pipe_event/t1021_remote_services",
+        "pipe_event/t1055_c2_frameworks",
         "process_access/baseline_exclude",
-        "process_access/baseline_include",
+        "process_access/t1003_001_lsass_any",
         "process_access/t1003_credential_dumping",
         "process_access/t1055_process_injection",
+        "process_access/t1055_suspicious_access",
         "process_create/baseline_exclude",
+        "process_create/t1003_001_lsass_dump_tools",
+        "process_create/t1003_003_ntds",
         "process_create/t1003_credential_dumping",
         "process_create/t1021_remote_services",
+        "process_create/t1027_obfuscation",
+        "process_create/t1036_masquerading",
         "process_create/t1047_wmi",
         "process_create/t1053_scheduled_task",
         "process_create/t1055_process_injection",
+        "process_create/t1059_001_powershell",
+        "process_create/t1059_003_cmd",
         "process_create/t1059_command_scripting",
+        "process_create/t1105_ingress_tool_transfer",
+        "process_create/t1204_004_clickfix",
+        "process_create/t1218_005_mshta",
+        "process_create/t1218_010_regsvr32",
+        "process_create/t1218_011_rundll32",
+        "process_create/t1490_inhibit_recovery",
+        "process_create/t1543_003_services",
+        "process_create/t1685_005_clear_event_logs",
+        "process_create/t1685_disable_security_tools",
+        "process_tampering/t1055_012_hollowing",
         "raw_access_read/baseline_exclude",
         "raw_access_read/t1003_credential_dumping",
         "registry_event/baseline_exclude",
-        "registry_event/baseline_include",
+        "registry_event/general_credential_config",
+        "registry_event/general_persistence",
+        "registry_event/general_privilege_config",
         "registry_event/t1003_credential_dumping",
         "registry_event/t1021_remote_services",
         "registry_event/t1053_scheduled_task",
+        "registry_event/t1204_004_clickfix_runmru",
+        "registry_event/t1543_003_services",
+        "registry_event/t1547_001_run_keys",
+        "registry_event/t1685_disable_security_tools",
+        "registry_event/t1686_firewall",
         "wmi_event/t1047_wmi"
       ],
       "output": "sysmon-balanced.xml"
@@ -1353,48 +1997,81 @@
         "create_remote_thread/baseline_exclude",
         "create_remote_thread/t1055_process_injection",
         "dns_query/baseline_exclude",
-        "dns_query/baseline_include",
+        "dns_query/general_c2_infrastructure",
+        "dns_query/t1218_proxy_binaries",
         "driver_load/baseline_exclude",
         "file_create/baseline_exclude",
-        "file_create/baseline_include",
+        "file_create/general_user_writable_payloads",
+        "file_create/t1003_001_dump_files",
+        "file_create/t1003_003_ntds",
         "file_create/t1003_credential_dumping",
         "file_create/t1021_remote_services",
         "file_create/t1047_wmi",
         "file_create/t1053_scheduled_task",
         "file_create/t1059_command_scripting",
+        "file_create/t1547_001_startup_folder",
         "file_create_stream_hash/baseline_exclude",
         "file_create_time/baseline_exclude",
         "file_delete_detected/baseline_exclude",
-        "file_delete_detected/baseline_include",
-        "file_executable_detected/baseline_include",
+        "file_delete_detected/general_anti_forensics",
+        "file_delete_detected/t1490_backups",
+        "file_delete_detected/t1685_005_log_files",
+        "file_executable_detected/t1105_dropped_executables",
         "image_load/baseline_exclude",
-        "image_load/baseline_include",
+        "image_load/general_user_writable_dlls",
+        "image_load/t1003_001_lsass_dump_dlls",
         "image_load/t1055_process_injection",
+        "image_load/t1059_001_powershell_unmanaged",
         "network_connect/baseline_exclude",
         "network_connect/t1021_remote_services",
         "network_connect/t1047_wmi",
         "network_connect/t1059_command_scripting",
         "pipe_event/baseline_exclude",
-        "pipe_event/baseline_include",
+        "pipe_event/t1021_002_remote_exec",
         "pipe_event/t1021_remote_services",
+        "pipe_event/t1055_c2_frameworks",
         "process_access/baseline_exclude",
-        "process_access/baseline_include",
+        "process_access/t1003_001_lsass_any",
         "process_access/t1003_credential_dumping",
         "process_access/t1055_process_injection",
+        "process_access/t1055_suspicious_access",
         "process_create/baseline_exclude",
+        "process_create/t1003_001_lsass_dump_tools",
+        "process_create/t1003_003_ntds",
         "process_create/t1003_credential_dumping",
         "process_create/t1021_remote_services",
+        "process_create/t1027_obfuscation",
+        "process_create/t1036_masquerading",
         "process_create/t1047_wmi",
         "process_create/t1053_scheduled_task",
         "process_create/t1055_process_injection",
+        "process_create/t1059_001_powershell",
+        "process_create/t1059_003_cmd",
         "process_create/t1059_command_scripting",
+        "process_create/t1105_ingress_tool_transfer",
+        "process_create/t1204_004_clickfix",
+        "process_create/t1218_005_mshta",
+        "process_create/t1218_010_regsvr32",
+        "process_create/t1218_011_rundll32",
+        "process_create/t1490_inhibit_recovery",
+        "process_create/t1543_003_services",
+        "process_create/t1685_005_clear_event_logs",
+        "process_create/t1685_disable_security_tools",
+        "process_tampering/t1055_012_hollowing",
         "raw_access_read/baseline_exclude",
         "raw_access_read/t1003_credential_dumping",
         "registry_event/baseline_exclude",
-        "registry_event/baseline_include",
+        "registry_event/general_credential_config",
+        "registry_event/general_persistence",
+        "registry_event/general_privilege_config",
         "registry_event/t1003_credential_dumping",
         "registry_event/t1021_remote_services",
         "registry_event/t1053_scheduled_task",
+        "registry_event/t1204_004_clickfix_runmru",
+        "registry_event/t1543_003_services",
+        "registry_event/t1547_001_run_keys",
+        "registry_event/t1685_disable_security_tools",
+        "registry_event/t1686_firewall",
         "wmi_event/t1047_wmi",
         "dns_query/dc_exclude",
         "dns_query/dc_include",
@@ -1494,5 +2171,1910 @@
       ],
       "output": "sysmon-verbose.xml"
     }
-  ]
+  ],
+  "coverage": {
+    "T1003.001": {
+      "name": "LSASS Memory",
+      "tactics": [
+        "credential-access"
+      ],
+      "modules": [
+        "file_create/t1003_001_dump_files",
+        "file_create/t1003_credential_dumping",
+        "image_load/t1003_001_lsass_dump_dlls",
+        "process_access/t1003_001_lsass_any",
+        "process_access/t1003_credential_dumping",
+        "process_create/t1003_001_lsass_dump_tools",
+        "process_create/t1003_credential_dumping",
+        "registry_event/general_credential_config"
+      ],
+      "events": [
+        "FileCreate",
+        "ImageLoad",
+        "ProcessAccess",
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "6902955a-01b7-432c-b32a-6f5f81d8f625",
+        "8fbf3271-1ef6-4e94-8210-03c2317947f6",
+        "93d94efc-d7ad-4161-ad7d-1638c4f908d8",
+        "8cde342c-ba48-4b74-b615-172c330f2e93",
+        "bdc64095-d59a-42a2-8588-71fd9c9d9abc",
+        "5ef9853e-4d0e-4a70-846f-a9ca37d876da",
+        "9bd012ee-0dff-44d7-84a0-aa698cfd87a3",
+        "a49fa4d5-11db-418c-8473-1e014a8dd462",
+        "4be8b654-0c01-4c9d-a10c-6b28467fc651",
+        "b1bd3a59-c1fd-4860-9f40-4dd161a7d1f5",
+        "472159c5-31b9-4f56-b794-b766faa8b0a7",
+        "646ea171-dded-4578-8a4d-65e9822892e3",
+        "5afee48e-67dd-4e03-a783-f74259dcf998",
+        "2704ab9e-afe2-4854-a3b1-0c0706d03578",
+        "b1876533-4ed5-4a83-90f3-b8645840a413"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1003.002": {
+      "name": "Security Account Manager",
+      "tactics": [
+        "credential-access"
+      ],
+      "modules": [
+        "file_create/t1003_credential_dumping",
+        "image_load/t1003_001_lsass_dump_dlls",
+        "process_create/t1003_credential_dumping",
+        "raw_access_read/t1003_credential_dumping"
+      ],
+      "events": [
+        "FileCreate",
+        "ImageLoad",
+        "ProcessCreate",
+        "RawAccessRead"
+      ],
+      "sigma": [
+        "8fbf3271-1ef6-4e94-8210-03c2317947f6",
+        "8cde342c-ba48-4b74-b615-172c330f2e93",
+        "bdc64095-d59a-42a2-8588-71fd9c9d9abc",
+        "5afee48e-67dd-4e03-a783-f74259dcf998",
+        "646ea171-dded-4578-8a4d-65e9822892e3",
+        "2704ab9e-afe2-4854-a3b1-0c0706d03578",
+        "b1876533-4ed5-4a83-90f3-b8645840a413",
+        "db809f10-56ce-4420-8c86-d6a7d793c79c"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1003.003": {
+      "name": "NTDS",
+      "tactics": [
+        "credential-access"
+      ],
+      "modules": [
+        "file_create/t1003_003_ntds",
+        "file_create/t1003_credential_dumping",
+        "process_create/t1003_003_ntds",
+        "process_create/t1003_credential_dumping"
+      ],
+      "events": [
+        "FileCreate",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "11b1ed55-154d-4e82-8ad7-83739298f720",
+        "4e7050dd-e548-483f-b7d6-527ab4fa784d",
+        "3a8da4e0-36c1-40d2-8b29-b3e890d5172a",
+        "8fbf3271-1ef6-4e94-8210-03c2317947f6",
+        "8bc64091-6875-4881-aaf9-7bd25b5dda08",
+        "a58353df-af43-4753-bad0-cd83ef35eef5",
+        "e7be6119-fc37-43f0-ad4f-1f3f99be2f9f",
+        "5afee48e-67dd-4e03-a783-f74259dcf998",
+        "646ea171-dded-4578-8a4d-65e9822892e3",
+        "2704ab9e-afe2-4854-a3b1-0c0706d03578",
+        "b1876533-4ed5-4a83-90f3-b8645840a413"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1003.005": {
+      "name": "Cached Domain Credentials",
+      "tactics": [
+        "credential-access"
+      ],
+      "modules": [
+        "registry_event/t1003_credential_dumping"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1003.006": {
+      "name": "DCSync",
+      "tactics": [
+        "credential-access"
+      ],
+      "modules": [
+        "process_create/t1003_credential_dumping"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "5afee48e-67dd-4e03-a783-f74259dcf998",
+        "646ea171-dded-4578-8a4d-65e9822892e3",
+        "2704ab9e-afe2-4854-a3b1-0c0706d03578",
+        "b1876533-4ed5-4a83-90f3-b8645840a413"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1021.001": {
+      "name": "Remote Desktop Protocol",
+      "tactics": [
+        "lateral-movement"
+      ],
+      "modules": [
+        "network_connect/t1021_remote_services",
+        "process_create/t1021_remote_services",
+        "registry_event/general_privilege_config"
+      ],
+      "events": [
+        "NetworkConnect",
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "c539afac-c12a-46ed-b1bd-5a5567c9f045",
+        "5cc2cda8-f261-4d88-a2de-e9e193c86716",
+        "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
+        "3abd6094-7027-475f-9630-8ab9be7b9725"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1021.002": {
+      "name": "SMB/Windows Admin Shares",
+      "tactics": [
+        "lateral-movement"
+      ],
+      "modules": [
+        "file_create/t1021_remote_services",
+        "network_connect/t1021_remote_services",
+        "pipe_event/t1021_002_remote_exec",
+        "pipe_event/t1021_remote_services",
+        "process_create/t1021_remote_services",
+        "registry_event/t1021_remote_services"
+      ],
+      "events": [
+        "FileCreate",
+        "NetworkConnect",
+        "PipeEvent",
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "304afd73-55a5-4bb9-8c21-0b1fc84ea9e4",
+        "4aafb0fa-bff5-4b9d-b99e-8093e659c65f",
+        "c539afac-c12a-46ed-b1bd-5a5567c9f045",
+        "f6451de4-df0a-41fa-8d72-b39f54a08db5",
+        "d36f87ea-c403-44d2-aa79-1a0ac7c24456",
+        "f318b911-ea88-43f4-9281-0de23ede628e",
+        "41504465-5e3a-4a5b-a5b4-2a0baadd4463",
+        "5cc2cda8-f261-4d88-a2de-e9e193c86716",
+        "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
+        "3abd6094-7027-475f-9630-8ab9be7b9725"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1021.003": {
+      "name": "Distributed Component Object Model",
+      "tactics": [
+        "lateral-movement"
+      ],
+      "modules": [
+        "network_connect/t1021_remote_services",
+        "process_create/t1021_remote_services"
+      ],
+      "events": [
+        "NetworkConnect",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "c539afac-c12a-46ed-b1bd-5a5567c9f045",
+        "5cc2cda8-f261-4d88-a2de-e9e193c86716",
+        "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
+        "3abd6094-7027-475f-9630-8ab9be7b9725"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1021.004": {
+      "name": "SSH",
+      "tactics": [
+        "lateral-movement"
+      ],
+      "modules": [
+        "network_connect/t1021_remote_services",
+        "process_create/t1021_remote_services"
+      ],
+      "events": [
+        "NetworkConnect",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "c539afac-c12a-46ed-b1bd-5a5567c9f045",
+        "5cc2cda8-f261-4d88-a2de-e9e193c86716",
+        "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
+        "3abd6094-7027-475f-9630-8ab9be7b9725"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1021.006": {
+      "name": "Windows Remote Management",
+      "tactics": [
+        "lateral-movement"
+      ],
+      "modules": [
+        "network_connect/t1021_remote_services",
+        "pipe_event/t1021_002_remote_exec",
+        "process_create/t1021_remote_services"
+      ],
+      "events": [
+        "NetworkConnect",
+        "PipeEvent",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "c539afac-c12a-46ed-b1bd-5a5567c9f045",
+        "f6451de4-df0a-41fa-8d72-b39f54a08db5",
+        "d36f87ea-c403-44d2-aa79-1a0ac7c24456",
+        "f318b911-ea88-43f4-9281-0de23ede628e",
+        "5cc2cda8-f261-4d88-a2de-e9e193c86716",
+        "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
+        "3abd6094-7027-475f-9630-8ab9be7b9725"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1027": {
+      "name": "Obfuscated Files or Information",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "process_create/t1027_obfuscation"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "cc9cbe82-7bc0-4ef5-bc23-bbfb83947be7",
+        "22e58743-4ac8-4a9f-bf19-00a0428d8c5f",
+        "e32d4572-9826-4738-b651-95fa63747e8a"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1027.010": {
+      "name": "Command Obfuscation",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "process_create/t1059_001_powershell"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "e32d4572-9826-4738-b651-95fa63747e8a",
+        "f26c6093-6f14-4b12-800f-0fcb46f5ffd0",
+        "88f680b8-070e-402c-ae11-d2914f2257f1",
+        "d7bcd677-645d-4691-a8d4-7a5602b780d1"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1036.003": {
+      "name": "Rename Legitimate Utilities",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "process_create/t1036_masquerading"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "2569ed8c-1147-498a-9b8c-2ad3656b10ed",
+        "e22a6eb2-f8a5-44b5-8b44-a2dbd47b1144",
+        "3dfd06d2-eaf4-4532-9555-68aca59f57c4"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1036.005": {
+      "name": "Match Legitimate Resource Name or Location",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "process_create/t1036_masquerading"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "2569ed8c-1147-498a-9b8c-2ad3656b10ed",
+        "e22a6eb2-f8a5-44b5-8b44-a2dbd47b1144",
+        "3dfd06d2-eaf4-4532-9555-68aca59f57c4"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1047": {
+      "name": "Windows Management Instrumentation",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "file_create/t1047_wmi",
+        "network_connect/t1047_wmi",
+        "pipe_event/t1021_002_remote_exec",
+        "process_create/t1047_wmi",
+        "wmi_event/t1047_wmi"
+      ],
+      "events": [
+        "FileCreate",
+        "NetworkConnect",
+        "PipeEvent",
+        "ProcessCreate",
+        "WmiEvent"
+      ],
+      "sigma": [
+        "8d5aca11-22b3-4f22-b7ba-90e60533e1fb",
+        "f6451de4-df0a-41fa-8d72-b39f54a08db5",
+        "d36f87ea-c403-44d2-aa79-1a0ac7c24456",
+        "f318b911-ea88-43f4-9281-0de23ede628e",
+        "3c89a1e8-0fba-449e-8f1b-8409d6267ec8",
+        "f6d1dd2f-b8ce-40ca-bc23-062efb686b34",
+        "8a582fe2-0882-4b89-a82a-da6b2dc32937",
+        "83844185-1c5b-45bc-bcf3-b5bf3084ca5b",
+        "fe21810c-2a8c-478f-8dd3-5a287fb2a0e0",
+        "0f06a3a5-6a09-413f-8743-e6cf35561297"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1053.005": {
+      "name": "Scheduled Task",
+      "tactics": [
+        "execution",
+        "persistence",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "file_create/t1053_scheduled_task",
+        "process_create/t1053_scheduled_task",
+        "registry_event/t1053_scheduled_task"
+      ],
+      "events": [
+        "FileCreate",
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "80e1f67a-4596-4351-98f5-a9c3efabac95",
+        "f2c64357-b1d2-41b7-849f-34d2682c0fad",
+        "8a8379b8-780b-4dbf-b1e9-31c8d112fefb",
+        "39019a4e-317f-4ce3-ae63-309a8c6b53c5",
+        "4720b7df-40c3-48fd-bbdf-fd4b3c464f0d",
+        "5b16df71-8615-4f7f-ac9b-6c43c0509e61"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1055": {
+      "name": "Process Injection",
+      "tactics": [
+        "stealth",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "create_remote_thread/t1055_process_injection",
+        "image_load/t1055_process_injection",
+        "pipe_event/t1055_c2_frameworks",
+        "process_access/t1055_suspicious_access"
+      ],
+      "events": [
+        "CreateRemoteThread",
+        "ImageLoad",
+        "PipeEvent",
+        "ProcessAccess"
+      ],
+      "sigma": [
+        "f239b326-2f41-4d6b-9dfa-c846a60ef505",
+        "6309645e-122d-4c5b-bb2b-22e4f9c2fa42",
+        "02d1d718-dd13-41af-989d-ea85c7fab93f",
+        "4508a70e-97ef-4300-b62b-ff27992990ea",
+        "d5601f8c-b26f-4ab0-9035-69e11a8d4ad2",
+        "85adeb13-4fc9-4e68-8a4a-c7cb2c336eb7",
+        "fe3ac066-98bb-432a-b1e7-a5229cb39d4a"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1055.003": {
+      "name": "Thread Execution Hijacking",
+      "tactics": [
+        "stealth",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "create_remote_thread/t1055_process_injection",
+        "process_access/t1055_process_injection"
+      ],
+      "events": [
+        "CreateRemoteThread",
+        "ProcessAccess"
+      ],
+      "sigma": [
+        "f239b326-2f41-4d6b-9dfa-c846a60ef505",
+        "6309645e-122d-4c5b-bb2b-22e4f9c2fa42",
+        "02d1d718-dd13-41af-989d-ea85c7fab93f"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1055.004": {
+      "name": "Asynchronous Procedure Call",
+      "tactics": [
+        "stealth",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "create_remote_thread/t1055_process_injection"
+      ],
+      "events": [
+        "CreateRemoteThread"
+      ],
+      "sigma": [
+        "f239b326-2f41-4d6b-9dfa-c846a60ef505",
+        "6309645e-122d-4c5b-bb2b-22e4f9c2fa42",
+        "02d1d718-dd13-41af-989d-ea85c7fab93f"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1055.011": {
+      "name": "Extra Window Memory Injection",
+      "tactics": [
+        "stealth",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "process_access/t1055_process_injection"
+      ],
+      "events": [
+        "ProcessAccess"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1055.012": {
+      "name": "Process Hollowing",
+      "tactics": [
+        "stealth",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "process_access/t1055_process_injection",
+        "process_tampering/t1055_012_hollowing"
+      ],
+      "events": [
+        "ProcessAccess",
+        "ProcessTampering"
+      ],
+      "sigma": [
+        "c4b890e5-8d8c-4496-8c66-c805753817cd"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1055.013": {
+      "name": "Process Doppelgänging",
+      "tactics": [
+        "stealth",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "process_create/t1055_process_injection"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1059": {
+      "name": "Command and Scripting Interpreter",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "file_create/t1059_command_scripting",
+        "network_connect/t1059_command_scripting"
+      ],
+      "events": [
+        "FileCreate",
+        "NetworkConnect"
+      ],
+      "sigma": [
+        "992a6cae-db6a-43c8-9cec-76d7195c96fc"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1059.001": {
+      "name": "PowerShell",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "image_load/t1059_001_powershell_unmanaged",
+        "process_create/t1059_001_powershell"
+      ],
+      "events": [
+        "ImageLoad",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "092bc4b9-3d1d-43b4-a6b4-8c8acd83522f",
+        "bb2ba6fb-95d4-4a25-89fc-30bb736c021a",
+        "e32d4572-9826-4738-b651-95fa63747e8a",
+        "f26c6093-6f14-4b12-800f-0fcb46f5ffd0",
+        "88f680b8-070e-402c-ae11-d2914f2257f1",
+        "d7bcd677-645d-4691-a8d4-7a5602b780d1"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1059.003": {
+      "name": "Windows Command Shell",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "process_create/t1059_003_cmd"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "a16980c2-0c56-4de0-9a79-17971979efdd",
+        "438025f9-5856-4663-83f7-52f878a70a50"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1059.005": {
+      "name": "Visual Basic",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "process_create/t1059_command_scripting"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "cea72823-df4d-4567-950c-0b579eaf0846"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1059.007": {
+      "name": "JavaScript",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "process_create/t1059_command_scripting"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "cea72823-df4d-4567-950c-0b579eaf0846"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1070.004": {
+      "name": "File Deletion",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "file_delete/archive_executables",
+        "file_delete_detected/general_anti_forensics",
+        "file_delete_detected/t1685_005_log_files"
+      ],
+      "events": [
+        "FileDelete",
+        "FileDeleteDetected"
+      ],
+      "sigma": [
+        "63c779ba-f638-40a0-a593-ddd45e8b1ddc"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all",
+          "rules"
+        ]
+      }
+    },
+    "T1090.003": {
+      "name": "Multi-hop Proxy",
+      "tactics": [
+        "command-and-control"
+      ],
+      "modules": [
+        "dns_query/general_c2_infrastructure"
+      ],
+      "events": [
+        "DnsQuery"
+      ],
+      "sigma": [
+        "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
+        "a1d9eec5-33b2-4177-8d24-27fe754d0812"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1105": {
+      "name": "Ingress Tool Transfer",
+      "tactics": [
+        "command-and-control"
+      ],
+      "modules": [
+        "file_create/general_user_writable_payloads",
+        "file_executable_detected/t1105_dropped_executables",
+        "process_create/t1105_ingress_tool_transfer"
+      ],
+      "events": [
+        "FileCreate",
+        "FileExecutableDetected",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "13e6fe51-d478-4c7e-b0f2-6da9b400a829",
+        "2ddef153-167b-4e89-86b6-757a9e65dcac",
+        "21dd6d38-2b18-4453-9404-a0fe4a0cc288"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1137": {
+      "name": "Office Application Startup",
+      "tactics": [
+        "persistence"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1140": {
+      "name": "Deobfuscate/Decode Files or Information",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "process_create/t1027_obfuscation"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "cc9cbe82-7bc0-4ef5-bc23-bbfb83947be7",
+        "22e58743-4ac8-4a9f-bf19-00a0428d8c5f",
+        "e32d4572-9826-4738-b651-95fa63747e8a"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1176.001": {
+      "name": "Browser Extensions",
+      "tactics": [
+        "persistence"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1204.002": {
+      "name": "Malicious File",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "file_create/general_user_writable_payloads",
+        "file_executable_detected/t1105_dropped_executables"
+      ],
+      "events": [
+        "FileCreate",
+        "FileExecutableDetected"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1204.004": {
+      "name": "Malicious Copy and Paste",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "process_create/t1204_004_clickfix",
+        "registry_event/t1204_004_clickfix_runmru"
+      ],
+      "events": [
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "d487ed4a-fd24-436d-a0b2-f4e95f7b2635",
+        "3ae9974a-eb09-4044-8e70-8980a50c12c8",
+        "7a1b4c5e-8f3d-4b9a-7c2e-1f4a5b8c6d9e",
+        "a7df0e9e-91a5-459a-a003-4cde67c2ff5d"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1218.005": {
+      "name": "Mshta",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "dns_query/t1218_proxy_binaries",
+        "process_create/t1218_005_mshta"
+      ],
+      "events": [
+        "DnsQuery",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "36e037c4-c228-4866-b6a3-48eb292b9955",
+        "b98d0db6-511d-45de-ad02-e82a98729620",
+        "67f113fa-e23d-4271-befa-30113b3e08b1",
+        "03cc0c25-389f-4bf8-b48d-11878079f1ca"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1218.010": {
+      "name": "Regsvr32",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "dns_query/t1218_proxy_binaries",
+        "process_create/t1218_010_regsvr32"
+      ],
+      "events": [
+        "DnsQuery",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "36e037c4-c228-4866-b6a3-48eb292b9955",
+        "327ff235-94eb-4f06-b9de-aaee571324be",
+        "2dd2c217-bf68-437a-b57c-fe9fd01d5de8",
+        "6f0947a4-1c5e-4e0d-8ac7-53159b8f23ca"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1218.011": {
+      "name": "Rundll32",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "dns_query/t1218_proxy_binaries",
+        "process_create/t1218_011_rundll32"
+      ],
+      "events": [
+        "DnsQuery",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "36e037c4-c228-4866-b6a3-48eb292b9955",
+        "5bb68627-3198-40ca-b458-49f973db8752",
+        "2569ed8c-1147-498a-9b8c-2ad3656b10ed",
+        "ae9c6a7c-9521-42a6-915e-5aaa8689d529"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1484.001": {
+      "name": "Group Policy Modification",
+      "tactics": [
+        "defense-impairment",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1490": {
+      "name": "Inhibit System Recovery",
+      "tactics": [
+        "impact"
+      ],
+      "modules": [
+        "file_delete_detected/t1490_backups",
+        "process_create/t1490_inhibit_recovery"
+      ],
+      "events": [
+        "FileDeleteDetected",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "06125661-3814-4e03-bfa2-1e4411c60ac3",
+        "c947b146-0abc-4c87-9c64-b17e9d7274a2",
+        "639c9081-f482-47d3-a0bd-ddee3d4ecd76",
+        "1444443e-6757-43e4-9ea4-c8fc705f79a2",
+        "21ff4ca9-f13a-41ad-b828-0077b2af2e40"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1496.001": {
+      "name": "Compute Hijacking",
+      "tactics": [
+        "impact"
+      ],
+      "modules": [
+        "dns_query/general_c2_infrastructure"
+      ],
+      "events": [
+        "DnsQuery"
+      ],
+      "sigma": [
+        "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
+        "a1d9eec5-33b2-4177-8d24-27fe754d0812"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1505.003": {
+      "name": "Web Shell",
+      "tactics": [
+        "persistence"
+      ],
+      "modules": [
+        "file_create/general_user_writable_payloads"
+      ],
+      "events": [
+        "FileCreate"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1543.003": {
+      "name": "Windows Service",
+      "tactics": [
+        "persistence",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "process_create/t1543_003_services",
+        "registry_event/t1543_003_services"
+      ],
+      "events": [
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "17a1be64-8d88-40bf-b5ff-a4f7a50ebcc8",
+        "138d3531-8793-4f50-a2cd-f291b2863d78",
+        "a07f0359-4c90-4dc4-a681-8ffea40b4f47",
+        "612e47e9-8a59-43a6-b404-f48683f45bd6",
+        "4a5f5a5e-ac01-474b-9b4e-d61298c9df1d"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1546.003": {
+      "name": "Windows Management Instrumentation Event Subscription",
+      "tactics": [
+        "privilege-escalation",
+        "persistence"
+      ],
+      "modules": [
+        "wmi_event/t1047_wmi"
+      ],
+      "events": [
+        "WmiEvent"
+      ],
+      "sigma": [
+        "83844185-1c5b-45bc-bcf3-b5bf3084ca5b",
+        "fe21810c-2a8c-478f-8dd3-5a287fb2a0e0",
+        "0f06a3a5-6a09-413f-8743-e6cf35561297"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1546.010": {
+      "name": "AppInit DLLs",
+      "tactics": [
+        "privilege-escalation",
+        "persistence"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1546.012": {
+      "name": "Image File Execution Options Injection",
+      "tactics": [
+        "privilege-escalation",
+        "persistence"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1546.015": {
+      "name": "Component Object Model Hijacking",
+      "tactics": [
+        "privilege-escalation",
+        "persistence"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1547.001": {
+      "name": "Registry Run Keys / Startup Folder",
+      "tactics": [
+        "persistence",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "file_create/t1547_001_startup_folder",
+        "registry_event/t1547_001_run_keys"
+      ],
+      "events": [
+        "FileCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "28208707-fe31-437f-9a7f-4b1108b94d2e",
+        "92fa78e7-4d39-45f1-91a3-8b23f3f1088d",
+        "2aa0a6b4-a865-495b-ab51-c28249537b75",
+        "02ee49e2-e294-4d0f-9278-f5b3212fc588",
+        "b7916c2a-fa2f-4795-9477-32b731f70f11"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1547.004": {
+      "name": "Winlogon Helper DLL",
+      "tactics": [
+        "persistence",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1547.005": {
+      "name": "Security Support Provider",
+      "tactics": [
+        "persistence",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "image_load/general_user_writable_dlls",
+        "registry_event/general_credential_config"
+      ],
+      "events": [
+        "ImageLoad",
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1547.014": {
+      "name": "Active Setup",
+      "tactics": [
+        "persistence",
+        "privilege-escalation"
+      ],
+      "modules": [
+        "registry_event/general_persistence"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1548.002": {
+      "name": "Bypass User Account Control",
+      "tactics": [
+        "privilege-escalation"
+      ],
+      "modules": [
+        "registry_event/general_privilege_config"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1553.005": {
+      "name": "Mark-of-the-Web Bypass",
+      "tactics": [
+        "defense-impairment"
+      ],
+      "modules": [
+        "file_create/general_user_writable_payloads"
+      ],
+      "events": [
+        "FileCreate"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1555.004": {
+      "name": "Windows Credential Manager",
+      "tactics": [
+        "credential-access"
+      ],
+      "modules": [
+        "image_load/t1003_001_lsass_dump_dlls"
+      ],
+      "events": [
+        "ImageLoad"
+      ],
+      "sigma": [
+        "8cde342c-ba48-4b74-b615-172c330f2e93",
+        "bdc64095-d59a-42a2-8588-71fd9c9d9abc"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1564": {
+      "name": "Hide Artifacts",
+      "tactics": [
+        "stealth"
+      ],
+      "modules": [
+        "file_create/general_user_writable_payloads"
+      ],
+      "events": [
+        "FileCreate"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1568": {
+      "name": "Dynamic Resolution",
+      "tactics": [
+        "command-and-control"
+      ],
+      "modules": [
+        "dns_query/general_c2_infrastructure"
+      ],
+      "events": [
+        "DnsQuery"
+      ],
+      "sigma": [
+        "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
+        "a1d9eec5-33b2-4177-8d24-27fe754d0812"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1569.002": {
+      "name": "Service Execution",
+      "tactics": [
+        "execution"
+      ],
+      "modules": [
+        "pipe_event/t1021_002_remote_exec"
+      ],
+      "events": [
+        "PipeEvent"
+      ],
+      "sigma": [
+        "f6451de4-df0a-41fa-8d72-b39f54a08db5",
+        "d36f87ea-c403-44d2-aa79-1a0ac7c24456",
+        "f318b911-ea88-43f4-9281-0de23ede628e"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1572": {
+      "name": "Protocol Tunneling",
+      "tactics": [
+        "command-and-control"
+      ],
+      "modules": [
+        "dns_query/general_c2_infrastructure"
+      ],
+      "events": [
+        "DnsQuery"
+      ],
+      "sigma": [
+        "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
+        "a1d9eec5-33b2-4177-8d24-27fe754d0812"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1574.001": {
+      "name": "DLL",
+      "tactics": [
+        "stealth",
+        "execution"
+      ],
+      "modules": [
+        "image_load/general_user_writable_dlls"
+      ],
+      "events": [
+        "ImageLoad"
+      ],
+      "sigma": [],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1685": {
+      "name": "Disable or Modify Tools",
+      "tactics": [
+        "defense-impairment"
+      ],
+      "modules": [
+        "process_create/t1685_disable_security_tools",
+        "registry_event/t1685_disable_security_tools"
+      ],
+      "events": [
+        "ProcessCreate",
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "a7ee1722-c3c5-aeff-3212-c777e4733217",
+        "51cbac1e-eee3-4a90-b1b7-358efb81fa0a",
+        "0eb46774-f1ab-4a74-8238-1155855f2263",
+        "a982fc9c-6333-4ffb-a51d-addb04e8b529",
+        "93d298a1-d28f-47f1-a468-d971e7796679",
+        "e1aa95de-610a-427d-b9e7-9b46cfafbe6a"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1685.001": {
+      "name": "Disable or Modify Windows Event Log",
+      "tactics": [
+        "defense-impairment"
+      ],
+      "modules": [
+        "process_create/t1685_005_clear_event_logs"
+      ],
+      "events": [
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "cc36992a-4671-4f21-a91d-6c2b72a2edf5"
+      ],
+      "profiles": {
+        "balanced": [
+          "all"
+        ],
+        "dc": [
+          "all"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1685.005": {
+      "name": "Clear Windows Event Logs",
+      "tactics": [
+        "defense-impairment"
+      ],
+      "modules": [
+        "file_delete_detected/t1685_005_log_files",
+        "process_create/t1685_005_clear_event_logs"
+      ],
+      "events": [
+        "FileDeleteDetected",
+        "ProcessCreate"
+      ],
+      "sigma": [
+        "63c779ba-f638-40a0-a593-ddd45e8b1ddc",
+        "cc36992a-4671-4f21-a91d-6c2b72a2edf5"
+      ],
+      "profiles": {
+        "balanced": [
+          "all",
+          "rules"
+        ],
+        "dc": [
+          "all",
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    },
+    "T1686": {
+      "name": "Disable or Modify System Firewall",
+      "tactics": [
+        "defense-impairment"
+      ],
+      "modules": [
+        "registry_event/t1686_firewall"
+      ],
+      "events": [
+        "RegistryEvent"
+      ],
+      "sigma": [
+        "974515da-6cc5-4c95-ae65-f97f9150ec7f"
+      ],
+      "profiles": {
+        "balanced": [
+          "rules"
+        ],
+        "dc": [
+          "rules"
+        ],
+        "verbose": [
+          "all"
+        ]
+      }
+    }
+  }
 }

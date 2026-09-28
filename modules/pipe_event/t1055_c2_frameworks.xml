@@ -1,0 +1,17 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Default named pipes of Cobalt Strike, Meterpreter and similar implants
+    techniques: T1055
+    sigma: d5601f8c-b26f-4ab0-9035-69e11a8d4ad2, 85adeb13-4fc9-4e68-8a4a-c7cb2c336eb7, fe3ac066-98bb-432a-b1e7-a5229cb39d4a
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="pipe_event/t1055_c2_frameworks" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains any">msagent_;MSSE-;postex_;status_;meterpreter</PipeName>
+        <PipeName condition="contains any">\NamedPipe\;\cromepipe</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -2,6 +2,7 @@
   <!--
   title: T1047 WMI execution and persistence: FileCreate include
   techniques: T1047
+  sigma: 8d5aca11-22b3-4f22-b7ba-90e60533e1fb
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1047_wmi_execution.xml
   status: migrated in phase 2; review in phase 3

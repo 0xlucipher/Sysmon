@@ -2,6 +2,7 @@
   <!--
   title: T1021 remote services: PipeEvent include
   techniques: T1021.002
+  sigma: 41504465-5e3a-4a5b-a5b4-2a0baadd4463
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1021_remote_services.xml
   status: migrated in phase 2; review in phase 3

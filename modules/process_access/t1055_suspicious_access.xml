@@ -1,0 +1,17 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Full-access handles and unknown call stacks (injection precursors)
+    techniques: T1055
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+    notes: UNKNOWN in CallTrace means code running from memory that is not backed by a file on disk.
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_access/t1055_suspicious_access" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <CallTrace condition="contains">UNKNOWN</CallTrace>
+        <GrantedAccess condition="is any">0x1F0FFF;0x1F1FFF;0x1F2FFF;0x1F3FFF;0x1FFFFF</GrantedAccess>
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

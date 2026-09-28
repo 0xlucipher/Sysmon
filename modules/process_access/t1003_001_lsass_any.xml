@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Any access to LSASS and other core security processes (after exclusions)
+    techniques: T1003.001
+    sigma: 5ef9853e-4d0e-4a70-846f-a9ca37d876da, 9bd012ee-0dff-44d7-84a0-aa698cfd87a3, a49fa4d5-11db-418c-8473-1e014a8dd462, 4be8b654-0c01-4c9d-a10c-6b28467fc651
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_access/t1003_001_lsass_any" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,28 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Shadow copy, backup and recovery destruction (ransomware precursor)
+    techniques: T1490
+    sigma: c947b146-0abc-4c87-9c64-b17e9d7274a2, 639c9081-f482-47d3-a0bd-ddee3d4ecd76, 1444443e-6757-43e4-9ea4-c8fc705f79a2, 21ff4ca9-f13a-41ad-b828-0077b2af2e40
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1490_inhibit_recovery" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="contains any">\vssadmin.exe;\wmic.exe</Image>
+          <CommandLine condition="contains">shadow</CommandLine>
+          <CommandLine condition="contains any">delete;resize</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\wbadmin.exe</Image>
+          <CommandLine condition="contains">delete</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\bcdedit.exe</Image>
+          <CommandLine condition="contains any">recoveryenabled;bootstatuspolicy</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

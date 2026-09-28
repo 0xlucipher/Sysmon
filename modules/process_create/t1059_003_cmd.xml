@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: cmd.exe launched by Office, script hosts or web servers
+    techniques: T1059.003
+    sigma: a16980c2-0c56-4de0-9a79-17971979efdd, 438025f9-5856-4663-83f7-52f878a70a50
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1059_003_cmd" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">Cmd.Exe</OriginalFileName>
+          <ParentImage condition="contains any">\winword.exe;\excel.exe;\powerpnt.exe;\outlook.exe;\mshta.exe;\wscript.exe;\cscript.exe;\w3wp.exe;\sqlservr.exe</ParentImage>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

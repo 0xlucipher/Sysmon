@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Commands that disable Defender or stop security services
+    techniques: T1685
+    sigma: a7ee1722-c3c5-aeff-3212-c777e4733217, 51cbac1e-eee3-4a90-b1b7-358efb81fa0a
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1685_disable_security_tools" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <CommandLine condition="contains any">DisableRealtimeMonitoring;DisableBehaviorMonitoring;DisableIOAVProtection;Add-MpPreference -ExclusionPath;Set-MpPreference -Exclusion</CommandLine>
+        <Rule groupRelation="and">
+          <Image condition="contains any">\sc.exe;\net.exe;\net1.exe</Image>
+          <CommandLine condition="contains any">WinDefend;Sysmon;SecurityHealthService;wscsvc</CommandLine>
+          <CommandLine condition="contains any">stop;delete;config</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

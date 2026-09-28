@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: PsExec-style remote execution pipes, PowerShell remoting and WMI pipes
+    techniques: T1021.002, T1569.002, T1021.006, T1047
+    sigma: f6451de4-df0a-41fa-8d72-b39f54a08db5, d36f87ea-c403-44d2-aa79-1a0ac7c24456, f318b911-ea88-43f4-9281-0de23ede628e
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+    notes: Pipe names are logged with a single leading backslash.
+  -->
+  <EventFiltering>
+    <RuleGroup name="pipe_event/t1021_002_remote_exec" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="begin with">\PSEXESVC</PipeName>
+        <PipeName condition="contains any">paexec;remcom;csexec</PipeName>
+        <PipeName condition="begin with">\PSHost</PipeName>
+        <PipeName condition="begin with">\WMIC</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -2,6 +2,7 @@
   <!--
   title: T1021 remote services: NetworkConnect include
   techniques: T1021.001, T1021.002, T1021.003, T1021.004, T1021.006
+  sigma: c539afac-c12a-46ed-b1bd-5a5567c9f045
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1021_remote_services.xml
   status: migrated in phase 2; review in phase 3

@@ -1,14 +1,14 @@
 <Sysmon schemaversion="4.90">
   <!--
-  title: Baseline FileCreate include rules
-  volume: unmeasured
-  source: migrated from configurations/sysmon-base.xml
-  status: migrated in phase 2; review in phase 3
--->
+    title: Executables, scripts and disk images written to user-writable locations; web shells
+    techniques: T1105, T1204.002, T1553.005, T1505.003, T1564
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+    notes: ISO/IMG containers bypass Mark-of-the-Web; .hta files are a common phishing payload.
+  -->
   <EventFiltering>
-    <RuleGroup name="file_create/baseline_include" groupRelation="or">
+    <RuleGroup name="file_create/general_user_writable_payloads" groupRelation="or">
       <FileCreate onmatch="include">
-        <!-- Executables in user-writable directories -->
         <Rule groupRelation="and">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.exe</TargetFilename>
@@ -21,7 +21,6 @@
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.sys</TargetFilename>
         </Rule>
-        <!-- Scripts in user directories -->
         <Rule groupRelation="and">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.ps1</TargetFilename>
@@ -38,14 +37,11 @@
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.js</TargetFilename>
         </Rule>
-        <!-- Executables in system temp -->
         <Rule groupRelation="and">
           <TargetFilename condition="begin with">C:\Windows\Temp\</TargetFilename>
           <TargetFilename condition="end with">.exe</TargetFilename>
         </Rule>
-        <!-- Files in Recycle Bin (data hiding) -->
         <TargetFilename condition="contains">\$Recycle.Bin\</TargetFilename>
-        <!-- Web shells in webroot directories -->
         <Rule groupRelation="and">
           <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
           <TargetFilename condition="end with">.asp</TargetFilename>
@@ -58,11 +54,7 @@
           <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
           <TargetFilename condition="end with">.php</TargetFilename>
         </Rule>
-        <!-- Startup folder (persistence) -->
-        <TargetFilename condition="contains">\Microsoft\Windows\Start Menu\Programs\Startup\</TargetFilename>
-        <!-- HTA files (phishing vector) -->
         <TargetFilename condition="end with">.hta</TargetFilename>
-        <!-- ISO/IMG files (malware delivery) -->
         <TargetFilename condition="end with">.iso</TargetFilename>
         <TargetFilename condition="end with">.img</TargetFilename>
       </FileCreate>
