@@ -8,9 +8,16 @@ Items marked ✅ are fixed in phase 1.
 
 The repository has a good amount of raw material: modules, exclusion lists,
 deployment scripts and a MITRE mapping. But the configurations had never been
-loaded into Sysmon. Several were likely to be rejected outright, including the
-default `balanced` profile used by the installer (`sysmon-base.xml`). Others
-silently logged nothing where they claimed to log everything. The biggest
+loaded into Sysmon. CI now confirms (Sysmon 15.22, `testing/probes`) that every
+class of mistake below makes Sysmon **reject the whole file**. That included the
+default `balanced` profile used by the installer (`sysmon-base.xml`), so a
+default install could not apply its configuration. Others silently logged
+nothing where they claimed to log everything.
+
+**Verified in CI:** Sysmon 15.22 rejects non-filterable events, unknown events,
+fields that don't exist on an event, invalid conditions and malformed XML. It
+accepts several event types in one RuleGroup and the same event in several
+RuleGroups. The validator reports those two as style warnings only. The biggest
 structural gap is that detection logic is copied across nine hand-maintained
 files, with no generator that can reliably rebuild them.
 
@@ -25,7 +32,7 @@ files, with no generator that can reliably rebuild them.
 | Invalid fields | `Signed` used on ProcessCreate and NetworkConnect. It exists only on ImageLoad and DriverLoad. | ✅ fixed (removed, with note) |
 | Invalid condition | `does not contain` in `10_process_access.xml`. The correct condition is `excludes`. | ✅ fixed |
 | BYOVD blind spot | Server/DC examples excluded driver loads on `Signed=true` **OR** `Signature=Microsoft Windows`, hiding every signed driver including vulnerable ones. | ✅ fixed (AND rule) |
-| Multiple event types per RuleGroup | Common in modules and examples (e.g. `AlwaysLog`, `T1003.001_LSASS_Memory`). The validator warns; the Windows load test will show whether Sysmon accepts it. | rebuild (phase 2) |
+| Multiple event types per RuleGroup | Common in modules and examples (e.g. `AlwaysLog`, `T1003.001_LSASS_Memory`). Sysmon accepts it (verified), but it makes merging and review harder. | rebuild (phase 2) |
 | Same event and `onmatch` in several RuleGroups | Modules repeat e.g. `ProcessCreate include` 3×. Unclear semantics once merged. | rebuild (phase 2) |
 | Profiles (`minimal`, `base`, `comprehensive`, `forensics`, `modular`) | Five overlapping hand-written files. Design calls for three generated profiles. | delete → generated in phase 2 |
 | `examples/*` (workstation, server, DC) | Copies of profile content. Hand-maintained. | delete; DC logic → `dc-overlay` |
