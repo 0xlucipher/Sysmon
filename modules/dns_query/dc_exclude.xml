@@ -11,12 +11,10 @@
         <!-- Internal domain -->
         <QueryName condition="end with">.local</QueryName>
         <!-- Microsoft -->
-        <QueryName condition="end with">microsoft.com</QueryName>
-        <QueryName condition="end with">windows.com</QueryName>
-        <!-- AD forest trusts (customize) -->
-        <!--
-        <QueryName condition="end with">trustedforest.com</QueryName>
-        -->
+        <QueryName condition="is any">microsoft.com;windows.com</QueryName>
+        <QueryName condition="end with">.microsoft.com</QueryName>
+        <QueryName condition="end with">.windows.com</QueryName>
+        <!-- AD forest trusts: add your trusted forest domains here, anchored like the lines above -->
       </DnsQuery>
     </RuleGroup>
   </EventFiltering>

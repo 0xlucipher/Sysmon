@@ -3,39 +3,38 @@
   title: Baseline DnsQuery exclude rules
   volume: unmeasured
   source: migrated from configurations/sysmon-base.xml
-  status: migrated in phase 2; review in phase 3
+  status: reviewed in phase 4: anchored domains, cloud platforms no longer excluded
 -->
   <EventFiltering>
     <RuleGroup name="dns_query/baseline_exclude" groupRelation="or">
       <DnsQuery onmatch="exclude">
-        <!-- Microsoft domains (very high volume) -->
-        <QueryName condition="end with">microsoft.com</QueryName>
-        <QueryName condition="end with">windows.com</QueryName>
-        <QueryName condition="end with">windowsupdate.com</QueryName>
-        <QueryName condition="end with">live.com</QueryName>
-        <QueryName condition="end with">office.com</QueryName>
-        <QueryName condition="end with">office365.com</QueryName>
-        <QueryName condition="end with">microsoftonline.com</QueryName>
-        <QueryName condition="end with">msftncsi.com</QueryName>
-        <!-- Common CDNs and cloud services -->
-        <QueryName condition="end with">cloudflare.com</QueryName>
-        <QueryName condition="end with">akamai.net</QueryName>
-        <QueryName condition="end with">amazonaws.com</QueryName>
-        <QueryName condition="end with">azure.com</QueryName>
-        <QueryName condition="end with">googleusercontent.com</QueryName>
-        <!-- Google services -->
-        <QueryName condition="end with">google.com</QueryName>
-        <QueryName condition="end with">googleapis.com</QueryName>
-        <QueryName condition="end with">gstatic.com</QueryName>
-        <!-- Common legitimate domains -->
-        <QueryName condition="end with">apple.com</QueryName>
-        <QueryName condition="end with">mozilla.org</QueryName>
-        <!-- Local/private DNS -->
+        <!-- Domains are anchored: an exact match or a real subdomain ("end with .microsoft.com").
+             A bare "end with microsoft.com" would also exclude lookalikes such as notmicrosoft.com. -->
+        <!-- Microsoft (very high volume) -->
+        <QueryName condition="is any">microsoft.com;windows.com;windowsupdate.com;live.com;office.com;office365.com;microsoftonline.com;msftncsi.com</QueryName>
+        <QueryName condition="end with">.microsoft.com</QueryName>
+        <QueryName condition="end with">.windows.com</QueryName>
+        <QueryName condition="end with">.windowsupdate.com</QueryName>
+        <QueryName condition="end with">.live.com</QueryName>
+        <QueryName condition="end with">.office.com</QueryName>
+        <QueryName condition="end with">.office365.com</QueryName>
+        <QueryName condition="end with">.microsoftonline.com</QueryName>
+        <QueryName condition="end with">.msftncsi.com</QueryName>
+        <!-- Common vendor and CDN domains.
+             Deliberately NOT excluded: amazonaws.com, azure.com, cloudflare.com,
+             googleusercontent.com, googleapis.com. Attackers host C2 and payloads on these
+             platforms, and excluding them also hid this config's own detections
+             (e.g. trycloudflare.com tunnels). -->
+        <QueryName condition="is any">akamai.net;google.com;gstatic.com;apple.com;mozilla.org</QueryName>
+        <QueryName condition="end with">.akamai.net</QueryName>
+        <QueryName condition="end with">.google.com</QueryName>
+        <QueryName condition="end with">.gstatic.com</QueryName>
+        <QueryName condition="end with">.apple.com</QueryName>
+        <QueryName condition="end with">.mozilla.org</QueryName>
+        <!-- Local/private DNS, reverse lookups, WPAD -->
         <QueryName condition="end with">.local</QueryName>
         <QueryName condition="end with">.lan</QueryName>
-        <!-- Reverse lookups -->
         <QueryName condition="end with">.in-addr.arpa</QueryName>
-        <!-- WPAD (Web Proxy Auto-Discovery) -->
         <QueryName condition="is">wpad</QueryName>
       </DnsQuery>
     </RuleGroup>
