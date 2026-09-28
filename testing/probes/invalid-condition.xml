@@ -1,0 +1,9 @@
+<Sysmon schemaversion="4.90">
+  <EventFiltering>
+    <RuleGroup name="probe" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="does not contain">x</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,44 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Static validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - name: Unit tests
+        run: python -m pytest -q tests
+      - name: Lint Sysmon configurations
+        run: python tools/sysmonlint.py configurations examples
+
+  sysmon-load:
+    name: Load configs into Sysmon
+    needs: lint
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply every configuration with sysmon -c
+        shell: pwsh
+        run: ./testing/Test-SysmonLoad.ps1 -Path configurations, examples
+      - name: Probe which mistakes Sysmon rejects (informational)
+        if: always()
+        shell: pwsh
+        run: ./testing/Test-SysmonLoad.ps1 -Path testing/probes -OutputDirectory sysmon-load-results/probes -Probe
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sysmon-load-results
+          path: sysmon-load-results/

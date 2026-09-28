@@ -423,10 +423,12 @@
          ====================================================================== -->
 
     <RuleGroup name="AlwaysLog" groupRelation="or">
-      <SysmonStatus onmatch="include"/>
       <DriverLoad onmatch="exclude">
-        <Signed condition="is">true</Signed>
-        <Signature condition="is">Microsoft Windows</Signature>
+        <!-- AND, not OR: excluding on Signed alone would hide signed-but-vulnerable drivers (BYOVD) -->
+        <Rule groupRelation="and">
+          <Signed condition="is">true</Signed>
+          <Signature condition="is">Microsoft Windows</Signature>
+        </Rule>
       </DriverLoad>
       <CreateRemoteThread onmatch="exclude">
         <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
@@ -434,8 +436,8 @@
       <RawAccessRead onmatch="exclude">
         <Image condition="is">C:\Windows\System32\svchost.exe</Image>
       </RawAccessRead>
-      <ProcessTampering onmatch="include"/>
-      <WmiEvent onmatch="include"/>
+      <ProcessTampering onmatch="exclude"/>
+      <WmiEvent onmatch="exclude"/>
     </RuleGroup>
 
   </EventFiltering>

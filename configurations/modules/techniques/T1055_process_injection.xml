@@ -156,9 +156,7 @@
     <RuleGroup name="T1055.012_Process_Hollowing" groupRelation="or">
 
       <!-- Event ID 25: ProcessTampering -->
-      <ProcessTampering onmatch="include">
-        <!-- Log all process tampering events -->
-      </ProcessTampering>
+      <ProcessTampering onmatch="exclude"/>
 
       <!-- Event ID 10: ProcessAccess - Hollowing prep -->
       <ProcessAccess onmatch="include">

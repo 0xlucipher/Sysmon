@@ -123,11 +123,6 @@
       </FileCreateStreamHash>
     </RuleGroup>
 
-    <!-- Always log all critical events -->
-    <RuleGroup name="SysmonStatus" groupRelation="or">
-      <SysmonStatus onmatch="include"/>
-    </RuleGroup>
-
     <RuleGroup name="DriverLoad" groupRelation="or">
       <DriverLoad onmatch="include">
         <ImageLoaded condition="begin with">C:\</ImageLoaded>
@@ -147,7 +142,7 @@
     </RuleGroup>
 
     <RuleGroup name="ProcessTampering" groupRelation="or">
-      <ProcessTampering onmatch="include"/>
+      <ProcessTampering onmatch="exclude"/>
     </RuleGroup>
 
     <RuleGroup name="FileCreateTime" groupRelation="or">
@@ -157,7 +152,7 @@
     </RuleGroup>
 
     <RuleGroup name="WmiEvent" groupRelation="or">
-      <WmiEvent onmatch="include"/>
+      <WmiEvent onmatch="exclude"/>
     </RuleGroup>
 
     <RuleGroup name="FileBlockExecutable" groupRelation="or">

@@ -1,0 +1,7 @@
+<Sysmon schemaversion="4.90">
+  <EventFiltering>
+    <RuleGroup name="probe" groupRelation="or">
+      <FileBlockRansomware onmatch="include"/>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

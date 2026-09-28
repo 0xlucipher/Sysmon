@@ -98,16 +98,10 @@
       </CreateRemoteThread>
 
       <!-- Critical: Always log WMI persistence -->
-      <WmiEvent onmatch="include"/>
-
-      <!-- Critical: Always log Sysmon tampering -->
-      <SysmonStatus onmatch="include"/>
-
-      <!-- Critical: Always log config changes -->
-      <SysmonConfigurationChange onmatch="include"/>
+      <WmiEvent onmatch="exclude"/>
 
       <!-- Critical: Always log process tampering -->
-      <ProcessTampering onmatch="include"/>
+      <ProcessTampering onmatch="exclude"/>
 
     </RuleGroup>
 
