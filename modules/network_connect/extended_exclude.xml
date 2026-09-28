@@ -1,0 +1,59 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Extended NetworkConnect exclude rules
+  volume: unmeasured
+  source: migrated from configurations/modules/categories/03_network_connections.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="network_connect/extended_exclude" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Localhost connections -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+        <!-- Multicast/Broadcast -->
+        <DestinationIp condition="begin with">224.0.0.</DestinationIp>
+        <DestinationIp condition="begin with">239.255.</DestinationIp>
+        <DestinationIp condition="is">255.255.255.255</DestinationIp>
+        <!-- Link-local -->
+        <DestinationIp condition="begin with">169.254.</DestinationIp>
+        <DestinationIp condition="begin with">fe80:</DestinationIp>
+        <!-- OPTIONAL: Exclude internal networks (for minimal profile) -->
+        <!-- Uncomment if you want to focus only on external connections -->
+        <!--
+        <DestinationIp condition="begin with">10.</DestinationIp>
+        <DestinationIp condition="begin with">172.16.</DestinationIp>
+        <DestinationIp condition="begin with">192.168.</DestinationIp>
+        -->
+        <!-- SVCHOST to Microsoft (extremely noisy) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="end with">windows.com</DestinationHostname>
+        </Rule>
+        <!-- System processes (legitimate) -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+        <!-- WMI Provider -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+          <DestinationPort condition="is">135</DestinationPort>
+        </Rule>
+        <!-- Windows Update legitimate traffic -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationHostname condition="contains">update.microsoft.com</DestinationHostname>
+        </Rule>
+        <!-- Office telemetry (if allowed) -->
+        <!--
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <DestinationHostname condition="end with">office.com</DestinationHostname>
+        </Rule>
+        -->
+      </NetworkConnect>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

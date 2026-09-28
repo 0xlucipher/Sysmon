@@ -1,0 +1,61 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1055 process injection: ImageLoad include
+  techniques: T1055
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1055_process_injection.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="image_load/t1055_process_injection" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <!-- Unsigned DLLs loaded into system processes -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\explorer.exe</Image>
+          <Signed condition="is">false</Signed>
+          <ImageLoaded condition="begin with">C:\Users\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\svchost.exe</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+        <!-- DLLs from temp directories -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="contains">\Temp\</ImageLoaded>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+        <Rule groupRelation="and">
+          <ImageLoaded condition="begin with">C:\Windows\Temp\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <ImageLoaded condition="contains">\AppData\Local\Temp\</ImageLoaded>
+        </Rule>
+        <!-- DLLs from ProgramData (common malware location) -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="begin with">C:\ProgramData\</ImageLoaded>
+          <Signed condition="is">false</Signed>
+        </Rule>
+        <!-- DLLs from Downloads folder -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="contains">\Downloads\</ImageLoaded>
+        </Rule>
+        <!-- Core system DLL names loaded from outside C:\Windows (planted copies).
+             Previously matched every load of these DLLs, i.e. every process. -->
+        <Rule groupRelation="and">
+          <ImageLoaded condition="end with">\kernel32.dll</ImageLoaded>
+          <ImageLoaded condition="not begin with">C:\Windows\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <ImageLoaded condition="end with">\ntdll.dll</ImageLoaded>
+          <ImageLoaded condition="not begin with">C:\Windows\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <ImageLoaded condition="end with">\user32.dll</ImageLoaded>
+          <ImageLoaded condition="not begin with">C:\Windows\</ImageLoaded>
+        </Rule>
+        <!-- Reflective DLL injection indicators -->
+        <ImageLoaded condition="contains">ReflectiveLoader</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

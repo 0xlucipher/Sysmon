@@ -1,0 +1,33 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline FileCreate exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/baseline_exclude" groupRelation="or">
+      <FileCreate onmatch="exclude">
+        <!-- Exclude browser cache/temp files -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Google\Chrome\</Image>
+          <TargetFilename condition="contains">\AppData\Local\Google\Chrome\User Data\</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\firefox.exe</Image>
+          <TargetFilename condition="contains">\AppData\Local\Mozilla\Firefox\</TargetFilename>
+        </Rule>
+        <!-- Exclude OneDrive sync -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <TargetFilename condition="contains">\OneDrive\</TargetFilename>
+        </Rule>
+        <!-- Exclude Visual Studio builds -->
+        <TargetFilename condition="contains">\bin\Debug\</TargetFilename>
+        <TargetFilename condition="contains">\bin\Release\</TargetFilename>
+        <TargetFilename condition="contains">\obj\Debug\</TargetFilename>
+        <TargetFilename condition="contains">\obj\Release\</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

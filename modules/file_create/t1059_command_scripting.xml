@@ -1,0 +1,36 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1059 command and scripting interpreters: FileCreate include
+  techniques: T1059
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1059_command_scripting.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/t1059_command_scripting" groupRelation="or">
+      <FileCreate onmatch="include">
+        <!-- VBS files in user directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.vbs</TargetFilename>
+        </Rule>
+        <!-- JS files in user directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.js</TargetFilename>
+        </Rule>
+        <!-- HTA files -->
+        <TargetFilename condition="end with">.hta</TargetFilename>
+        <!-- BAT/CMD files in suspicious locations -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Windows\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.bat</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\AppData\Local\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.cmd</TargetFilename>
+        </Rule>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

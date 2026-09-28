@@ -1,0 +1,25 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1021 remote services: PipeEvent include
+  techniques: T1021.002
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1021_remote_services.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="pipe_event/t1021_remote_services" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <!-- PSExec -->
+        <PipeName condition="begin with">\\PSEXESVC</PipeName>
+        <!-- PAExec (alternative) -->
+        <PipeName condition="contains">paexec</PipeName>
+        <!-- RemCom (alternative) -->
+        <PipeName condition="contains">remcom</PipeName>
+        <!-- CSExec (alternative) -->
+        <PipeName condition="contains">csexec</PipeName>
+        <!-- WinExe -->
+        <PipeName condition="contains">winexesvc</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,45 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline ProcessCreate exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/baseline_exclude" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Microsoft Windows processes (low-risk, high-volume) -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <Image condition="is">C:\Windows\System32\wbem\WmiApSrv.exe</Image>
+        <!-- Windows Update and servicing (very noisy) -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Windows\System32\</Image>
+          <CommandLine condition="contains">TrustedInstaller</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">-k LocalServiceNetworkRestricted -p -s WpnService</CommandLine>
+        </Rule>
+        <!-- Windows Defender (exclude to reduce log volume, still log suspicious activity) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Program Files\Windows Defender\MsMpEng.exe</Image>
+          <CommandLine condition="excludes">-Scan -Schedule</CommandLine>
+        </Rule>
+        <!-- Microsoft Edge auto-update (very frequent) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe</ParentImage>
+          <Image condition="contains">\Microsoft\EdgeUpdate\</Image>
+        </Rule>
+        <!-- Chrome update checks (noisy) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Google\Chrome\Application\</ParentImage>
+          <CommandLine condition="contains">--type=crashpad-handler</CommandLine>
+        </Rule>
+        <!-- OneDrive sync (high-frequency background process) -->
+        <Image condition="is">C:\Program Files\Microsoft OneDrive\OneDrive.exe</Image>
+        <!-- Common legitimate software (customize per environment) -->
+        <!-- NOTE: Review and adjust based on your environment -->
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,82 @@
+# Default profile for workstations and member servers.
+# Keeps the event modes of the previous sysmon-base.xml, adds the ATT&CK
+# technique modules, and logs file deletions without archiving (DESIGN.md #13).
+description = "Default for workstations and servers: broad process, network and driver visibility with selective file, registry and access events."
+schema = "4.90"
+modules = [
+  "create_remote_thread/baseline_exclude",
+  "create_remote_thread/t1055_process_injection",
+  "dns_query/baseline_exclude",
+  "dns_query/baseline_include",
+  "driver_load/baseline_exclude",
+  "file_create/baseline_exclude",
+  "file_create/baseline_include",
+  "file_create/t1003_credential_dumping",
+  "file_create/t1021_remote_services",
+  "file_create/t1047_wmi",
+  "file_create/t1053_scheduled_task",
+  "file_create/t1059_command_scripting",
+  "file_create_stream_hash/baseline_exclude",
+  "file_create_time/baseline_exclude",
+  "file_delete_detected/baseline_exclude",
+  "file_delete_detected/baseline_include",
+  "file_executable_detected/baseline_include",
+  "image_load/baseline_exclude",
+  "image_load/baseline_include",
+  "image_load/t1055_process_injection",
+  "network_connect/baseline_exclude",
+  "network_connect/t1021_remote_services",
+  "network_connect/t1047_wmi",
+  "network_connect/t1059_command_scripting",
+  "pipe_event/baseline_exclude",
+  "pipe_event/baseline_include",
+  "pipe_event/t1021_remote_services",
+  "process_access/baseline_exclude",
+  "process_access/baseline_include",
+  "process_access/t1003_credential_dumping",
+  "process_access/t1055_process_injection",
+  "process_create/baseline_exclude",
+  "process_create/t1003_credential_dumping",
+  "process_create/t1021_remote_services",
+  "process_create/t1047_wmi",
+  "process_create/t1053_scheduled_task",
+  "process_create/t1055_process_injection",
+  "process_create/t1059_command_scripting",
+  "raw_access_read/baseline_exclude",
+  "raw_access_read/t1003_credential_dumping",
+  "registry_event/baseline_exclude",
+  "registry_event/baseline_include",
+  "registry_event/t1003_credential_dumping",
+  "registry_event/t1021_remote_services",
+  "registry_event/t1053_scheduled_task",
+  "wmi_event/t1047_wmi",
+]
+
+[settings]
+hash_algorithms = ["SHA256", "IMPHASH"]
+check_revocation = true
+dns_lookup = false
+
+[events]
+ProcessCreate          = "all"
+FileCreateTime         = "all"
+NetworkConnect         = "all"
+ProcessTerminate       = "off"
+DriverLoad             = "all"
+ImageLoad              = "selective"
+CreateRemoteThread     = "all"
+RawAccessRead          = "all"
+ProcessAccess          = "selective"
+FileCreate             = "selective"
+RegistryEvent          = "selective"
+FileCreateStreamHash   = "all"
+PipeEvent              = "selective"
+WmiEvent               = "all"
+DnsQuery               = "selective"
+FileDelete             = "off"  # deletions are logged via FileDeleteDetected, without archiving
+ClipboardChange        = "off"  # privacy: never captured
+ProcessTampering       = "all"
+FileDeleteDetected     = "selective"
+FileBlockExecutable    = "off"
+FileBlockShredding     = "off"
+FileExecutableDetected = "selective"

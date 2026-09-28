@@ -1,0 +1,82 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1055 process injection: ProcessCreate include
+  techniques: T1055.013
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1055_process_injection.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1055_process_injection" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- from RuleGroup T1055.013_Process_Doppelganging -->
+        <!-- Process created without expected parent -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">null</ParentImage>
+          <Image condition="is not">C:\Windows\System32\smss.exe</Image>
+        </Rule>
+        <!-- System process with unusual parent -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Windows\System32\</Image>
+          <ParentImage condition="begin with">C:\Users\</ParentImage>
+        </Rule>
+        <!-- from RuleGroup T1055_Known_Tools -->
+        <!-- Cobalt Strike -->
+        <CommandLine condition="contains">inject</CommandLine>
+        <CommandLine condition="contains">shinject</CommandLine>
+        <CommandLine condition="contains">execute-assembly</CommandLine>
+        <!-- Metasploit -->
+        <CommandLine condition="contains">migrate</CommandLine>
+        <CommandLine condition="contains">post/windows/manage/migrate</CommandLine>
+        <!-- PowerSploit -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-DllInjection</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-ReflectivePEInjection</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-Shellcode</CommandLine>
+        </Rule>
+        <!-- Process Hacker (can be used for injection) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\ProcessHacker.exe</Image>
+          <CommandLine condition="contains">-s</CommandLine>
+        </Rule>
+        <!-- Mavinject.exe (Windows utility abused for injection) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mavinject.exe</Image>
+          <CommandLine condition="contains">/INJECTRUNNING</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1055_PowerShell_Injection -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">VirtualAlloc</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">WriteProcessMemory</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">CreateRemoteThread</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">QueueUserAPC</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">[System.Runtime.InteropServices.Marshal]::Copy</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-MemoryLoad</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

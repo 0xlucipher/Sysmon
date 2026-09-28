@@ -1,0 +1,24 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline RawAccessRead exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="raw_access_read/baseline_exclude" groupRelation="or">
+      <RawAccessRead onmatch="exclude">
+        <!-- System legitimate raw access -->
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <Image condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        <Image condition="is">C:\Windows\System32\RuntimeBroker.exe</Image>
+        <!-- Windows Defender -->
+        <Image condition="begin with">C:\Program Files\Windows Defender\</Image>
+        <Image condition="is">C:\Windows\System32\MRT.exe</Image>
+        <!-- Backup software (customize per environment) -->
+        <!-- <Image condition="contains">\Veeam\</Image> -->
+        <!-- <Image condition="contains">\Acronis\</Image> -->
+      </RawAccessRead>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

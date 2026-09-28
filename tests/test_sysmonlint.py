@@ -98,7 +98,52 @@ def test_bad_hash_algorithm_is_error():
 
 
 def test_repository_configs_have_no_errors():
-    files = sysmonlint.collect([str(ROOT / "configurations"), str(ROOT / "examples")])
+    files = sysmonlint.collect([str(ROOT / "modules"), str(ROOT / "dist")])
     assert files
     errors = [str(f) for p in files for f in sysmonlint.lint_file(p) if f.level == "error"]
     assert errors == []
+
+
+def test_standalone_parent_image_exclude_warns():
+    warns = messages(lint(group('<ProcessCreate onmatch="exclude">'
+                                '<ParentImage condition="contains">\\Office\\</ParentImage>'
+                                '</ProcessCreate>')), "warning")
+    assert warns and "EVERY child" in warns[0]
+
+
+def test_unanchored_image_exclude_warns():
+    warns = messages(lint(group('<ProcessAccess onmatch="exclude">'
+                                '<SourceImage condition="end with">procexp.exe</SourceImage>'
+                                '</ProcessAccess>')), "warning")
+    assert warns and "not anchored" in warns[0]
+
+
+def test_anchored_or_rule_scoped_exclude_is_fine():
+    f = lint(group('<ProcessCreate onmatch="exclude">'
+                   '<Image condition="begin with">C:\\Program Files\\Mozilla Firefox\\</Image>'
+                   '<Image condition="end with">C:\\Program Files\\App\\x.exe</Image>'
+                   '<Rule groupRelation="and">'
+                   '<ParentImage condition="is">C:\\Windows\\System32\\services.exe</ParentImage>'
+                   '<Image condition="end with">\\svc.exe</Image>'
+                   '</Rule></ProcessCreate>'))
+    assert f == []
+
+
+def test_comments_are_ignored():
+    root = ET.fromstring('<Sysmon schemaversion="4.90"><!-- c --><EventFiltering><!-- c -->'
+                         '<RuleGroup name="g" groupRelation="or"><!-- c -->'
+                         '<DnsQuery onmatch="exclude"><!-- c --></DnsQuery>'
+                         '</RuleGroup></EventFiltering></Sysmon>',
+                         parser=ET.XMLParser(target=ET.TreeBuilder(insert_comments=True)))
+    assert sysmonlint.lint_tree(root, Path("t.xml")) == []
+
+
+def test_standalone_command_line_exclude_warns():
+    warns = messages(lint(group('<ProcessCreate onmatch="exclude">'
+                                '<CommandLine condition="contains">--type=</CommandLine>'
+                                '</ProcessCreate>')), "warning")
+    assert warns and "attacker-controlled" in warns[0]
+
+
+def test_empty_include_in_off_group_is_intentional():
+    assert lint(group('<ProcessTerminate onmatch="include"/>', "ProcessTerminate off")) == []

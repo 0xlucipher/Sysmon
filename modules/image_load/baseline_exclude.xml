@@ -1,0 +1,40 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline ImageLoad exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="image_load/baseline_exclude" groupRelation="or">
+      <ImageLoad onmatch="exclude">
+        <!-- Exclude all signed Microsoft DLLs from system directories -->
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\</ImageLoaded>
+        </Rule>
+        <!-- Exclude signed Microsoft DLLs from Program Files -->
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Corporation</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Program Files\</ImageLoaded>
+        </Rule>
+        <!-- Exclude common signed third-party DLLs -->
+        <Rule groupRelation="and">
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Program Files\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Program Files (x86)\</ImageLoaded>
+        </Rule>
+        <!-- Exclude .NET Framework assemblies (very noisy) -->
+        <ImageLoaded condition="begin with">C:\Windows\Microsoft.NET\</ImageLoaded>
+        <ImageLoaded condition="begin with">C:\Windows\assembly\</ImageLoaded>
+        <!-- Exclude WinSxS (side-by-side assemblies) -->
+        <ImageLoaded condition="begin with">C:\Windows\WinSxS\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

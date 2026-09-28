@@ -1,0 +1,38 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller NetworkConnect include rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="network_connect/dc_include" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <!-- PowerShell network activity (potential C2) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        <!-- cmd.exe network -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        <!-- Script hosts -->
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+        <!-- LOLBins with network -->
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <!-- RDP outbound (DCs shouldn't initiate RDP) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mstsc.exe</Image>
+          <DestinationPort condition="is">3389</DestinationPort>
+        </Rule>
+        <!-- Suspicious ports -->
+        <DestinationPort condition="is">4444</DestinationPort>
+        <DestinationPort condition="is">8080</DestinationPort>
+      </NetworkConnect>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

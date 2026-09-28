@@ -1,0 +1,18 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common third-party software RegistryEvent activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/common_software.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="registry_event/noise_common_software" groupRelation="or">
+      <RegistryEvent onmatch="exclude">
+        <!-- Chrome settings (noisy) -->
+        <TargetObject condition="contains">\Software\Google\Chrome\</TargetObject>
+        <!-- Firefox settings -->
+        <TargetObject condition="contains">\Software\Mozilla\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,22 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline RegistryEvent exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="registry_event/baseline_exclude" groupRelation="or">
+      <RegistryEvent onmatch="exclude">
+        <!-- Exclude high-frequency low-value keys -->
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run\SecurityHealth</TargetObject>
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run\OneDriveSetup</TargetObject>
+        <!-- Windows Update registry writes -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\</TargetObject>
+        </Rule>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

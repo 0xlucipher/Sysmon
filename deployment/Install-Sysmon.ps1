@@ -8,7 +8,7 @@
     scenarios including standalone, SCCM, and Group Policy.
 
 .PARAMETER ConfigProfile
-    Configuration profile to use: minimal, balanced, comprehensive, forensics
+    Configuration profile to use: balanced, verbose, dc
     Default: balanced
 
 .PARAMETER SysmonPath
@@ -40,8 +40,8 @@
     Install Sysmon with default 'balanced' profile
 
 .EXAMPLE
-    .\Install-Sysmon.ps1 -ConfigProfile comprehensive
-    Install with comprehensive profile for high-security environments
+    .\Install-Sysmon.ps1 -ConfigProfile dc
+    Install with the domain controller profile
 
 .EXAMPLE
     .\Install-Sysmon.ps1 -ConfigPath "C:\Custom\my-config.xml"
@@ -65,7 +65,7 @@
 [CmdletBinding(DefaultParameterSetName='Install')]
 param(
     [Parameter(ParameterSetName='Install')]
-    [ValidateSet('minimal','balanced','comprehensive','forensics')]
+    [ValidateSet('balanced','verbose','dc')]
     [string]$ConfigProfile = 'balanced',
 
     [Parameter(ParameterSetName='Install')]
@@ -102,39 +102,26 @@ $Script:ScriptVersion = '1.0.0'
 $Script:SysmonDownloadUrl = 'https://download.sysinternals.com/files/Sysmon.zip'
 $Script:SysmonMinVersion = [Version]'13.0'
 
-# Profile definitions
+# Profile definitions. Configs are generated into dist/ by tools/sysmongen.py.
+# Volume is not listed until it has been measured (see documentation/DESIGN.md #11).
 $Script:Profiles = @{
-    'minimal' = @{
-        Name = 'Minimal'
-        Description = 'Critical detections only, minimal performance impact'
-        CPUTarget = '<2%'
-        DailyLogs = '~100MB'
-        ConfigFile = 'sysmon-minimal.xml'
-        UseCase = 'Resource-constrained environments, baseline monitoring'
-    }
     'balanced' = @{
         Name = 'Balanced'
-        Description = 'Recommended production default, optimal visibility/performance ratio'
-        CPUTarget = '<5%'
-        DailyLogs = '~500MB'
-        ConfigFile = 'sysmon-base.xml'
-        UseCase = 'General production environments, most organizations'
+        Description = 'Default for workstations and servers'
+        ConfigFile = 'sysmon-balanced.xml'
+        UseCase = 'Fleet-wide default'
     }
-    'comprehensive' = @{
-        Name = 'Comprehensive'
-        Description = 'Maximum coverage for high-security environments'
-        CPUTarget = '<10%'
-        DailyLogs = '~1.5GB'
-        ConfigFile = 'sysmon-comprehensive.xml'
-        UseCase = 'High-security zones, critical infrastructure'
+    'verbose' = @{
+        Name = 'Verbose'
+        Description = 'Every event type except clipboard and blocking, minus known noise; archives deleted executables'
+        ConfigFile = 'sysmon-verbose.xml'
+        UseCase = 'Incident response and research on individual hosts'
     }
-    'forensics' = @{
-        Name = 'Forensics'
-        Description = 'Full logging for incident response investigations'
-        CPUTarget = '~15%'
-        DailyLogs = '~3GB'
-        ConfigFile = 'sysmon-forensics.xml'
-        UseCase = 'Temporary deep-dive investigations, IR mode'
+    'dc' = @{
+        Name = 'Domain controller'
+        Description = 'Balanced plus domain-controller detections and noise filters'
+        ConfigFile = 'sysmon-dc.xml'
+        UseCase = 'Domain controllers'
     }
 }
 
@@ -369,7 +356,6 @@ function Show-Profiles {
         Write-Host "[$profileKey]".ToUpper() -ForegroundColor Yellow -NoNewline
         Write-Host " - $($profile.Name)"
         Write-Host "  Description: $($profile.Description)"
-        Write-Host "  CPU Target: $($profile.CPUTarget) | Daily Logs: $($profile.DailyLogs)"
         Write-Host "  Use Case: $($profile.UseCase)"
         Write-Host ""
     }
@@ -477,11 +463,10 @@ function Main {
         Write-Log "Using custom configuration: $configFile" -Level Info
     } else {
         $profileInfo = $Script:Profiles[$ConfigProfile]
-        $configFile = Join-Path $PSScriptRoot "..\configurations\$($profileInfo.ConfigFile)"
+        $configFile = Join-Path $PSScriptRoot "..\dist\$($profileInfo.ConfigFile)"
 
         Write-Log "Using profile: $($profileInfo.Name)" -Level Info
         Write-Log "  Description: $($profileInfo.Description)" -Level Info
-        Write-Log "  Expected Impact: CPU $($profileInfo.CPUTarget), Logs $($profileInfo.DailyLogs)" -Level Info
     }
 
     # Validate configuration

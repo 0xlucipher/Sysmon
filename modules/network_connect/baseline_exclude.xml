@@ -1,0 +1,62 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline NetworkConnect exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="network_connect/baseline_exclude" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Exclude internal private networks (RFC1918) -->
+        <!-- CUSTOMIZE: Remove these if you need internal network visibility -->
+        <Rule groupRelation="and">
+          <DestinationIp condition="begin with">10.</DestinationIp>
+          <DestinationPort condition="is not">22</DestinationPort>
+          <!-- Keep SSH -->
+          <DestinationPort condition="is not">3389</DestinationPort>
+          <!-- Keep RDP -->
+          <DestinationPort condition="is not">445</DestinationPort>
+          <!-- Keep SMB -->
+        </Rule>
+        <Rule groupRelation="and">
+          <DestinationIp condition="begin with">172.16.</DestinationIp>
+          <DestinationPort condition="is not">22</DestinationPort>
+          <DestinationPort condition="is not">3389</DestinationPort>
+          <DestinationPort condition="is not">445</DestinationPort>
+        </Rule>
+        <Rule groupRelation="and">
+          <DestinationIp condition="begin with">192.168.</DestinationIp>
+          <DestinationPort condition="is not">22</DestinationPort>
+          <DestinationPort condition="is not">3389</DestinationPort>
+          <DestinationPort condition="is not">445</DestinationPort>
+        </Rule>
+        <!-- Localhost connections (very noisy) -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+        <!-- Link-local addresses -->
+        <DestinationIp condition="begin with">169.254.</DestinationIp>
+        <DestinationIp condition="begin with">fe80:</DestinationIp>
+        <!-- Multicast -->
+        <DestinationIp condition="begin with">224.0.0.</DestinationIp>
+        <DestinationIp condition="begin with">ff02:</DestinationIp>
+        <!-- Microsoft telemetry (low security value, high volume) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\Microsoft\Edge\Application\msedge.exe</Image>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+        <!-- Windows Update -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationPort condition="is">443</DestinationPort>
+          <DestinationHostname condition="end with">windowsupdate.com</DestinationHostname>
+        </Rule>
+        <!-- OneDrive sync -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\Microsoft OneDrive\OneDrive.exe</Image>
+          <DestinationHostname condition="end with">onedrive.live.com</DestinationHostname>
+        </Rule>
+      </NetworkConnect>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

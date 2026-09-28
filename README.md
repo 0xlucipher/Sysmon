@@ -5,6 +5,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Sysmon Version](https://img.shields.io/badge/Sysmon-15.0+-blue.svg)](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK%20v15-red.svg)](https://attack.mitre.org/)
+[![Validate](https://github.com/0xlucipher/Sysmon/actions/workflows/validate.yml/badge.svg)](https://github.com/0xlucipher/Sysmon/actions/workflows/validate.yml)
+
+> **Rework in progress.** See [documentation/DESIGN.md](documentation/DESIGN.md) for the plan and
+> [documentation/AUDIT.md](documentation/AUDIT.md) for what was found and fixed. The quick start,
+> architecture and profile sections below are current. The performance, coverage and
+> customization sections further down predate the rework and will be regenerated from
+> measurements in later phases.
 
 ## Table of Contents
 
@@ -71,131 +78,70 @@ Default Windows logging captures only a fraction of security-relevant events. Sy
 
 ### Prerequisites
 
-- Windows 10/11 or Server 2016+ (64-bit)
-- Administrator privileges
+- Windows 10/11 or Server 2016+ (64-bit), administrator rights
 - PowerShell 5.1 or later
-- Internet connection (for download)
+- Sysmon 15.0+ (the installer downloads it and verifies Microsoft's signature)
 
 ### Automatic Installation
 
 ```powershell
-# 1. Download Sysmon and this configuration
-Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile "Sysmon.zip"
-Expand-Archive -Path "Sysmon.zip" -DestinationPath ".\Sysmon"
-
-# 2. Install with recommended balanced configuration
-.\deployment\Install-Sysmon.ps1 -ConfigProfile "balanced"
-
-# 3. Verify installation
-Get-Service Sysmon64
-Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 10
+git clone https://github.com/0xlucipher/Sysmon.git
+cd Sysmon
+.\deployment\Install-Sysmon.ps1                     # balanced (default)
+.\deployment\Install-Sysmon.ps1 -ConfigProfile dc   # domain controllers
+.\deployment\Install-Sysmon.ps1 -ListProfiles
 ```
 
 ### Manual Installation
 
-```cmd
-REM Extract Sysmon and navigate to directory
-cd C:\Tools\Sysmon
-
-REM Install with configuration
-Sysmon64.exe -accepteula -i ..\configurations\sysmon-base.xml
-
-REM Verify
-sc query Sysmon64
+```powershell
+Sysmon64.exe -accepteula -i dist\sysmon-balanced.xml   # install
+Sysmon64.exe -c dist\sysmon-balanced.xml               # update an existing install
 ```
-
-**That's it!** Sysmon is now logging security-relevant events to:
-`Event Viewer → Applications and Services → Microsoft → Windows → Sysmon → Operational`
 
 ---
 
 ## Repository Architecture
 
-This repository uses a **hybrid modular design** inspired by [olafhartong/sysmon-modular](https://github.com/olafhartong/sysmon-modular), optimized for flexibility and maintainability.
-
 ### Directory Structure
 
 ```
-sysmon-ultimate/
-├── configurations/
-│   ├── sysmon-base.xml              # Monolithic all-in-one config
-│   ├── sysmon-modular.xml           # Modular loader (references modules/)
-│   └── modules/
-│       ├── techniques/              # MITRE ATT&CK technique-based
-│       │   ├── T1003_credential_dumping.xml
-│       │   ├── T1055_process_injection.xml
-│       │   ├── T1047_wmi_execution.xml
-│       │   └── [50+ technique modules]
-│       ├── categories/              # Event type-based
-│       │   ├── 01_process_creation.xml
-│       │   ├── 03_network_connections.xml
-│       │   ├── 07_image_loaded.xml
-│       │   └── [all event types 1-30]
-│       ├── exclusions/              # Noise reduction
-│       │   ├── global_exclusions.xml
-│       │   ├── microsoft_exclusions.xml
-│       │   └── common_software.xml
-│       └── compliance/              # Regulatory requirements
-│           ├── pci_dss_required.xml
-│           ├── hipaa_required.xml
-│           └── nist_recommended.xml
-├── deployment/                      # Installation scripts
-├── testing/                         # Validation tools
-├── performance/                     # Benchmarking utilities
-├── documentation/                   # Detailed guides
-├── tools/                           # Configuration generators
-└── examples/                        # Pre-built profiles
+modules/<event>/<name>.xml   one Sysmon event filter per file, with metadata
+profiles/<name>.toml         which modules a profile uses, and a mode per event
+tools/sysmongen.py           builds dist/ from modules + profiles
+tools/sysmonlint.py          static validator (event types, fields, conditions, risky exclusions)
+dist/                        generated configs + catalog.json. Do not edit by hand.
+testing/                     loads every config into real Sysmon in CI
+deployment/                  install / update / remove scripts
+documentation/               design, audit, detection notes
 ```
 
 ### Module Organization Philosophy
 
-**Technique Modules** (`techniques/`): Organized by MITRE ATT&CK IDs for threat-focused customization
-- **Use Case**: Enable detection for specific adversary behaviors
-- **Example**: Enable only `T1003_credential_dumping.xml` + `T1021_remote_services.xml` for targeted monitoring
+Every rule lives in exactly one module. Profiles only choose modules, and each
+event gets an explicit mode (`off`, `all`, `selective`). The generator merges
+them, so no rule is copied between configurations. See
+[modules/README.md](modules/README.md) and [documentation/DESIGN.md](documentation/DESIGN.md).
 
-**Category Modules** (`categories/`): Organized by Sysmon event types for event-focused tuning
-- **Use Case**: Tune specific log sources (e.g., reduce network logging, enhance registry monitoring)
-- **Example**: Customize `03_network_connections.xml` to exclude internal IPs
+Every change is checked in CI:
 
-**Exclusion Modules** (`exclusions/`): Pre-built filters for common noisy applications
-- **Use Case**: Reduce false positives without custom configuration
-- **Example**: Apply `microsoft_exclusions.xml` to filter Windows Update noise
+1. Unit tests for the generator and validator.
+2. The validator run over every module and generated config.
+3. A check that `dist/` matches a fresh build.
+4. Every generated config and module loaded into real Sysmon on a Windows runner.
 
 ---
 
 ## Configuration Profiles
 
-Pre-built configurations for different operational needs:
+| Profile | File | Use |
+|---|---|---|
+| `balanced` | `dist/sysmon-balanced.xml` | Default for workstations and member servers |
+| `verbose` | `dist/sysmon-verbose.xml` | Incident response / research on individual hosts. Logs every event type except clipboard, minus known noise. Archives deleted executables. |
+| `dc` | `dist/sysmon-dc.xml` | Domain controllers: `balanced` plus DC-specific rules |
 
-| Profile | CPU Impact | Daily Logs (Avg Workstation) | Use Case |
-|---------|------------|------------------------------|----------|
-| **Minimal** | <2% | ~100MB | Critical detections only, resource-constrained environments |
-| **Balanced** | <5% | ~500MB | **Recommended** - Production default, optimal visibility/performance |
-| **Comprehensive** | <10% | ~1.5GB | Maximum coverage for high-security environments |
-| **Forensics** | ~15% | ~3GB | Incident response mode, temporary deep-dive investigations |
-
-### Profile Comparison
-
-| Feature | Minimal | Balanced | Comprehensive | Forensics |
-|---------|---------|----------|---------------|-----------|
-| Process Creation | Critical paths only | All processes | All + hashes | All + full CLI |
-| Network Connections | External only | All non-local | All + DNS | All + payloads |
-| File Operations | Executable zones | Suspicious paths | All critical areas | Everything |
-| Registry Monitoring | Run keys | Persistence keys | All security keys | Full registry |
-| Image Loading | Unsigned only | Suspicious DLLs | All non-MS | Every DLL |
-
-### Selecting a Profile
-
-```powershell
-# View available profiles
-.\deployment\Install-Sysmon.ps1 -ListProfiles
-
-# Install with specific profile
-.\deployment\Install-Sysmon.ps1 -ConfigProfile "balanced"
-
-# Switch profiles on existing installation
-.\deployment\Update-Sysmon.ps1 -ConfigProfile "comprehensive"
-```
+Log volume per profile has not been measured yet. The numbers in older
+versions of this README were estimates and have been removed from the tooling.
 
 ---
 
@@ -203,46 +149,21 @@ Pre-built configurations for different operational needs:
 
 ### Building Custom Configurations
 
-Use the modular system to create organization-specific configurations:
-
-```powershell
-# Generate custom config from selected modules
-.\tools\Generate-ModularConfig.ps1 `
-    -TechniqueModules @("T1003","T1055","T1047") `
-    -CategoryModules @("01","03","10") `
-    -ExcludeNoisySoftware `
-    -OutputPath ".\my-custom-config.xml"
+```bash
+python tools/sysmongen.py build            # regenerate dist/
+python tools/sysmongen.py build --check    # CI: fail if dist/ is stale
+python tools/sysmonlint.py modules dist    # validate
+python -m pytest tests                     # unit tests
 ```
 
-### Module Selection Examples
-
-**SOC Detection Lab** (threat hunting focus):
-```powershell
-.\tools\Generate-ModularConfig.ps1 -Profile "forensics" -IncludeCompliance:$false
-```
-
-**Domain Controller** (authentication monitoring):
-```powershell
-.\tools\Generate-ModularConfig.ps1 `
-    -TechniqueModules @("T1003","T1021","T1078","T1550") `
-    -EnableRegistryMonitoring `
-    -ExcludeDomainControllerNoise
-```
-
-**Workstation Fleet** (balanced production):
-```powershell
-# Use pre-built balanced profile
-.\deployment\Install-Sysmon.ps1 -ConfigProfile "balanced" -DeployViaSCCM
-```
+Python 3.11+, standard library only. To make your own profile, add
+`profiles/<name>.toml`. It can `extends = "balanced"` and add modules or
+change event modes.
 
 ### Updating Configurations
 
 ```powershell
-# Update configuration without restarting service (hot-reload)
-.\deployment\Update-Sysmon.ps1 -ConfigPath ".\configurations\sysmon-base.xml" -NoRestart
-
-# Validate before deployment
-.\testing\Validate-Configuration.ps1 -ConfigPath ".\my-custom-config.xml"
+.\deployment\Update-Sysmon.ps1 -ConfigProfile verbose   # switch profile in place
 ```
 
 ---
@@ -271,9 +192,9 @@ Performance testing conducted on: **Intel i7-10700K, 32GB RAM, Windows 11 Pro 23
 
 If experiencing performance issues:
 
-1. **Start conservative**: Use `minimal` profile initially
+1. **Start with `balanced`**: keep `verbose` for individual hosts under investigation
 2. **Analyze logs**: Identify high-volume event sources
-3. **Apply exclusions**: Use environment-specific exclusion templates
+3. **Apply exclusions**: add a narrow noise module (see the Customization Guide)
 4. **Iteratively expand**: Add rules incrementally while monitoring impact
 
 ```powershell
@@ -336,79 +257,53 @@ See [documentation/mitre-mapping-matrix.csv](documentation/mitre-mapping-matrix.
 
 ### Adding Environment-Specific Exclusions
 
-1. Copy the template:
-```powershell
-Copy-Item ".\configurations\modules\exclusions\environment_specific_template.xml" `
-          ".\configurations\modules\exclusions\my_company_exclusions.xml"
-```
-
-2. Edit with your tools:
-```xml
-<!-- Exclude your backup software -->
-<ProcessCreate onmatch="exclude">
-  <Image condition="is">C:\Program Files\Veeam\Veeam.Backup.Service.exe</Image>
-</ProcessCreate>
-
-<!-- Exclude your deployment tool -->
-<ProcessCreate onmatch="exclude">
-  <ParentImage condition="is">C:\Program Files\SCCM\CcmExec.exe</ParentImage>
-  <CommandLine condition="contains">-DeploymentID</CommandLine>
-</ProcessCreate>
-```
-
-3. Regenerate configuration:
-```powershell
-.\tools\Generate-ModularConfig.ps1 -IncludeCustomExclusions ".\configurations\modules\exclusions\my_company_exclusions.xml"
-```
-
-### Tuning for Specific Applications
-
-**High-volume software** (e.g., Chrome, Java, Node.js):
+Put your exclusions in a module of their own, add them to a profile of your
+own, and rebuild:
 
 ```xml
-<!-- Reduce Chrome network logging -->
-<NetworkConnect onmatch="exclude">
-  <Image condition="end with">chrome.exe</Image>
-  <DestinationIp condition="is private"/>  <!-- Only log external connections -->
-</NetworkConnect>
-
-<!-- Reduce Node.js file creation spam -->
-<FileCreate onmatch="exclude">
-  <Image condition="end with">node.exe</Image>
-  <TargetFilename condition="contains">\node_modules\</TargetFilename>
-</FileCreate>
-```
-
-### Creating Custom Technique Modules
-
-Template for new technique module:
-
-```xml
+<!-- modules/process_create/noise_mycompany.xml -->
 <Sysmon schemaversion="4.90">
-  <!-- MITRE ATT&CK: T1234 - Example Technique -->
-  <!-- Description: Detects adversary behavior XYZ -->
-  <!-- Priority: High | Expected FP Rate: Low | Est. Events: 10-50/day -->
-
+  <!--
+    title: Noise: MyCompany backup agent
+    source: original
+  -->
   <EventFiltering>
-    <RuleGroup name="T1234_example_technique" groupRelation="or">
-
-      <!-- Rule 1: Specific indicator -->
-      <ProcessCreate onmatch="include">
-        <CommandLine condition="contains">malicious_pattern</CommandLine>
-      </ProcessCreate>
-
-      <!-- Rule 2: Contextual detection -->
-      <NetworkConnect onmatch="include">
+    <RuleGroup name="process_create/noise_mycompany" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Anchor to a directory users cannot write to -->
+        <Image condition="is">C:\Program Files\Veeam\Veeam.Backup.Service.exe</Image>
+        <!-- Scope parent/command-line conditions with an AND rule, never standalone -->
         <Rule groupRelation="and">
-          <Image condition="end with">suspicious_tool.exe</Image>
-          <DestinationPort condition="is">4444</DestinationPort>
+          <ParentImage condition="is">C:\Windows\CCM\CcmExec.exe</ParentImage>
+          <Image condition="is">C:\Windows\System32\msiexec.exe</Image>
         </Rule>
-      </NetworkConnect>
-
+      </ProcessCreate>
     </RuleGroup>
   </EventFiltering>
 </Sysmon>
 ```
+
+```toml
+# profiles/mycompany.toml
+extends = "balanced"
+modules = ["process_create/noise_mycompany"]
+```
+
+```bash
+python tools/sysmongen.py build      # writes dist/sysmon-mycompany.xml
+```
+
+Excludes are applied before includes. A broad exclusion therefore hides
+detections from every module for that event. The validator warns about
+standalone `ParentImage` / `CommandLine` exclusions and about name-only matches
+such as `end with \updater.exe`.
+
+### Creating Custom Technique Modules
+
+Write an include module tagged with its technique (`techniques: T1218.005`),
+add it to a profile where that event is `selective`, and rebuild. Matching
+events carry `RuleName: technique_id=T1218.005,module=<id>`. The format is in
+[modules/README.md](modules/README.md).
 
 ---
 
@@ -416,182 +311,64 @@ Template for new technique module:
 
 ### Common Issues
 
-#### Issue: "Sysmon configuration error - Invalid XML"
+#### Issue: "Sysmon rejects the configuration"
 
-**Solution:**
-```powershell
-# Validate XML syntax
-.\testing\Validate-Configuration.ps1 -ConfigPath ".\configurations\sysmon-base.xml"
+Run `python tools/sysmonlint.py <file>`. It reports what Sysmon rejects: unknown
+or non-filterable events (for example `SysmonStatus`), fields that don't exist
+on an event, invalid conditions, and malformed XML. See `testing/probes/` for
+confirmed examples.
 
-# Check for common errors
-- Ensure all XML tags are properly closed
-- Verify schemaversion matches your Sysmon version (use 4.90 for v15+)
-- Check for special characters in conditions (use &lt; for <, &amp; for &)
-```
+#### Issue: "An event type I expected is missing"
 
-#### Issue: "Too many events - log volume overwhelming"
+Check its mode in the header comment of the generated file. An empty
+`onmatch="include"` logs **nothing**. Use mode `all` in the profile to log
+everything except exclusions.
 
-**Solution:**
-```powershell
-# 1. Identify noisy event sources
-.\performance\Measure-LogVolume.ps1 -Days 1 -GroupBy EventID
+#### Issue: "Too many events"
 
-# 2. Apply targeted exclusions
-# Edit configurations\modules\exclusions\environment_specific_template.xml
-
-# 3. Switch to lighter profile temporarily
-.\deployment\Update-Sysmon.ps1 -ConfigProfile "minimal"
-
-# 4. Use smart exclusion generator
-.\tools\Generate-SmartExclusions.ps1 -AnalyzeDays 7 -SuggestExclusions
-```
-
-#### Issue: "High CPU usage after Sysmon installation"
-
-**Solution:**
-```powershell
-# 1. Identify high-cost rules
-.\performance\Benchmark-Sysmon.ps1 -IdentifyBottlenecks
-
-# 2. Common culprits:
-# - Network logging for high-traffic servers (exclude internal subnets)
-# - File creation in temp directories (exclude)
-# - Image loading for .NET applications (reduce)
-
-# 3. Apply performance tuning
-.\deployment\Update-Sysmon.ps1 -ConfigProfile "balanced" -ApplyPerformanceTuning
-```
+Find the noisy sources with
+`.\performance\Measure-LogVolume.ps1 -Days 1 -GroupBy Image`, then add a narrow
+noise module as described above. `verbose` is meant for single hosts during an
+investigation, not fleet-wide use.
 
 #### Issue: "Events not appearing in Event Viewer"
 
-**Solution:**
-```cmd
-REM 1. Verify service is running
-sc query Sysmon64
-
-REM 2. Check driver is loaded
-fltmc instances
-
-REM 3. Verify configuration is active
-Sysmon64.exe -c
-
-REM 4. Check event log size limits
-wevtutil gl "Microsoft-Windows-Sysmon/Operational"
-
-REM 5. Increase log size if needed
-wevtutil sl "Microsoft-Windows-Sysmon/Operational" /ms:1073741824  :: 1GB
-```
-
-### Getting Help
-
-1. **Check the FAQ**: [FAQ Section](#faq) below
-2. **Review Documentation**: [documentation/](documentation/) folder
-3. **Search Issues**: Check existing GitHub issues
-4. **Create Issue**: Provide OS version, Sysmon version, configuration used, error messages
+Sysmon writes to `Applications and Services Logs/Microsoft/Windows/Sysmon/Operational`.
+Check that the service is running (`Get-Service Sysmon64`) and print the loaded
+configuration with `Sysmon64.exe -c`.
 
 ---
 
 ## Contributing
 
-We welcome contributions from the security community! This repository thrives on collective expertise.
-
-### How to Contribute
-
-1. **Report Issues**: Found a bug or false positive? [Open an issue](../../issues)
-2. **Submit Detection Rules**: Have a new technique module? Submit a PR
-3. **Improve Documentation**: Clarify guides or add examples
-4. **Performance Optimization**: Share tuning discoveries
-5. **Test & Validate**: Help test on different environments
-
-### Contribution Guidelines
-
-- **Follow module template structure**
-- **Include MITRE ATT&CK mapping comments**
-- **Document expected false positive rate**
-- **Test on at least Windows 10/11 or Server 2019/2022**
-- **Ensure XML validates**: Run `.\testing\Validate-Configuration.ps1`
-- **Measure performance impact**: Include benchmark results for high-volume rules
-
-### Recognition
-
-Contributors will be acknowledged in [CHANGELOG.md](CHANGELOG.md) and this README.
+1. Change or add modules or profiles. Never edit `dist/` by hand.
+2. Run `python -m pytest tests`, `python tools/sysmonlint.py modules dist` and
+   `python tools/sysmongen.py build`.
+3. Commit the regenerated `dist/`. CI loads every config into real Sysmon.
 
 ---
 
 ## FAQ
 
-### General Questions
-
-**Q: Is this configuration suitable for production use?**
-A: Yes. The `balanced` profile is designed for production environments and has been tested across diverse infrastructures. Start conservative, then expand coverage.
-
-**Q: Does this work with my SIEM (Splunk, Elastic, Sentinel, etc.)?**
-A: Yes. Sysmon writes to standard Windows Event Log. All major SIEMs have built-in Sysmon parsers. See [documentation/siem-integration.md](documentation/siem-integration.md) for platform-specific guidance.
-
-**Q: Can I use this with other security tools (EDR, AV)?**
-A: Yes. Sysmon complements EDR/AV by providing telemetry for custom detections and forensics. It does not conflict with security software.
-
-**Q: How often should I update the configuration?**
-A: Review quarterly or after major threat intelligence updates. Subscribe to repository updates for new technique modules.
-
-**Q: What's the difference between this and other Sysmon configs?**
-A: See [documentation/comparative-analysis.md](documentation/comparative-analysis.md) for detailed comparison with SwiftOnSecurity, sysmon-modular, and others.
-
-### Technical Questions
-
 **Q: Which Sysmon version is required?**
-A: Minimum Sysmon 13.0. Recommended: Latest version (15.0+) for full event coverage and performance improvements.
-
-**Q: Does this support Linux Sysmon?**
-A: Not currently. This repository focuses on Windows. Linux Sysmon uses different architecture (eBPF) and configuration format.
+A: 15.0 or later (schema 4.90). CI tests against the current Sysinternals
+release. Built-in Windows Sysmon (Windows 11 / Server 2025) uses the same
+configuration format.
 
 **Q: Can I use include and exclude rules together?**
-A: Yes, but use carefully. Sysmon processes exclusions after inclusions. Recommendation: Use inclusion-only or exclusion-only per event type for clarity.
-
-**Q: How do I log to a centralized location?**
-A: Use Windows Event Forwarding (WEF) or a SIEM agent (Winlogbeat, Splunk UF, etc.). Sysmon writes locally; external tools handle forwarding.
-
-**Q: What's the impact on endpoint performance?**
-A: `Balanced` profile: 1-3% CPU overhead. `Comprehensive`: 3-7%. See [Performance Characteristics](#performance-characteristics) for benchmarks.
-
-**Q: Can attackers disable Sysmon?**
-A: Only with admin/SYSTEM privileges. Sysmon logs tampering attempts (Event ID 16, 255). Protect with: Protected Process Light (PPL), driver signing, WDAC policies.
-
-**Q: How do I handle log rotation?**
-A: Configure Windows Event Log size/archival:
-```cmd
-wevtutil sl "Microsoft-Windows-Sysmon/Operational" /ms:1073741824 /ab:true
-```
-Or forward to SIEM for central storage.
-
-### Configuration Questions
-
-**Q: How do I test if my configuration is working?**
-A: Use Atomic Red Team tests:
-```powershell
-.\testing\Test-DetectionCoverage.ps1 -RunAtomicTests -TechniqueIDs @("T1003","T1055","T1047")
-```
-
-**Q: I'm getting too many false positives from [X] application. How do I fix this?**
-A:
-1. Identify the noisy process: `.\performance\Measure-LogVolume.ps1 -GroupBy Image`
-2. Add targeted exclusion to `configurations\modules\exclusions\environment_specific_template.xml`
-3. Reload config: `.\deployment\Update-Sysmon.ps1`
-
-**Q: Can I merge this with my existing Sysmon config?**
-A: Yes. Use the merge tool:
-```powershell
-.\tools\Merge-SysmonConfigs.ps1 -Config1 ".\my-old-config.xml" -Config2 ".\configurations\sysmon-base.xml" -Output ".\merged.xml"
-```
+A: Yes. For one event, Sysmon logs what matches an include rule and no exclude
+rule. The generator makes this explicit with the `selective` mode.
 
 **Q: How do I enable only specific MITRE techniques?**
-A: Use modular configuration:
-```powershell
-.\tools\Generate-ModularConfig.ps1 -TechniqueModules @("T1003","T1055","T1047","T1021")
-```
+A: Create a profile that lists only the technique modules you want, with those
+events set to `selective`.
 
-**Q: What's the difference between `sysmon-base.xml` and `sysmon-modular.xml`?**
-A: `sysmon-base.xml` is a monolithic all-in-one file (easier deployment). `sysmon-modular.xml` references separate modules (easier customization). Functionality is identical.
+**Q: Can I merge this with my existing Sysmon config?**
+A: Split your config into modules (one event filter each), then add them to a
+profile. The generator merges filters per event and flags conflicts.
+
+**Q: Does this support Linux Sysmon?**
+A: No. Sysmon for Linux uses a different event set.
 
 ---
 

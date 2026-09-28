@@ -1,0 +1,25 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows DnsQuery activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="dns_query/noise_global" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <!-- Local domain -->
+        <QueryName condition="end with">.local</QueryName>
+        <!-- Reverse DNS lookups -->
+        <QueryName condition="end with">.in-addr.arpa</QueryName>
+        <QueryName condition="end with">.ip6.arpa</QueryName>
+        <!-- WPAD (Web Proxy Auto-Discovery) -->
+        <QueryName condition="is">wpad</QueryName>
+        <QueryName condition="begin with">wpad.</QueryName>
+        <!-- ISATAP -->
+        <QueryName condition="is">isatap</QueryName>
+        <QueryName condition="begin with">isatap.</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

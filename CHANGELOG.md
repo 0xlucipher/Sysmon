@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Configurations are generated from single-filter modules (`modules/`) and
+  profiles (`profiles/*.toml`) by `tools/sysmongen.py` into `dist/`. The five
+  hand-written profiles and three example configs are replaced by `balanced`,
+  `verbose` and `dc`.
+- File deletions in `balanced` are logged with FileDeleteDetected (no archiving).
+  `verbose` archives deleted executables only.
+- Install/Update scripts use the new profile names and no longer quote
+  unmeasured CPU and log-volume figures.
+
+### Fixed
+- Configs that Sysmon rejected outright (non-filterable and unknown events,
+  invalid fields and conditions). Verified against Sysmon 15.22 in CI.
+- Event types that were meant to log everything but logged nothing.
+- Exclusions that hid attacks: every child of Office apps, every child of
+  Firefox, any command line containing `--type=`, name-only matches for
+  MSBuild/csc/vbc and for `procexp.exe` accessing LSASS, and all signed drivers
+  on servers and DCs.
+- ImageLoad rules that matched every process, and an over-broad registry rule.
+
+### Added
+- `tools/sysmonlint.py` static validator, including checks for exclusions an
+  attacker can exploit.
+- CI: unit tests, validation, `dist/` freshness, loading every config into real
+  Sysmon on Windows, rejection probes, PSScriptAnalyzer.
+- Authenticode signature check before running a downloaded Sysmon.
+
+### Removed
+- `tools/Generate-ModularConfig.ps1` and `testing/Validate-Configuration.ps1`.
+
 ## [1.0.0] - 2025-10-30
 
 ### Added

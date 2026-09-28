@@ -1,0 +1,101 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1053 scheduled tasks: ProcessCreate include
+  techniques: T1053.005
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1053_scheduled_task.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1053_scheduled_task" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- from RuleGroup T1053.005_Schtasks -->
+        <!-- Local task creation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/create</CommandLine>
+        </Rule>
+        <!-- Remote task creation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/s </CommandLine>
+        </Rule>
+        <!-- Task modification -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/change</CommandLine>
+        </Rule>
+        <!-- Task with suspicious characteristics -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/ru system</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/rl highest</CommandLine>
+        </Rule>
+        <!-- Task executing scripts -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/tr</CommandLine>
+          <CommandLine condition="contains">powershell</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/tr</CommandLine>
+          <CommandLine condition="contains">.vbs</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/tr</CommandLine>
+          <CommandLine condition="contains">.js</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1053.005_Schtasks -->
+        <Image condition="end with">\at.exe</Image>
+        <!-- from RuleGroup T1053.005_Schtasks -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="is not">C:\Windows\System32\conhost.exe</Image>
+        </Rule>
+        <!-- from RuleGroup T1053_PowerShell -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-ScheduledTask</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Register-ScheduledTask</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Set-ScheduledTask</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-ScheduledTaskTrigger</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-ScheduledTaskAction</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1053_Suspicious -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="begin with">C:\Users\</Image>
+        </Rule>
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="begin with">C:\ProgramData\</Image>
+        </Rule>
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <ParentCommandLine condition="contains">Schedule</ParentCommandLine>
+          <Image condition="begin with">C:\Temp\</Image>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

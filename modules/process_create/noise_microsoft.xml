@@ -1,0 +1,95 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: Microsoft software ProcessCreate activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/microsoft_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/noise_microsoft" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- from RuleGroup MS_Office_Exclude -->
+        <!-- Office Protected View sandbox -->
+        <!-- Was two standalone conditions, which hid EVERY child of Office apps
+             (macro -> cmd/powershell). Now both must match. -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Microsoft Office\root\Office</ParentImage>
+          <Image condition="end with">\protectedview.exe</Image>
+        </Rule>
+        <!-- Office ClickToRun updater -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OfficeClickToRun.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\services.exe</ParentImage>
+        </Rule>
+        <!-- Office update tasks -->
+        <Image condition="begin with">C:\Program Files\Common Files\microsoft shared\ClickToRun\</Image>
+        <!-- from RuleGroup MS_Defender_Exclude -->
+        <!-- Defender processes (unless monitoring for tampering) -->
+        <Image condition="begin with">C:\ProgramData\Microsoft\Windows Defender\</Image>
+        <!-- MpCmdRun (Defender CLI) - legitimate use -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Program Files\Windows Defender\MpCmdRun.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+        <!-- ConfigSecurityPolicy (Defender helper) -->
+        <Image condition="is">C:\Windows\System32\ConfigSecurityPolicy.exe</Image>
+        <!-- from RuleGroup MS_Edge_Exclude -->
+        <!-- Edge update processes -->
+        <!-- Was standalone Image + CommandLine conditions: any process whose command
+             line contained the type switch was hidden. Now Edge child processes only. -->
+        <Rule groupRelation="and">
+          <Image condition="begin with">C:\Program Files (x86)\Microsoft\Edge\Application\</Image>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+        <!-- Edge installer/updater -->
+        <Image condition="begin with">C:\Program Files (x86)\Microsoft\EdgeUpdate\</Image>
+        <!-- from RuleGroup MS_Teams_Exclude -->
+        <!-- Teams renderer processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Microsoft\Teams\</ParentImage>
+          <Image condition="contains">\Microsoft\Teams\</Image>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+        <!-- Teams updater -->
+        <!-- removed in phase 2: Teams updater runs from user-writable %LOCALAPPDATA% -->
+        <!-- from RuleGroup MS_OneDrive_Exclude -->
+        <!-- OneDrive sync process -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\OneDrive.exe</Image>
+          <CommandLine condition="contains">/background</CommandLine>
+        </Rule>
+        <!-- OneDrive updater -->
+        <!-- removed in phase 2: OneDrive runs from user-writable %LOCALAPPDATA% -->
+        <!-- File Sync -->
+        <!-- removed in phase 2: OneDrive runs from user-writable %LOCALAPPDATA% -->
+        <!-- from RuleGroup MS_Telemetry_Exclude -->
+        <!-- Telemetry and diagnostics -->
+        <Image condition="is">C:\Windows\System32\CompatTelRunner.exe</Image>
+        <Image condition="is">C:\Windows\System32\DeviceCensus.exe</Image>
+        <Image condition="is">C:\Windows\System32\DiagTrackRunner.exe</Image>
+        <!-- Universal Telemetry Client -->
+        <Image condition="is">C:\Windows\System32\utcutil.exe</Image>
+        <!-- from RuleGroup MS_WindowsUpdate_Exclude -->
+        <!-- Windows Update -->
+        <Image condition="is">C:\Windows\System32\wuauclt.exe</Image>
+        <Image condition="is">C:\Windows\System32\UsoClient.exe</Image>
+        <!-- Windows Modules Installer -->
+        <Image condition="is">C:\Windows\System32\TiWorker.exe</Image>
+        <!-- Trusted Installer -->
+        <Image condition="is">C:\Windows\servicing\TrustedInstaller.exe</Image>
+        <!-- from RuleGroup MS_Development_Exclude -->
+        <!-- MSBuild (very noisy during builds) -->
+        <!-- removed in phase 2: MSBuild is a proxy-execution LOLBin (T1127.001) -->
+        <!-- Visual Studio Code processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Microsoft VS Code\</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+        <!-- .NET compiler servers -->
+        <!-- removed in phase 2: unanchored name match; compiler server is attack-relevant -->
+        <!-- removed in phase 2: csc is used to compile payloads after delivery (T1027.004) -->
+        <!-- removed in phase 2: vbc is used to compile payloads after delivery (T1027.004) -->
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

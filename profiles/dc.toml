@@ -1,0 +1,25 @@
+# Domain controllers: the balanced profile plus DC-specific rules
+# (NTDS access, DCSync-adjacent tooling, AD replication noise).
+# Replay tests cannot cover this profile: CI runners are not domain controllers.
+description = "Domain controllers: balanced plus DC-specific detections and noise filters."
+extends = "balanced"
+modules = [
+  "dns_query/dc_exclude",
+  "dns_query/dc_include",
+  "driver_load/dc_exclude",
+  "file_create/dc_include",
+  "file_create_time/dc_exclude",
+  "file_delete_detected/dc_include",
+  "network_connect/dc_exclude",
+  "network_connect/dc_include",
+  "pipe_event/dc_exclude",
+  "pipe_event/dc_include",
+  "process_access/dc_exclude",
+  "process_access/dc_include",
+  "process_create/dc_exclude",
+  "process_create/dc_include",
+  "raw_access_read/dc_exclude",
+  "raw_access_read/dc_include",
+  "registry_event/dc_exclude",
+  "registry_event/dc_include",
+]

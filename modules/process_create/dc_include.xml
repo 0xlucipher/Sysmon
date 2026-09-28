@@ -1,0 +1,81 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller ProcessCreate include rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/dc_include" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- PowerShell (always monitor on DCs) -->
+        <Image condition="end with">\powershell.exe</Image>
+        <!-- PowerShell ISE -->
+        <Image condition="end with">\powershell_ise.exe</Image>
+        <!-- cmd.exe (monitor all) -->
+        <Image condition="end with">\cmd.exe</Image>
+        <!-- WMI -->
+        <Image condition="end with">\wmic.exe</Image>
+        <!-- VBScript/JScript -->
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+        <!-- MSHTA -->
+        <Image condition="end with">\mshta.exe</Image>
+        <!-- Credential dumping tools -->
+        <CommandLine condition="contains">mimikatz</CommandLine>
+        <CommandLine condition="contains">procdump</CommandLine>
+        <CommandLine condition="contains">lsass</CommandLine>
+        <CommandLine condition="contains">sekurlsa</CommandLine>
+        <!-- NTDS.dit dumping -->
+        <CommandLine condition="contains">ntds.dit</CommandLine>
+        <CommandLine condition="contains">ntdsutil</CommandLine>
+        <CommandLine condition="contains">IFM</CommandLine>
+        <!-- Volume Shadow Copy (can be used to copy NTDS.dit) -->
+        <Image condition="end with">\vssadmin.exe</Image>
+        <CommandLine condition="contains">create shadow</CommandLine>
+        <!-- Shadow copy delete (ransomware/AV evasion) -->
+        <CommandLine condition="contains">delete shadows</CommandLine>
+        <!-- DCSync simulation -->
+        <CommandLine condition="contains">lsadump::dcsync</CommandLine>
+        <!-- Kerberos attacks -->
+        <CommandLine condition="contains">kerberos::golden</CommandLine>
+        <CommandLine condition="contains">kerberos::silver</CommandLine>
+        <CommandLine condition="contains">kerberos::ptt</CommandLine>
+        <!-- Active Directory module usage (monitor for abuse) -->
+        <CommandLine condition="contains">Get-ADUser</CommandLine>
+        <CommandLine condition="contains">Get-ADGroup</CommandLine>
+        <CommandLine condition="contains">Get-ADComputer</CommandLine>
+        <CommandLine condition="contains">Set-ADAccountPassword</CommandLine>
+        <!-- LDAP queries from command line -->
+        <Image condition="end with">\ldp.exe</Image>
+        <!-- Active Directory discovery -->
+        <CommandLine condition="contains">net user /domain</CommandLine>
+        <CommandLine condition="contains">net group /domain</CommandLine>
+        <CommandLine condition="contains">net group "domain admins" /domain</CommandLine>
+        <CommandLine condition="contains">nltest</CommandLine>
+        <!-- Remote execution tools -->
+        <Image condition="contains">psexec</Image>
+        <Image condition="end with">\winrs.exe</Image>
+        <Image condition="end with">\wsmprovhost.exe</Image>
+        <!-- Service manipulation -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains">create</CommandLine>
+        </Rule>
+        <!-- Scheduled tasks -->
+        <Image condition="end with">\schtasks.exe</Image>
+        <!-- LOLBins -->
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+        <!-- Defense evasion -->
+        <CommandLine condition="contains">Set-MpPreference</CommandLine>
+        <CommandLine condition="contains">DisableRealtimeMonitoring</CommandLine>
+        <!-- Event log clearing -->
+        <CommandLine condition="contains">wevtutil cl</CommandLine>
+        <CommandLine condition="contains">Clear-EventLog</CommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

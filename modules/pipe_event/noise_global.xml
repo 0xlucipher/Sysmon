@@ -1,0 +1,27 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows PipeEvent activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="pipe_event/noise_global" groupRelation="or">
+      <PipeEvent onmatch="exclude">
+        <!-- System pipes (legitimate) -->
+        <PipeName condition="begin with">\\lsass</PipeName>
+        <PipeName condition="begin with">\\samr</PipeName>
+        <PipeName condition="begin with">\\winreg</PipeName>
+        <PipeName condition="begin with">\\spoolss</PipeName>
+        <PipeName condition="begin with">\\srvsvc</PipeName>
+        <PipeName condition="begin with">\\wkssvc</PipeName>
+        <PipeName condition="begin with">\\netlogon</PipeName>
+        <PipeName condition="begin with">\\protected_storage</PipeName>
+        <!-- PowerShell Remoting (if not monitoring) -->
+        <!-- <PipeName condition="contains">PSHost</PipeName> -->
+        <!-- WMI -->
+        <PipeName condition="begin with">\\WMIEP_</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

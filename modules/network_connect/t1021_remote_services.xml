@@ -1,0 +1,42 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1021 remote services: NetworkConnect include
+  techniques: T1021.001, T1021.002, T1021.003, T1021.004, T1021.006
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1021_remote_services.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="network_connect/t1021_remote_services" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <!-- from RuleGroup T1021.002_PSExec -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">445</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+        <!-- from RuleGroup T1021.001_RDP -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mstsc.exe</Image>
+          <DestinationPort condition="is">3389</DestinationPort>
+        </Rule>
+        <!-- from RuleGroup T1021.006_WinRM -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">5985</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">5986</DestinationPort>
+          <Initiated condition="is">true</Initiated>
+        </Rule>
+        <!-- from RuleGroup T1021.003_DCOM -->
+        <Rule groupRelation="and">
+          <DestinationPort condition="is">135</DestinationPort>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+        </Rule>
+        <!-- from RuleGroup T1021.004_SSH -->
+        <DestinationPort condition="is">22</DestinationPort>
+      </NetworkConnect>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

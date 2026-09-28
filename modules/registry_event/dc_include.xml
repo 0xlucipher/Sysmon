@@ -1,0 +1,34 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller RegistryEvent include rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="registry_event/dc_include" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <!-- Persistence -->
+        <TargetObject condition="contains">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\</TargetObject>
+        <!-- Group Policy -->
+        <TargetObject condition="contains">\Software\Policies\Microsoft\Windows\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Policies\</TargetObject>
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Group Policy\</TargetObject>
+        <!-- LSA (credential theft) -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\</TargetObject>
+        <TargetObject condition="contains">\SecurityProviders\</TargetObject>
+        <!-- Security settings -->
+        <TargetObject condition="contains">\Windows Defender\</TargetObject>
+        <TargetObject condition="contains">\FirewallPolicy\</TargetObject>
+        <TargetObject condition="contains">\Policies\System\EnableLUA</TargetObject>
+        <!-- Kerberos configuration -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Control\Lsa\Kerberos\</TargetObject>
+        <!-- Active Directory settings -->
+        <TargetObject condition="contains">\System\CurrentControlSet\Services\NTDS\</TargetObject>
+        <!-- Scheduled tasks -->
+        <TargetObject condition="contains">\Schedule\TaskCache\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

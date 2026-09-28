@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows FileDelete activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_delete/noise_global" groupRelation="or">
+      <FileDelete onmatch="exclude">
+        <!-- Temp file cleanup -->
+        <TargetFilename condition="end with">.tmp</TargetFilename>
+        <!-- Browser cache cleanup -->
+        <TargetFilename condition="contains">\INetCache\</TargetFilename>
+        <TargetFilename condition="contains">\Google\Chrome\User Data\</TargetFilename>
+        <!-- Windows Update cleanup -->
+        <Image condition="is">C:\Windows\System32\cleanmgr.exe</Image>
+      </FileDelete>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

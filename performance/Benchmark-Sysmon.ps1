@@ -236,7 +236,7 @@ Write-Host "===============================================`n" -ForegroundColor 
 if ($avgCPU -gt 5) {
     Write-Host "- CPU usage is above 5%. Consider:" -ForegroundColor Yellow
     Write-Host "  1. Adding exclusions for high-volume processes" -ForegroundColor White
-    Write-Host "  2. Switching to 'balanced' or 'minimal' profile" -ForegroundColor White
+    Write-Host "  2. Switching from 'verbose' to the 'balanced' profile" -ForegroundColor White
     Write-Host "  3. Excluding internal network monitoring" -ForegroundColor White
 }
 

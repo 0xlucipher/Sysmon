@@ -1,0 +1,34 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline FileDeleteDetected include rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_delete_detected/baseline_include" groupRelation="or">
+      <FileDeleteDetected onmatch="include">
+        <!-- from RuleGroup FileDelete -->
+        <!-- Security event logs -->
+        <TargetFilename condition="contains">\Windows\System32\winevt\Logs\</TargetFilename>
+        <!-- Sysmon logs -->
+        <TargetFilename condition="contains">\Sysmon.evtx</TargetFilename>
+        <!-- Backup files -->
+        <TargetFilename condition="end with">.bak</TargetFilename>
+        <TargetFilename condition="end with">.backup</TargetFilename>
+        <!-- Shadow copy components (ransomware) -->
+        <TargetFilename condition="contains">\System Volume Information\</TargetFilename>
+        <!-- Recycle bin (anti-forensics) -->
+        <TargetFilename condition="contains">\$Recycle.Bin\</TargetFilename>
+        <!-- Prefetch files (anti-forensics) -->
+        <TargetFilename condition="contains">\Windows\Prefetch\</TargetFilename>
+        <!-- from RuleGroup FileDeleteDetected -->
+        <!-- Same strategy as Event ID 23 -->
+        <TargetFilename condition="contains">\Windows\System32\winevt\Logs\</TargetFilename>
+        <TargetFilename condition="contains">\Sysmon.evtx</TargetFilename>
+        <TargetFilename condition="end with">.bak</TargetFilename>
+        <TargetFilename condition="contains">\System Volume Information\</TargetFilename>
+      </FileDeleteDetected>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

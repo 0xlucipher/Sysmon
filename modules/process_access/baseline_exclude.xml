@@ -1,0 +1,38 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline ProcessAccess exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_access/baseline_exclude" groupRelation="or">
+      <ProcessAccess onmatch="exclude">
+        <!-- Legitimate LSASS access by system processes -->
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        </Rule>
+        <!-- Windows Defender scanning -->
+        <Rule groupRelation="and">
+          <TargetImage condition="end with">\lsass.exe</TargetImage>
+          <SourceImage condition="begin with">C:\Program Files\Windows Defender\</SourceImage>
+          <GrantedAccess condition="is">0x1410</GrantedAccess>
+        </Rule>
+        <!-- Legitimate csrss access -->
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+        <!-- Task Manager (read-only access) -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+          <GrantedAccess condition="is">0x1400</GrantedAccess>
+        </Rule>
+        <!-- Process Explorer (if used) -->
+        <!-- <SourceImage condition="end with">\procexp64.exe</SourceImage> -->
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

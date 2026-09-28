@@ -1,0 +1,36 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common third-party software NetworkConnect activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/common_software.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="network_connect/noise_common_software" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- from RuleGroup Communication_Exclude -->
+        <!-- Slack (very noisy) -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Slack\</Image>
+          <DestinationHostname condition="end with">slack.com</DestinationHostname>
+        </Rule>
+        <!-- Zoom -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Zoom\</Image>
+          <DestinationHostname condition="end with">zoom.us</DestinationHostname>
+        </Rule>
+        <!-- Discord -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Discord\</Image>
+          <DestinationHostname condition="end with">discord.com</DestinationHostname>
+        </Rule>
+        <!-- from RuleGroup Adobe_Exclude -->
+        <!-- Adobe update servers -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Adobe\</Image>
+          <DestinationHostname condition="end with">adobe.com</DestinationHostname>
+        </Rule>
+      </NetworkConnect>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

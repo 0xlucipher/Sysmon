@@ -1,0 +1,71 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline FileCreate include rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/baseline_include" groupRelation="or">
+      <FileCreate onmatch="include">
+        <!-- Executables in user-writable directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.dll</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.sys</TargetFilename>
+        </Rule>
+        <!-- Scripts in user directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.bat</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.vbs</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.js</TargetFilename>
+        </Rule>
+        <!-- Executables in system temp -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Windows\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+        <!-- Files in Recycle Bin (data hiding) -->
+        <TargetFilename condition="contains">\$Recycle.Bin\</TargetFilename>
+        <!-- Web shells in webroot directories -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
+          <TargetFilename condition="end with">.asp</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
+          <TargetFilename condition="end with">.aspx</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
+          <TargetFilename condition="end with">.php</TargetFilename>
+        </Rule>
+        <!-- Startup folder (persistence) -->
+        <TargetFilename condition="contains">\Microsoft\Windows\Start Menu\Programs\Startup\</TargetFilename>
+        <!-- HTA files (phishing vector) -->
+        <TargetFilename condition="end with">.hta</TargetFilename>
+        <!-- ISO/IMG files (malware delivery) -->
+        <TargetFilename condition="end with">.iso</TargetFilename>
+        <TargetFilename condition="end with">.img</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

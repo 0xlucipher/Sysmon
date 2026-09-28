@@ -1,0 +1,49 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1055 process injection: ProcessAccess include
+  techniques: T1055.003, T1055.011, T1055.012
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1055_process_injection.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_access/t1055_process_injection" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <!-- from RuleGroup T1055.012_Process_Hollowing -->
+        <!-- VirtualAllocEx + WriteProcessMemory pattern -->
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x1F0FFF</GrantedAccess>
+          <!-- PROCESS_ALL_ACCESS -->
+        </Rule>
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x1F1FFF</GrantedAccess>
+        </Rule>
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x1FFFFF</GrantedAccess>
+        </Rule>
+        <!-- Access from suspicious processes -->
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <GrantedAccess condition="is">0x1410</GrantedAccess>
+          <!-- PROCESS_VM_OPERATION + PROCESS_VM_WRITE -->
+        </Rule>
+        <!-- from RuleGroup T1055.003_Thread_Hijacking -->
+        <!-- THREAD_SET_CONTEXT access -->
+        <Rule groupRelation="and">
+          <GrantedAccess condition="is">0x0010</GrantedAccess>
+          <!-- THREAD_SET_CONTEXT -->
+        </Rule>
+        <Rule groupRelation="and">
+          <CallTrace condition="contains">SetThreadContext</CallTrace>
+        </Rule>
+        <!-- from RuleGroup T1055.011_EWMI -->
+        <Rule groupRelation="and">
+          <CallTrace condition="contains">user32.dll!SetWindowLongPtr</CallTrace>
+        </Rule>
+        <Rule groupRelation="and">
+          <CallTrace condition="contains">user32.dll!SetWindowLong</CallTrace>
+        </Rule>
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

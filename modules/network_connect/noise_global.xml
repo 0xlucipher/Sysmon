@@ -1,0 +1,37 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows NetworkConnect activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="network_connect/noise_global" groupRelation="or">
+      <NetworkConnect onmatch="exclude">
+        <!-- Localhost (intra-system communication) -->
+        <DestinationIp condition="is">127.0.0.1</DestinationIp>
+        <DestinationIp condition="is">::1</DestinationIp>
+        <!-- Multicast/Broadcast -->
+        <DestinationIp condition="begin with">224.0.0.</DestinationIp>
+        <DestinationIp condition="begin with">239.255.</DestinationIp>
+        <DestinationIp condition="is">255.255.255.255</DestinationIp>
+        <!-- Link-local -->
+        <DestinationIp condition="begin with">169.254.</DestinationIp>
+        <DestinationIp condition="begin with">fe80:</DestinationIp>
+        <!-- SVCHOST legitimate connections -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationPort condition="is">80</DestinationPort>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <DestinationPort condition="is">443</DestinationPort>
+          <DestinationHostname condition="end with">microsoft.com</DestinationHostname>
+        </Rule>
+        <!-- SearchIndexer -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+      </NetworkConnect>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

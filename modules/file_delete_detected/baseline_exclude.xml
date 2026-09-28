@@ -1,0 +1,24 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline FileDeleteDetected exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_delete_detected/baseline_exclude" groupRelation="or">
+      <FileDeleteDetected onmatch="exclude">
+        <!-- Browser cache cleanup -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Google\Chrome\</Image>
+          <TargetFilename condition="contains">\Google\Chrome\User Data\</TargetFilename>
+        </Rule>
+        <!-- Windows Update cleanup -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <TargetFilename condition="contains">\Windows\SoftwareDistribution\</TargetFilename>
+        </Rule>
+      </FileDeleteDetected>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

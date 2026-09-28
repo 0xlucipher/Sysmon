@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows CreateRemoteThread activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="create_remote_thread/noise_global" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <!-- Legitimate system threads -->
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        <!-- csrss.exe (Client Server Runtime) -->
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

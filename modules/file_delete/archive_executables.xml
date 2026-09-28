@@ -1,0 +1,18 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Archive deleted executables
+    techniques: T1070.004
+    volume: low
+    source: original
+    notes: FileDelete (event 23) copies each matching file to ArchiveDirectory before
+      deletion. Scoped to executables so dropped tools and payloads survive
+      cleanup without archiving every deleted document.
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_delete/archive_executables" groupRelation="or">
+      <FileDelete onmatch="include">
+        <IsExecutable condition="is">true</IsExecutable>
+      </FileDelete>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

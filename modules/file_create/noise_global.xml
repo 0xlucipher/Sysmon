@@ -1,0 +1,33 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows FileCreate activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/noise_global" groupRelation="or">
+      <FileCreate onmatch="exclude">
+        <!-- Temporary .tmp files -->
+        <TargetFilename condition="end with">.tmp</TargetFilename>
+        <!-- Thumbs.db -->
+        <TargetFilename condition="end with">Thumbs.db</TargetFilename>
+        <!-- Desktop.ini -->
+        <TargetFilename condition="end with">desktop.ini</TargetFilename>
+        <!-- ETL/WER files -->
+        <TargetFilename condition="end with">.etl</TargetFilename>
+        <TargetFilename condition="contains">\WER\</TargetFilename>
+        <!-- Prefetch (monitored elsewhere) -->
+        <TargetFilename condition="begin with">C:\Windows\Prefetch\</TargetFilename>
+        <!-- Log files (noisy) -->
+        <TargetFilename condition="end with">.log</TargetFilename>
+        <!-- Browser cache -->
+        <TargetFilename condition="contains">\AppData\Local\Microsoft\Windows\INetCache\</TargetFilename>
+        <TargetFilename condition="contains">\AppData\Local\Google\Chrome\User Data\</TargetFilename>
+        <TargetFilename condition="contains">\AppData\Local\Mozilla\Firefox\Profiles\</TargetFilename>
+        <!-- Windows Update cache -->
+        <TargetFilename condition="begin with">C:\Windows\SoftwareDistribution\</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

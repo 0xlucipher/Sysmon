@@ -1,0 +1,49 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows ProcessCreate activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/noise_global" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Console Host (extremely noisy) -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <!-- SearchIndexer and related processes -->
+        <Image condition="is">C:\Windows\System32\SearchIndexer.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchProtocolHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchFilterHost.exe</Image>
+        <!-- Background Intelligent Transfer Service -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+          <CommandLine condition="contains">BITS</CommandLine>
+        </Rule>
+        <!-- Windows Notification Services -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">WpnService</CommandLine>
+        </Rule>
+        <!-- Device Census -->
+        <Image condition="is">C:\Windows\System32\DeviceCensus.exe</Image>
+        <!-- Compatibility Telemetry -->
+        <Image condition="is">C:\Windows\System32\CompatTelRunner.exe</Image>
+        <!-- DLL Host (legitimate only) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\dllhost.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+        <!-- Runtime Broker (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\RuntimeBroker.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+        <!-- Taskhostw (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\taskhostw.exe</Image>
+          <ParentImage condition="is">C:\Windows\System32\svchost.exe</ParentImage>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

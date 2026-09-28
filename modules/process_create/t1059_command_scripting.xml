@@ -1,0 +1,190 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1059 command and scripting interpreters: ProcessCreate include
+  techniques: T1059.001, T1059.003
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1059_command_scripting.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1059_command_scripting" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- from RuleGroup T1059.001_PowerShell -->
+        <!-- Encoded commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-enc</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-EncodedCommand</CommandLine>
+        </Rule>
+        <!-- Hidden window -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-w hidden</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-WindowStyle hidden</CommandLine>
+        </Rule>
+        <!-- No profile -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-nop</CommandLine>
+        </Rule>
+        <!-- Execution policy bypass -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-ep bypass</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-ExecutionPolicy Bypass</CommandLine>
+        </Rule>
+        <!-- Non-interactive -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">-NonI</CommandLine>
+        </Rule>
+        <!-- Download cradles -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">IEX</CommandLine>
+          <CommandLine condition="contains">Net.WebClient</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-Expression</CommandLine>
+          <CommandLine condition="contains">DownloadString</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">IEX</CommandLine>
+          <CommandLine condition="contains">DownloadString</CommandLine>
+        </Rule>
+        <!-- Base64 encoded PowerShell -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">FromBase64String</CommandLine>
+        </Rule>
+        <!-- Invoke-WebRequest to suspicious locations -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-WebRequest</CommandLine>
+          <CommandLine condition="contains">$env:TEMP</CommandLine>
+        </Rule>
+        <!-- PowerShell from suspicious parents -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\winword.exe</ParentImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\excel.exe</ParentImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\mshta.exe</ParentImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <ParentImage condition="end with">\wscript.exe</ParentImage>
+        </Rule>
+        <!-- from RuleGroup T1059.003_Cmd -->
+        <!-- cmd.exe with encoded commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">/c echo</CommandLine>
+          <CommandLine condition="contains">| powershell</CommandLine>
+        </Rule>
+        <!-- cmd.exe spawning PowerShell -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\cmd.exe</ParentImage>
+          <Image condition="end with">\powershell.exe</Image>
+        </Rule>
+        <!-- cmd.exe from Office applications -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\winword.exe</ParentImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\excel.exe</ParentImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <ParentImage condition="end with">\outlook.exe</ParentImage>
+        </Rule>
+        <!-- cmd.exe running suspicious commands -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">whoami</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">net user</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">net localgroup</CommandLine>
+        </Rule>
+        <!-- cmd.exe with certutil (download/decode) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">certutil</CommandLine>
+        </Rule>
+        <!-- cmd.exe with bitsadmin (download) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\cmd.exe</Image>
+          <CommandLine condition="contains">bitsadmin</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1059_Scripts -->
+        <!-- WScript.exe (VBS/JS) -->
+        <Image condition="end with">\wscript.exe</Image>
+        <!-- CScript.exe (VBS/JS) -->
+        <Image condition="end with">\cscript.exe</Image>
+        <!-- MSHTA (HTA files) -->
+        <Image condition="end with">\mshta.exe</Image>
+        <!-- MSHTA from unusual locations -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <CommandLine condition="contains">http</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <CommandLine condition="contains">javascript:</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\mshta.exe</Image>
+          <CommandLine condition="contains">vbscript:</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1059_LOLBins -->
+        <!-- certutil for download/decode -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\certutil.exe</Image>
+          <CommandLine condition="contains">-urlcache</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\certutil.exe</Image>
+          <CommandLine condition="contains">-decode</CommandLine>
+        </Rule>
+        <!-- bitsadmin for download -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\bitsadmin.exe</Image>
+          <CommandLine condition="contains">/transfer</CommandLine>
+        </Rule>
+        <!-- regsvr32 /i (Squiblydoo) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\regsvr32.exe</Image>
+          <CommandLine condition="contains">/i:</CommandLine>
+        </Rule>
+        <!-- rundll32 javascript -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\rundll32.exe</Image>
+          <CommandLine condition="contains">javascript:</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

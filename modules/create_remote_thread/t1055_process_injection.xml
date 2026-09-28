@@ -1,0 +1,69 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1055 process injection: CreateRemoteThread include
+  techniques: T1055.003, T1055.004
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1055_process_injection.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="create_remote_thread/t1055_process_injection" groupRelation="or">
+      <CreateRemoteThread onmatch="include">
+        <!-- from RuleGroup T1055_CreateRemoteThread -->
+        <!-- Cross-process thread creation (exclude same process) -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is not">TargetImage</SourceImage>
+          <!-- Exclude legitimate sources -->
+          <SourceImage condition="is not">C:\Windows\System32\svchost.exe</SourceImage>
+          <SourceImage condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+          <SourceImage condition="is not">C:\Windows\System32\csrss.exe</SourceImage>
+        </Rule>
+        <!-- Injection into sensitive processes -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+        <!-- Injection from suspicious locations -->
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Users\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\</TargetImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\ProgramData\</SourceImage>
+          <TargetImage condition="begin with">C:\Windows\</TargetImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <SourceImage condition="begin with">C:\Temp\</SourceImage>
+        </Rule>
+        <!-- Start address in unusual memory regions -->
+        <Rule groupRelation="and">
+          <StartModule condition="is">null</StartModule>
+        </Rule>
+        <!-- from RuleGroup T1055.004_APC_Injection -->
+        <!-- Thread start address in APC region -->
+        <Rule groupRelation="and">
+          <StartFunction condition="contains">ntdll.dll!NtQueueApcThread</StartFunction>
+        </Rule>
+        <Rule groupRelation="and">
+          <StartFunction condition="contains">kernel32.dll!QueueUserAPC</StartFunction>
+        </Rule>
+        <!-- from RuleGroup T1055.003_Thread_Hijacking -->
+        <!-- Injection from PowerShell -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\powershell.exe</SourceImage>
+          <TargetImage condition="is not">SourceImage</TargetImage>
+        </Rule>
+        <!-- Injection from scripting hosts -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\cscript.exe</SourceImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\wscript.exe</SourceImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\mshta.exe</SourceImage>
+        </Rule>
+      </CreateRemoteThread>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
