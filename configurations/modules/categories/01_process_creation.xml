@@ -261,11 +261,9 @@
         <CommandLine condition="contains">net group /domain</CommandLine>
         <CommandLine condition="contains">nltest /domain_trusts</CommandLine>
 
-        <!-- Unsigned executables from user directories -->
-        <Rule groupRelation="and">
-          <Image condition="begin with">C:\Users\</Image>
-          <Signed condition="is">false</Signed>
-        </Rule>
+        <!-- Note: ProcessCreate has no Signed field, so "unsigned binary in a
+             user directory" cannot be filtered here. Use ImageLoad (event 7,
+             Signed/SignatureStatus) or enrich in the SIEM instead. -->
 
       </ProcessCreate>
 

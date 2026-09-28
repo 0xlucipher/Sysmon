@@ -176,12 +176,9 @@
           <Initiated condition="is">true</Initiated>
         </Rule>
 
-        <!-- Unsigned executables from user directories -->
-        <Rule groupRelation="and">
-          <Image condition="begin with">C:\Users\</Image>
-          <Signed condition="is">false</Signed>
-          <Initiated condition="is">true</Initiated>
-        </Rule>
+        <!-- Note: NetworkConnect has no Signed field, so "unsigned binary
+             beaconing out" cannot be filtered here. Correlate with ImageLoad
+             (event 7) or enrich in the SIEM instead. -->
 
         <!-- Suspicious ports (common C2) -->
         <DestinationPort condition="is">4444</DestinationPort>

@@ -481,14 +481,16 @@
          ====================================================================== -->
 
     <RuleGroup name="AlwaysLog" groupRelation="or">
-      <SysmonStatus onmatch="include"/>
       <DriverLoad onmatch="exclude">
-        <Signed condition="is">true</Signed>
-        <Signature condition="is">Microsoft Windows</Signature>
+        <!-- AND, not OR: excluding on Signed alone would hide signed-but-vulnerable drivers (BYOVD) -->
+        <Rule groupRelation="and">
+          <Signed condition="is">true</Signed>
+          <Signature condition="is">Microsoft Windows</Signature>
+        </Rule>
       </DriverLoad>
-      <CreateRemoteThread onmatch="include"/>
-      <ProcessTampering onmatch="include"/>
-      <WmiEvent onmatch="include"/>
+      <CreateRemoteThread onmatch="exclude"/>
+      <ProcessTampering onmatch="exclude"/>
+      <WmiEvent onmatch="exclude"/>
       <FileCreateTime onmatch="exclude">
         <Image condition="is">C:\Windows\System32\msiexec.exe</Image>
       </FileCreateTime>

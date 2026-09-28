@@ -236,17 +236,9 @@
     <!--
       MITRE: T1562.001 - Impair Defenses: Disable or Modify Tools
 
-      STRATEGY: Always log Sysmon state changes (service start/stop).
-      Critical for detecting tampering attempts.
-
-      PERFORMANCE: Negligible (<0.01% of events)
+      Sysmon always logs service state changes (start/stop). This event is
+      not filterable, so it has no RuleGroup here. Alert on unexpected stops.
     -->
-
-    <RuleGroup name="SysmonStatus" groupRelation="or">
-      <SysmonStatus onmatch="include">
-        <!-- Log all state changes -->
-      </SysmonStatus>
-    </RuleGroup>
 
 
     <!-- ======================================================================
@@ -805,17 +797,9 @@
     <!--
       MITRE: T1562.001 - Impair Defenses: Disable or Modify Tools
 
-      STRATEGY: Always log configuration changes. Critical for detecting
-      tampering attempts.
-
-      PERFORMANCE: Negligible (<0.01% of events)
+      Sysmon always logs configuration changes. This event is not
+      filterable, so it has no RuleGroup here. Alert on unexpected changes.
     -->
-
-    <RuleGroup name="SysmonConfigurationChange" groupRelation="or">
-      <SysmonConfigurationChange onmatch="include">
-        <!-- Log all configuration changes -->
-      </SysmonConfigurationChange>
-    </RuleGroup>
 
 
     <!-- ======================================================================
@@ -906,9 +890,8 @@
     -->
 
     <RuleGroup name="WmiEvent" groupRelation="or">
-      <WmiEvent onmatch="include">
-        <!-- Log all WMI event activity -->
-      </WmiEvent>
+      <!-- Empty exclude = log every event. (An empty include would log nothing.) -->
+      <WmiEvent onmatch="exclude"/>
     </RuleGroup>
 
 
@@ -1096,9 +1079,8 @@
     -->
 
     <RuleGroup name="ProcessTampering" groupRelation="or">
-      <ProcessTampering onmatch="include">
-        <!-- Log all process tampering -->
-      </ProcessTampering>
+      <!-- Empty exclude = log every event. (An empty include would log nothing.) -->
+      <ProcessTampering onmatch="exclude"/>
     </RuleGroup>
 
 
@@ -1132,15 +1114,16 @@
     <!--
       MITRE: T1562.001 - Impair Defenses: Disable or Modify Tools (Detection)
 
-      STRATEGY: Requires Sysmon 13.30+ with -r flag for executable blocking.
+      STRATEGY: Requires Sysmon 14.0+. Blocking is disabled by default.
 
       PERFORMANCE: Negligible (only when blocking is configured)
     -->
 
     <RuleGroup name="FileBlockExecutable" groupRelation="or">
-      <FileBlockExecutable onmatch="include">
-        <!-- Log all blocked executables -->
-      </FileBlockExecutable>
+      <!-- Blocking is OFF: include rules here define what Sysmon BLOCKS.
+           Add narrowly scoped rules only after testing. Never use an empty exclude,
+           which would block every matching file operation. -->
+      <FileBlockExecutable onmatch="include"/>
     </RuleGroup>
 
 
@@ -1150,15 +1133,16 @@
     <!--
       MITRE: T1070.004 - Indicator Removal: File Deletion
 
-      STRATEGY: Requires Sysmon 13.30+ with -r flag for shredding detection.
+      STRATEGY: Requires Sysmon 14.1+. Blocking is disabled by default.
 
       PERFORMANCE: Negligible
     -->
 
     <RuleGroup name="FileBlockShredding" groupRelation="or">
-      <FileBlockShredding onmatch="include">
-        <!-- Log all file shredding attempts -->
-      </FileBlockShredding>
+      <!-- Blocking is OFF: include rules here define what Sysmon BLOCKS.
+           Add narrowly scoped rules only after testing. Never use an empty exclude,
+           which would block every matching file operation. -->
+      <FileBlockShredding onmatch="include"/>
     </RuleGroup>
 
 
@@ -1168,7 +1152,7 @@
     <!--
       MITRE: T1204.002 - User Execution: Malicious File
 
-      STRATEGY: Requires Sysmon 14.0+ for executable detection.
+      STRATEGY: Requires Sysmon 15.0+ (schema 4.90).
 
       PERFORMANCE: Medium volume
     -->
@@ -1184,24 +1168,6 @@
         <TargetFilename condition="contains">\Downloads\</TargetFilename>
 
       </FileExecutableDetected>
-    </RuleGroup>
-
-
-    <!-- ======================================================================
-         EVENT ID 30: FILE BLOCK RANSOMWARE DETECTED
-         ====================================================================== -->
-    <!--
-      MITRE: T1486 - Data Encrypted for Impact
-
-      STRATEGY: Requires Sysmon 14.0+ with ransomware detection.
-
-      PERFORMANCE: Low volume (only when ransomware behavior detected)
-    -->
-
-    <RuleGroup name="FileBlockRansomware" groupRelation="or">
-      <FileBlockRansomware onmatch="include">
-        <!-- Log all ransomware-like file operations -->
-      </FileBlockRansomware>
     </RuleGroup>
 
 

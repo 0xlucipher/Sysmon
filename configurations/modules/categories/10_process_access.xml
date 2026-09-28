@@ -190,13 +190,13 @@
         <Rule groupRelation="and">
           <SourceImage condition="contains">\chrome.exe</SourceImage>
           <TargetImage condition="is not">C:\Windows\System32\conhost.exe</TargetImage>
-          <TargetImage condition="does not contain">\chrome.exe</TargetImage>
+          <TargetImage condition="excludes">\chrome.exe</TargetImage>
         </Rule>
 
         <Rule groupRelation="and">
           <SourceImage condition="contains">\firefox.exe</SourceImage>
           <TargetImage condition="is not">C:\Windows\System32\conhost.exe</TargetImage>
-          <TargetImage condition="does not contain">\firefox.exe</TargetImage>
+          <TargetImage condition="excludes">\firefox.exe</TargetImage>
         </Rule>
 
       </ProcessAccess>

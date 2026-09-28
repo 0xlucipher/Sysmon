@@ -246,12 +246,20 @@ function Download-Sysmon {
         Remove-Item $zipPath -Force
 
         $sysmonExe = Join-Path $DestinationPath 'Sysmon64.exe'
-        if (Test-Path $sysmonExe) {
-            Write-Log "Sysmon downloaded successfully" -Level Success
-            return $sysmonExe
-        } else {
+        if (-not (Test-Path $sysmonExe)) {
             throw "Sysmon64.exe not found in extracted archive"
         }
+
+        # Refuse to run anything that is not validly signed by Microsoft
+        $signature = Get-AuthenticodeSignature -FilePath $sysmonExe
+        if ($signature.Status -ne 'Valid' -or
+            $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+            Remove-Item $sysmonExe -Force -ErrorAction SilentlyContinue
+            throw "Sysmon64.exe failed signature verification (status: $($signature.Status))"
+        }
+
+        Write-Log "Sysmon downloaded and signature verified" -Level Success
+        return $sysmonExe
     } catch {
         Write-Log "Failed to download Sysmon: $_" -Level Error
         throw

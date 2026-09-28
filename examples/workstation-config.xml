@@ -183,11 +183,6 @@
       </FileCreate>
     </RuleGroup>
 
-    <!-- Always log critical events -->
-    <RuleGroup name="SysmonStatus" groupRelation="or">
-      <SysmonStatus onmatch="include"/>
-    </RuleGroup>
-
     <RuleGroup name="DriverLoad" groupRelation="or">
       <DriverLoad onmatch="exclude">
         <Rule groupRelation="and">
@@ -236,7 +231,7 @@
     </RuleGroup>
 
     <RuleGroup name="WmiEvent" groupRelation="or">
-      <WmiEvent onmatch="include"/>
+      <WmiEvent onmatch="exclude"/>
     </RuleGroup>
 
     <RuleGroup name="FileDelete" groupRelation="or">
@@ -247,7 +242,7 @@
     </RuleGroup>
 
     <RuleGroup name="ProcessTampering" groupRelation="or">
-      <ProcessTampering onmatch="include"/>
+      <ProcessTampering onmatch="exclude"/>
     </RuleGroup>
 
   </EventFiltering>
