@@ -72,7 +72,7 @@ size a SIEM with it. Measure your own hosts with
 
 | Profile | Events/hour (synthetic) | Largest sources |
 |---|---|---|
-| `balanced` | ~16,700 | registry value set (13), process access (10), network (3), process create (1) |
+| `balanced` | ~16,700 | process access (10), registry value set (13), network (3), process create (1) |
 | `dc` | ~16,100 | same as balanced on a non-DC runner |
 | `verbose` | ~441,000 | registry value set (13) ~62%, process access (10) ~20%, registry key create/delete (12) ~16% |
 
