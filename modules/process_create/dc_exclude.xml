@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller ProcessCreate exclude rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/dc_exclude" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Minimal exclusions on DCs -->
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <!-- AD Replication (legitimate) -->
+        <Rule groupRelation="and">
+          <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+          <CommandLine condition="contains">DcomLaunch</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

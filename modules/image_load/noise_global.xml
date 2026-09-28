@@ -1,0 +1,36 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows ImageLoad activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="image_load/noise_global" groupRelation="or">
+      <ImageLoad onmatch="exclude">
+        <!-- Signed Microsoft DLLs from system directories -->
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\System32\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\SysWOW64\</ImageLoaded>
+        </Rule>
+        <Rule groupRelation="and">
+          <Signature condition="is">Microsoft Windows</Signature>
+          <Signed condition="is">true</Signed>
+          <ImageLoaded condition="begin with">C:\Windows\WinSxS\</ImageLoaded>
+        </Rule>
+        <!-- Font loading (extremely noisy) -->
+        <ImageLoaded condition="contains">\Fonts\</ImageLoaded>
+        <!-- IME (Input Method Editor) -->
+        <ImageLoaded condition="contains">\IME\</ImageLoaded>
+        <!-- .NET native images -->
+        <ImageLoaded condition="contains">\assembly\NativeImages_</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

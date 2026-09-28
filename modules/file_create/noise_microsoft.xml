@@ -1,0 +1,47 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: Microsoft software FileCreate activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/microsoft_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/noise_microsoft" groupRelation="or">
+      <FileCreate onmatch="exclude">
+        <!-- from RuleGroup MS_Office_Exclude -->
+        <!-- Office temporary files -->
+        <Rule groupRelation="and">
+          <Image condition="contains">\Microsoft Office\</Image>
+          <TargetFilename condition="begin with">~$</TargetFilename>
+        </Rule>
+        <!-- Office auto-save/recovery -->
+        <TargetFilename condition="contains">\Microsoft\Office\UnsavedFiles\</TargetFilename>
+        <!-- from RuleGroup MS_Defender_Exclude -->
+        <!-- Defender quarantine -->
+        <TargetFilename condition="begin with">C:\ProgramData\Microsoft\Windows Defender\Quarantine\</TargetFilename>
+        <!-- Defender scans -->
+        <TargetFilename condition="begin with">C:\ProgramData\Microsoft\Windows Defender\Scans\</TargetFilename>
+        <!-- from RuleGroup MS_Edge_Exclude -->
+        <!-- Edge cache and temp files -->
+        <TargetFilename condition="contains">\Microsoft\Edge\User Data\</TargetFilename>
+        <!-- from RuleGroup MS_Teams_Exclude -->
+        <!-- Teams cache -->
+        <TargetFilename condition="contains">\Microsoft\Teams\</TargetFilename>
+        <!-- from RuleGroup MS_OneDrive_Exclude -->
+        <!-- OneDrive cache -->
+        <TargetFilename condition="contains">\OneDrive\</TargetFilename>
+        <!-- from RuleGroup MS_WindowsUpdate_Exclude -->
+        <!-- Windows Update cache -->
+        <TargetFilename condition="begin with">C:\Windows\SoftwareDistribution\</TargetFilename>
+        <!-- CBS logs -->
+        <TargetFilename condition="begin with">C:\Windows\Logs\CBS\</TargetFilename>
+        <!-- from RuleGroup MS_Development_Exclude -->
+        <!-- Build outputs -->
+        <TargetFilename condition="contains">\bin\Debug\</TargetFilename>
+        <TargetFilename condition="contains">\bin\Release\</TargetFilename>
+        <TargetFilename condition="contains">\obj\Debug\</TargetFilename>
+        <TargetFilename condition="contains">\obj\Release\</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

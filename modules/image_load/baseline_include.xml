@@ -1,0 +1,37 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline ImageLoad include rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="image_load/baseline_include" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <!-- Unsigned DLLs loaded into sensitive processes -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\lsass.exe</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\csrss.exe</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+        <!-- DLLs loaded from suspicious paths -->
+        <ImageLoaded condition="begin with">C:\Users\</ImageLoaded>
+        <ImageLoaded condition="begin with">C:\ProgramData\</ImageLoaded>
+        <ImageLoaded condition="begin with">C:\Windows\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains">\AppData\Local\Temp\</ImageLoaded>
+        <!-- Known malicious or abuse-prone DLLs -->
+        <ImageLoaded condition="end with">\comsvcs.dll</ImageLoaded>
+        <!-- Used for LSASS dumping -->
+        <ImageLoaded condition="end with">\samlib.dll</ImageLoaded>
+        <!-- SAM database access -->
+        <ImageLoaded condition="end with">\vaultcli.dll</ImageLoaded>
+        <!-- Credential vault -->
+        <ImageLoaded condition="end with">\wdigest.dll</ImageLoaded>
+        <!-- Credential theft -->
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

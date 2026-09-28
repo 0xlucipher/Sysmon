@@ -1,0 +1,19 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller DnsQuery include rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="dns_query/dc_include" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <!-- Suspicious TLDs -->
+        <QueryName condition="end with">.tk</QueryName>
+        <QueryName condition="end with">.xyz</QueryName>
+        <QueryName condition="end with">duckdns.org</QueryName>
+        <QueryName condition="end with">ngrok.io</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

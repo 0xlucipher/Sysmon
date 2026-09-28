@@ -48,29 +48,39 @@ sysmon-modular already cover breadth. Neither proves detection.
 | 25 | Workflow | One PR per phase, merged before the next starts. |
 | 26 | Licence | MIT, copyright updated to the owner. SwiftOnSecurity licence checked before borrowing. |
 
-## Target layout
+## Layout
 
 ```
-modules/<event>/<id>_<name>.xml   rule fragments with metadata header
-profiles/<name>.yml               ordered module lists + global settings
-tools/                            generator, validator (Python)
-tests/                            unit tests for tools
-atomics/<technique>.yml           which Atomic tests prove which module
-deployment/                       on-host PowerShell (install/update/drift)
-dist/ (release asset only)        generated XML, catalog.json, reports
+modules/<event>/<name>.xml   one event filter + metadata (see modules/README.md)
+profiles/<name>.toml         event modes, module list, settings; may `extends` another
+tools/sysmongen.py           generator: modules + profile -> dist/
+tools/sysmonlint.py          static validator
+tests/                       unit tests for tools
+testing/                     Windows load test and rejection probes
+dist/                        generated configs + catalog.json (committed; CI checks it is current)
+deployment/                  on-host PowerShell (install/update)
+atomics/<technique>.yml      (phase 4) which Atomic tests prove which module
 ```
 
-### Module metadata (header comment, machine-read)
+Profiles are TOML rather than YAML so the generator needs only the Python
+standard library (`tomllib`), which also runs unchanged under Pyodide for the GUI.
 
-```
-technique: T1003.001
-event: ProcessAccess (10)
-onmatch: include
-volume: low | medium | high
-sigma: [<rule ids>]
-atomics: [T1003.001-1, T1003.001-2]
-source: original | <attribution>
-```
+### Event modes
+
+Every filterable event gets an explicit mode in each profile: `off`, `all`
+(exclude modules only) or `selective` (include modules minus exclude modules).
+The generator refuses combinations that would silently change meaning. For
+example, include rules added to an `all` event would turn "log everything" into
+"log only matches"; the generator skips them and reports it. See
+[modules/README.md](../modules/README.md).
+
+### Schemas
+
+Every module targets schema 4.90 unless it declares `min_schema: 4.91`. A
+profile targets one schema, and the build fails if a module needs a newer one.
+CI confirms 4.90 output loads on Sysmon 15.22 (schema 4.91). A second per-schema
+output is added only when a module needs a 4.91-only feature. Built-in Windows
+Sysmon reads the same configuration format.
 
 ## Phases
 

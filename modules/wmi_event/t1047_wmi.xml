@@ -1,0 +1,24 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1047 WMI execution and persistence: WmiEvent include
+  techniques: T1047
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1047_wmi_execution.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="wmi_event/t1047_wmi" groupRelation="or">
+      <WmiEvent onmatch="include">
+        <!-- from RuleGroup T1047_WMI_Persistence -->
+        <!-- All WMI event filter activity -->
+        <EventType condition="is">WmiFilterEvent</EventType>
+        <!-- from RuleGroup T1047_WMI_Persistence -->
+        <!-- All WMI consumer activity -->
+        <EventType condition="is">WmiConsumerEvent</EventType>
+        <!-- from RuleGroup T1047_WMI_Persistence -->
+        <!-- All WMI consumer-to-filter bindings -->
+        <EventType condition="is">WmiBindingEvent</EventType>
+      </WmiEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

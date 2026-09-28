@@ -7,7 +7,7 @@
     switching and custom configuration deployment.
 
 .PARAMETER ConfigProfile
-    Configuration profile: minimal, balanced, comprehensive, forensics
+    Configuration profile: balanced, verbose, dc
 
 .PARAMETER ConfigPath
     Custom configuration file path
@@ -22,8 +22,8 @@
     Force update even if configuration appears unchanged
 
 .EXAMPLE
-    .\Update-Sysmon.ps1 -ConfigProfile comprehensive
-    Switch to comprehensive profile
+    .\Update-Sysmon.ps1 -ConfigProfile verbose
+    Switch to the verbose profile for an investigation
 
 .EXAMPLE
     .\Update-Sysmon.ps1 -ConfigPath "C:\Custom\tuned-config.xml" -Validate
@@ -36,7 +36,7 @@
 
 [CmdletBinding()]
 param(
-    [ValidateSet('minimal','balanced','comprehensive','forensics')]
+    [ValidateSet('balanced','verbose','dc')]
     [string]$ConfigProfile = 'balanced',
 
     [string]$ConfigPath,
@@ -61,14 +61,7 @@ function Update-Configuration {
 
     # Determine config file
     if (-not $ConfigPath) {
-        $profiles = @{
-            'minimal' = 'sysmon-minimal.xml'
-            'balanced' = 'sysmon-base.xml'
-            'comprehensive' = 'sysmon-comprehensive.xml'
-            'forensics' = 'sysmon-forensics.xml'
-        }
-
-        $ConfigPath = Join-Path $PSScriptRoot "..\configurations\$($profiles[$ConfigProfile])"
+        $ConfigPath = Join-Path $PSScriptRoot "..\dist\sysmon-$ConfigProfile.xml"
     }
 
     if (-not (Test-Path $ConfigPath)) {

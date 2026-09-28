@@ -21,8 +21,10 @@ jobs:
       - run: pip install pytest
       - name: Unit tests
         run: python -m pytest -q tests
-      - name: Lint Sysmon configurations
-        run: python tools/sysmonlint.py configurations examples
+      - name: Lint modules and generated configs
+        run: python tools/sysmonlint.py modules dist
+      - name: Generated configs are up to date
+        run: python tools/sysmongen.py build --check
 
   sysmon-load:
     name: Load configs into Sysmon
@@ -30,9 +32,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply every configuration with sysmon -c
+      - name: Apply every generated config and module with sysmon -c
         shell: pwsh
-        run: ./testing/Test-SysmonLoad.ps1 -Path configurations, examples
+        run: ./testing/Test-SysmonLoad.ps1 -Path dist, modules
       - name: Probe which mistakes Sysmon rejects (informational)
         if: always()
         shell: pwsh
@@ -42,3 +44,18 @@ jobs:
         with:
           name: sysmon-load-results
           path: sysmon-load-results/
+
+  powershell:
+    name: PowerShell analysis
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PSScriptAnalyzer (errors)
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
+              Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+          }
+          $findings = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error
+          $findings | Format-Table -AutoSize | Out-String -Width 200 | Write-Host
+          if ($findings) { exit 1 }

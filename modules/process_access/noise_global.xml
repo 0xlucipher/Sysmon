@@ -1,0 +1,30 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows ProcessAccess activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_access/noise_global" groupRelation="or">
+      <ProcessAccess onmatch="exclude">
+        <!-- Legitimate system processes accessing each other -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+          <TargetImage condition="is">C:\Windows\System32\svchost.exe</TargetImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        </Rule>
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\lsass.exe</SourceImage>
+        </Rule>
+        <!-- Task Manager (legitimate) -->
+        <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+        <!-- Process Explorer (if deployed) -->
+        <!-- removed in phase 2: any binary named procexp.exe (e.g. a renamed credential dumper) could access LSASS unlogged -->
+        <!-- removed in phase 2: any binary named procexp64.exe (e.g. a renamed credential dumper) could access LSASS unlogged -->
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

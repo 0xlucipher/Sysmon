@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline FileCreateTime exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create_time/baseline_exclude" groupRelation="or">
+      <FileCreateTime onmatch="exclude">
+        <!-- Exclude legitimate installer/update processes -->
+        <Image condition="is">C:\Windows\System32\msiexec.exe</Image>
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <Image condition="is">C:\Windows\explorer.exe</Image>
+        <!-- Exclude trusted paths where timestomping is expected -->
+        <TargetFilename condition="begin with">C:\Windows\Installer\</TargetFilename>
+        <TargetFilename condition="begin with">C:\Windows\WinSxS\</TargetFilename>
+      </FileCreateTime>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,93 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1021 remote services: ProcessCreate include
+  techniques: T1021.001, T1021.002, T1021.003, T1021.004, T1021.006
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1021_remote_services.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1021_remote_services" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- from RuleGroup T1021.002_PSExec -->
+        <!-- Command execution from services.exe (remote service creation) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\services.exe</ParentImage>
+          <Image condition="is not">C:\Windows\System32\svchost.exe</Image>
+          <Image condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        </Rule>
+        <!-- PSExec execution patterns -->
+        <CommandLine condition="contains">psexec</CommandLine>
+        <CommandLine condition="contains">paexec</CommandLine>
+        <!-- SC.exe creating remote services -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\sc.exe</Image>
+          <CommandLine condition="contains">\\</CommandLine>
+          <CommandLine condition="contains">create</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1021.001_RDP -->
+        <!-- RDP client -->
+        <Image condition="end with">\mstsc.exe</Image>
+        <!-- RDP clipboard process (indicator of active RDP session) -->
+        <Image condition="end with">\rdpclip.exe</Image>
+        <!-- Third-party RDP clients -->
+        <CommandLine condition="contains">-rdp:</CommandLine>
+        <CommandLine condition="contains">/rdp:</CommandLine>
+        <!-- from RuleGroup T1021.006_WinRM -->
+        <!-- WinRS.exe (Windows Remote Shell) -->
+        <Image condition="end with">\winrs.exe</Image>
+        <!-- WSMan PowerShell provider host -->
+        <Image condition="end with">\wsmprovhost.exe</Image>
+        <!-- Invoke-Command or Enter-PSSession indicators -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-Command</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Enter-PSSession</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1021.003_DCOM -->
+        <!-- MMC20.Application (common DCOM vector) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\mmc.exe</Image>
+          <CommandLine condition="contains">-Embedding</CommandLine>
+        </Rule>
+        <!-- ShellBrowserWindow (DCOM exec) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\svchost.exe</ParentImage>
+          <CommandLine condition="contains">/Automation</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1021.004_SSH -->
+        <!-- Windows OpenSSH -->
+        <Image condition="end with">\ssh.exe</Image>
+        <!-- PuTTY -->
+        <Image condition="end with">\putty.exe</Image>
+        <Image condition="end with">\plink.exe</Image>
+        <!-- Other SSH clients -->
+        <CommandLine condition="contains">ssh </CommandLine>
+        <!-- from RuleGroup T1021_Admin_Shares -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\net.exe</Image>
+          <CommandLine condition="contains">use</CommandLine>
+          <CommandLine condition="contains">\C$</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\net.exe</Image>
+          <CommandLine condition="contains">use</CommandLine>
+          <CommandLine condition="contains">\ADMIN$</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1021_Remote_Tasks -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\schtasks.exe</Image>
+          <CommandLine condition="contains">/s </CommandLine>
+          <CommandLine condition="contains">/create</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\at.exe</Image>
+          <CommandLine condition="contains">\\</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,22 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1053 scheduled tasks: FileCreate include
+  techniques: T1053
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1053_scheduled_task.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/t1053_scheduled_task" groupRelation="or">
+      <FileCreate onmatch="include">
+        <!-- Task definitions -->
+        <TargetFilename condition="begin with">C:\Windows\System32\Tasks\</TargetFilename>
+        <!-- Task backup/export -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="end with">.xml</TargetFilename>
+          <TargetFilename condition="contains">Task</TargetFilename>
+        </Rule>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

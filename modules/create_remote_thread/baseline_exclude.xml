@@ -1,0 +1,30 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline CreateRemoteThread exclude rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="create_remote_thread/baseline_exclude" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <!-- Legitimate Microsoft processes -->
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\csrss.exe</SourceImage>
+        <!-- Visual Studio debugger -->
+        <!-- removed in phase 2: "end with" a directory never matched any image -->
+        <!-- Chrome process management -->
+        <Rule groupRelation="and">
+          <SourceImage condition="contains">\Google\Chrome\Application\chrome.exe</SourceImage>
+          <TargetImage condition="contains">\Google\Chrome\Application\chrome.exe</TargetImage>
+        </Rule>
+        <!-- Firefox process management -->
+        <Rule groupRelation="and">
+          <SourceImage condition="end with">\firefox.exe</SourceImage>
+          <TargetImage condition="end with">\firefox.exe</TargetImage>
+        </Rule>
+      </CreateRemoteThread>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

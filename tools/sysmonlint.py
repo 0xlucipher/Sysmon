@@ -132,6 +132,11 @@ class Finding:
         return f"{self.path}: {self.level}: {self.message}"
 
 
+def _elements(parent: ET.Element) -> list[ET.Element]:
+    """Child elements, skipping comments and processing instructions."""
+    return [c for c in parent if isinstance(c.tag, str)]
+
+
 def lint_tree(root: ET.Element, path: Path) -> list[Finding]:
     out: list[Finding] = []
 
@@ -149,7 +154,7 @@ def lint_tree(root: ET.Element, path: Path) -> list[Finding]:
     if schema not in SUPPORTED_SCHEMAS:
         err(f"schemaversion {schema!r} not in supported {sorted(SUPPORTED_SCHEMAS)}")
 
-    for child in root:
+    for child in _elements(root):
         if child.tag not in TOP_LEVEL:
             err(f"unknown top-level element <{child.tag}>")
 
@@ -164,7 +169,7 @@ def lint_tree(root: ET.Element, path: Path) -> list[Finding]:
         return out
 
     seen: dict[tuple[str, str], list[str]] = {}
-    for group in filtering:
+    for group in _elements(filtering):
         if group.tag != "RuleGroup":
             # Bare event elements directly under EventFiltering are legal.
             events, gname = [group], "(no RuleGroup)"
@@ -173,7 +178,7 @@ def lint_tree(root: ET.Element, path: Path) -> list[Finding]:
             rel = group.get("groupRelation")
             if rel not in GROUP_RELATIONS:
                 err(f"RuleGroup {gname!r}: groupRelation={rel!r}, expected 'and' or 'or'")
-            events = list(group)
+            events = _elements(group)
             if len(events) > 1:
                 tags = ", ".join(e.tag for e in events)
                 warn(f"RuleGroup {gname!r} holds {len(events)} event filters ({tags}); "
@@ -205,28 +210,59 @@ def _lint_event(ev: ET.Element, gname: str, err, warn) -> None:
         return
 
     fields = EVENT_FIELDS[ev.tag]
-    children = list(ev)
+    children = _elements(ev)
     if ev.tag in BLOCKING_EVENTS:
         if onmatch == "exclude" and not children:
             err(f"{where}: empty onmatch='exclude' BLOCKS every matching file operation")
         elif onmatch == "exclude":
             warn(f"{where}: onmatch='exclude' blocks everything not excluded; "
                  "prefer narrow include rules")
-    elif not children and onmatch == "include":
+    elif not children and onmatch == "include" and not gname.endswith(" off"):
+        # RuleGroups named "<Event> off" (as sysmongen emits) mark an event as
+        # deliberately disabled, so the empty include is intended.
         warn(f"{where}: empty onmatch='include' logs NOTHING for this event; "
              "use an empty onmatch='exclude' to log everything")
+
+    if onmatch == "exclude":
+        for child in children:
+            _lint_broad_exclude(child, where, warn)
 
     for child in children:
         if child.tag == "Rule":
             rel = child.get("groupRelation")
             if rel not in GROUP_RELATIONS:
                 err(f"{where}: <Rule name={child.get('name')!r}> groupRelation={rel!r}")
-            if not list(child):
+            if not _elements(child):
                 err(f"{where}: <Rule name={child.get('name')!r}> has no conditions")
-            for leaf in child:
+            for leaf in _elements(child):
                 _lint_field(leaf, fields, where, err)
         else:
             _lint_field(child, fields, where, err)
+
+
+IMAGE_FIELDS = {"Image", "SourceImage", "ParentImage"}
+
+
+def _lint_broad_exclude(leaf: ET.Element, where: str, warn) -> None:
+    """Warn on standalone exclusions that hide more than intended.
+
+    Only fields directly under the event filter are checked; inside a
+    <Rule groupRelation="and"> they are narrowed by the other conditions.
+    """
+    if leaf.tag in ("CommandLine", "ParentCommandLine"):
+        warn(f"{where}: standalone <{leaf.tag}> exclusion is attacker-controlled: any process "
+             "can add this text to its command line to hide; scope it with Image in a <Rule>")
+        return
+    if leaf.tag not in IMAGE_FIELDS:
+        return
+    value = (leaf.text or "").strip()
+    cond = leaf.get("condition", "is")
+    if leaf.tag == "ParentImage":
+        warn(f"{where}: standalone <ParentImage {cond} {value!r}> excludes EVERY child "
+             "process of it; combine with other fields in a <Rule groupRelation=\"and\">")
+    elif cond in ("end with", "contains") and value[1:3] != ":\\":
+        warn(f"{where}: <{leaf.tag} {cond} {value!r}> is not anchored to a directory, so "
+             "any file with this name anywhere is excluded; use 'begin with' a protected path")
 
 
 def _lint_field(leaf: ET.Element, fields: set[str], where: str, err) -> None:

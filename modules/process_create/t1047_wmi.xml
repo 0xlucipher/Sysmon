@@ -1,0 +1,67 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: T1047 WMI execution and persistence: ProcessCreate include
+  techniques: T1047
+  volume: unmeasured
+  source: migrated from configurations/modules/techniques/T1047_wmi_execution.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1047_wmi" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <!-- from RuleGroup T1047_WMI_Execution -->
+        <!-- WMIC.exe with process call create -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <CommandLine condition="contains">process call create</CommandLine>
+        </Rule>
+        <!-- WMIC with remote node -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <CommandLine condition="contains">/node:</CommandLine>
+        </Rule>
+        <!-- WMIC suspicious usage -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\wmic.exe</Image>
+          <CommandLine condition="contains">shadowcopy delete</CommandLine>
+        </Rule>
+        <!-- WMI scripting host -->
+        <Image condition="end with">\scrcons.exe</Image>
+        <!-- WMI Provider Host executing suspicious commands -->
+        <Rule groupRelation="and">
+          <ParentImage condition="end with">\wmiprvse.exe</ParentImage>
+          <Image condition="is not">C:\Windows\System32\wbem\mofcomp.exe</Image>
+          <Image condition="is not">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        </Rule>
+        <!-- from RuleGroup T1047_WMI_Execution -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Get-WmiObject</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-WmiMethod</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Set-WmiInstance</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Register-WmiEvent</CommandLine>
+        </Rule>
+        <!-- CIM cmdlets (modern WMI) -->
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">Invoke-CimMethod</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\powershell.exe</Image>
+          <CommandLine condition="contains">New-CimInstance</CommandLine>
+        </Rule>
+        <!-- from RuleGroup T1047_WMI_Repository -->
+        <Image condition="end with">\mofcomp.exe</Image>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,71 @@
+# Incident response and research: log everything except known noise.
+# Expect high volume (ImageLoad and DnsQuery in particular). Not for fleet-wide use.
+description = "Incident response and research: every event type except clipboard and blocking, minus known noise. Archives deleted executables."
+schema = "4.90"
+modules = [
+  "create_remote_thread/baseline_exclude",
+  "create_remote_thread/noise_global",
+  "dns_query/baseline_exclude",
+  "dns_query/noise_global",
+  "driver_load/baseline_exclude",
+  "file_create/baseline_exclude",
+  "file_create/noise_common_software",
+  "file_create/noise_global",
+  "file_create/noise_microsoft",
+  "file_create_stream_hash/baseline_exclude",
+  "file_create_stream_hash/noise_global",
+  "file_create_time/baseline_exclude",
+  "file_delete/noise_global",
+  "file_delete_detected/baseline_exclude",
+  "image_load/baseline_exclude",
+  "image_load/noise_global",
+  "network_connect/baseline_exclude",
+  "network_connect/noise_common_software",
+  "network_connect/noise_global",
+  "network_connect/noise_microsoft",
+  "pipe_event/baseline_exclude",
+  "pipe_event/noise_global",
+  "process_access/baseline_exclude",
+  "process_access/noise_global",
+  "process_create/baseline_exclude",
+  "process_create/noise_common_software",
+  "process_create/noise_global",
+  "process_create/noise_microsoft",
+  "raw_access_read/baseline_exclude",
+  "raw_access_read/noise_global",
+  "registry_event/baseline_exclude",
+  "registry_event/noise_common_software",
+  "registry_event/noise_global",
+  "registry_event/noise_microsoft",
+  "file_delete/archive_executables",
+]
+
+[settings]
+hash_algorithms = ["SHA256", "IMPHASH"]
+check_revocation = true
+dns_lookup = false
+archive_directory = "SysmonArchive"
+
+[events]
+ProcessCreate          = "all"
+FileCreateTime         = "all"
+NetworkConnect         = "all"
+ProcessTerminate       = "all"
+DriverLoad             = "all"
+ImageLoad              = "all"
+CreateRemoteThread     = "all"
+RawAccessRead          = "all"
+ProcessAccess          = "all"
+FileCreate             = "all"
+RegistryEvent          = "all"
+FileCreateStreamHash   = "all"
+PipeEvent              = "all"
+WmiEvent               = "all"
+DnsQuery               = "all"
+FileDelete             = "selective"  # archive executables only
+ClipboardChange        = "off"  # privacy: never captured
+ProcessTampering       = "all"
+FileDeleteDetected     = "all"
+FileBlockExecutable    = "off"  # blocking stays off
+FileBlockShredding     = "off"  # blocking stays off
+FileExecutableDetected = "all"

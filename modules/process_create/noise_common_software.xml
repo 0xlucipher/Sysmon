@@ -1,0 +1,66 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common third-party software ProcessCreate activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/common_software.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_create/noise_common_software" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- from RuleGroup Browsers_Exclude -->
+        <!-- Google Chrome renderer processes (extremely noisy) -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Google\Chrome\Application\chrome.exe</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+        <!-- Chrome update processes -->
+        <Image condition="begin with">C:\Program Files (x86)\Google\Update\</Image>
+        <!-- Firefox renderer processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Mozilla Firefox\firefox.exe</ParentImage>
+          <CommandLine condition="contains">-contentproc</CommandLine>
+        </Rule>
+        <!-- Firefox updater -->
+        <Image condition="is">C:\Program Files\Mozilla Firefox\updater.exe</Image>
+        <!-- removed in phase 2: hid every child of Firefox, including exploit-spawned shells -->
+        <!-- from RuleGroup Communication_Exclude -->
+        <!-- Slack processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Slack\</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+        <!-- Zoom processes -->
+        <!-- removed in phase 2: Zoom runs from user-writable %APPDATA%, so the path is spoofable -->
+        <!-- Discord processes -->
+        <Rule groupRelation="and">
+          <ParentImage condition="contains">\Discord\</ParentImage>
+          <CommandLine condition="contains">--type=</CommandLine>
+        </Rule>
+        <!-- from RuleGroup Adobe_Exclude -->
+        <!-- Adobe Acrobat updater -->
+        <Image condition="begin with">C:\Program Files (x86)\Common Files\Adobe\ARM\</Image>
+        <!-- Adobe Creative Cloud -->
+        <Image condition="begin with">C:\Program Files\Adobe\Adobe Creative Cloud\</Image>
+        <Image condition="begin with">C:\Program Files (x86)\Adobe\Adobe Creative Cloud\</Image>
+        <!-- Adobe GC Invoker (update checker) -->
+        <Image condition="begin with">C:\Program Files (x86)\Common Files\Adobe\AdobeGCClient\</Image>
+        <!-- from RuleGroup Java_Exclude -->
+        <!-- Java Auto Updater -->
+        <Image condition="begin with">C:\Program Files (x86)\Common Files\Java\Java Update\</Image>
+        <!-- Java (development/app server environments only) -->
+        <!-- SECURITY WARNING: Java is a common attack vector -->
+        <!--
+        <Image condition="end with">\java.exe</Image>
+        <Image condition="end with">\javaw.exe</Image>
+        -->
+        <!-- from RuleGroup Printing_Exclude -->
+        <!-- Print spooler operations -->
+        <Rule groupRelation="and">
+          <ParentImage condition="is">C:\Windows\System32\spoolsv.exe</ParentImage>
+          <Image condition="begin with">C:\Windows\System32\spool\drivers\</Image>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

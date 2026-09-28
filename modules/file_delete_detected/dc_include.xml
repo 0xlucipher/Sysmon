@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller FileDeleteDetected include rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_delete_detected/dc_include" groupRelation="or">
+      <FileDeleteDetected onmatch="include">
+        <!-- Event logs (critical on DCs) -->
+        <TargetFilename condition="contains">\winevt\Logs\</TargetFilename>
+        <!-- NTDS backups -->
+        <TargetFilename condition="contains">ntds</TargetFilename>
+        <!-- Prefetch (anti-forensics) -->
+        <TargetFilename condition="contains">\Prefetch\</TargetFilename>
+      </FileDeleteDetected>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,22 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller ProcessAccess exclude rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_access/dc_exclude" groupRelation="or">
+      <ProcessAccess onmatch="exclude">
+        <!-- Legitimate system access only -->
+        <Rule groupRelation="and">
+          <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+          <TargetImage condition="is not">\lsass.exe</TargetImage>
+        </Rule>
+        <SourceImage condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</SourceImage>
+        <!-- Task Manager (admin tool) -->
+        <SourceImage condition="is">C:\Windows\System32\taskmgr.exe</SourceImage>
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

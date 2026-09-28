@@ -1,0 +1,43 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller FileCreate include rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="file_create/dc_include" groupRelation="or">
+      <FileCreate onmatch="include">
+        <!-- NTDS.dit (AD database) - ANY access is suspicious -->
+        <TargetFilename condition="contains">ntds.dit</TargetFilename>
+        <!-- NTDS.dit log files -->
+        <TargetFilename condition="contains">edb.log</TargetFilename>
+        <!-- SAM/SYSTEM/SECURITY hives export -->
+        <TargetFilename condition="end with">.hiv</TargetFilename>
+        <!-- Group Policy files -->
+        <TargetFilename condition="begin with">C:\Windows\SYSVOL\</TargetFilename>
+        <!-- Scripts in SYSVOL -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\SYSVOL\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\SYSVOL\</TargetFilename>
+          <TargetFilename condition="end with">.bat</TargetFilename>
+        </Rule>
+        <!-- Scripts in temp -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="contains">\Temp\</TargetFilename>
+          <TargetFilename condition="end with">.ps1</TargetFilename>
+        </Rule>
+        <!-- System directory modifications -->
+        <TargetFilename condition="begin with">C:\Windows\System32\</TargetFilename>
+        <!-- Executable in user directories (rare on DC) -->
+        <Rule groupRelation="and">
+          <TargetFilename condition="begin with">C:\Users\</TargetFilename>
+          <TargetFilename condition="end with">.exe</TargetFilename>
+        </Rule>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

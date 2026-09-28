@@ -1,0 +1,36 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows RegistryEvent activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="registry_event/noise_global" groupRelation="or">
+      <RegistryEvent onmatch="exclude">
+        <!-- MUI Cache (extremely noisy) -->
+        <TargetObject condition="contains">\Software\Classes\Local Settings\MuiCache\</TargetObject>
+        <!-- User Shell Folders (noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders\</TargetObject>
+        <!-- Shell Bags (noisy) -->
+        <TargetObject condition="contains">\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\</TargetObject>
+        <TargetObject condition="contains">\Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\Bags\</TargetObject>
+        <!-- Recent Docs (noisy, low security value) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs\</TargetObject>
+        <!-- TypedURLs -->
+        <TargetObject condition="contains">\Software\Microsoft\Internet Explorer\TypedURLs\</TargetObject>
+        <!-- File MRU lists -->
+        <TargetObject condition="contains">\OpenSavePidlMRU\</TargetObject>
+        <TargetObject condition="contains">\LastVisitedPidlMRU\</TargetObject>
+        <!-- Explorer session data -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\</TargetObject>
+        <!-- COM+ catalog -->
+        <TargetObject condition="contains">\Software\Classes\CLSID\{</TargetObject>
+        <!-- Performance counters -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib\</TargetObject>
+        <!-- AppCompatFlags (extremely noisy) -->
+        <TargetObject condition="contains">\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

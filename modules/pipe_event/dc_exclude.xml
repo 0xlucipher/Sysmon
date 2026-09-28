@@ -1,0 +1,18 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Domain controller PipeEvent exclude rules
+  volume: unmeasured
+  source: migrated from examples/domain-controller-config.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="pipe_event/dc_exclude" groupRelation="or">
+      <PipeEvent onmatch="exclude">
+        <!-- Legitimate system pipes -->
+        <PipeName condition="begin with">\\lsass</PipeName>
+        <PipeName condition="begin with">\\samr</PipeName>
+        <PipeName condition="begin with">\\winreg</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

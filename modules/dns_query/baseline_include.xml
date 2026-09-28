@@ -1,0 +1,40 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline DnsQuery include rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="dns_query/baseline_include" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <!-- Dynamic DNS services (common for C2) -->
+        <QueryName condition="end with">duckdns.org</QueryName>
+        <QueryName condition="end with">no-ip.com</QueryName>
+        <QueryName condition="end with">no-ip.org</QueryName>
+        <QueryName condition="end with">ddns.net</QueryName>
+        <QueryName condition="end with">freedns.afraid.org</QueryName>
+        <!-- Tunneling services -->
+        <QueryName condition="end with">ngrok.io</QueryName>
+        <QueryName condition="end with">serveo.net</QueryName>
+        <QueryName condition="end with">localtunnel.me</QueryName>
+        <QueryName condition="end with">portmap.io</QueryName>
+        <!-- Suspicious TLDs -->
+        <QueryName condition="end with">.tk</QueryName>
+        <QueryName condition="end with">.ml</QueryName>
+        <QueryName condition="end with">.ga</QueryName>
+        <QueryName condition="end with">.cf</QueryName>
+        <QueryName condition="end with">.gq</QueryName>
+        <!-- Tor -->
+        <QueryName condition="end with">.onion</QueryName>
+        <QueryName condition="contains">tor2web</QueryName>
+        <!-- Cryptomining pools -->
+        <QueryName condition="contains">coinminer</QueryName>
+        <QueryName condition="contains">cryptonight</QueryName>
+        <QueryName condition="contains">xmrig</QueryName>
+        <!-- Unusually long domains (DGA, tunneling) -->
+        <!-- Note: QueryName length not directly filterable, handled in SIEM -->
+      </DnsQuery>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

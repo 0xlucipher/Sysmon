@@ -1,0 +1,1498 @@
+{
+  "format": 1,
+  "schemas": [
+    "4.90",
+    "4.91"
+  ],
+  "events": {
+    "ProcessCreate": {
+      "id": "1",
+      "blocking": false
+    },
+    "FileCreateTime": {
+      "id": "2",
+      "blocking": false
+    },
+    "NetworkConnect": {
+      "id": "3",
+      "blocking": false
+    },
+    "ProcessTerminate": {
+      "id": "5",
+      "blocking": false
+    },
+    "DriverLoad": {
+      "id": "6",
+      "blocking": false
+    },
+    "ImageLoad": {
+      "id": "7",
+      "blocking": false
+    },
+    "CreateRemoteThread": {
+      "id": "8",
+      "blocking": false
+    },
+    "RawAccessRead": {
+      "id": "9",
+      "blocking": false
+    },
+    "ProcessAccess": {
+      "id": "10",
+      "blocking": false
+    },
+    "FileCreate": {
+      "id": "11",
+      "blocking": false
+    },
+    "RegistryEvent": {
+      "id": "12-14",
+      "blocking": false
+    },
+    "FileCreateStreamHash": {
+      "id": "15",
+      "blocking": false
+    },
+    "PipeEvent": {
+      "id": "17-18",
+      "blocking": false
+    },
+    "WmiEvent": {
+      "id": "19-21",
+      "blocking": false
+    },
+    "DnsQuery": {
+      "id": "22",
+      "blocking": false
+    },
+    "FileDelete": {
+      "id": "23",
+      "blocking": false
+    },
+    "ClipboardChange": {
+      "id": "24",
+      "blocking": false
+    },
+    "ProcessTampering": {
+      "id": "25",
+      "blocking": false
+    },
+    "FileDeleteDetected": {
+      "id": "26",
+      "blocking": false
+    },
+    "FileBlockExecutable": {
+      "id": "27",
+      "blocking": true
+    },
+    "FileBlockShredding": {
+      "id": "28",
+      "blocking": true
+    },
+    "FileExecutableDetected": {
+      "id": "29",
+      "blocking": false
+    }
+  },
+  "modules": [
+    {
+      "id": "create_remote_thread/baseline_exclude",
+      "path": "modules/create_remote_thread/baseline_exclude.xml",
+      "event": "CreateRemoteThread",
+      "onmatch": "exclude",
+      "rules": 5,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline CreateRemoteThread exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "create_remote_thread/noise_global",
+      "path": "modules/create_remote_thread/noise_global.xml",
+      "event": "CreateRemoteThread",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows CreateRemoteThread activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "create_remote_thread/t1055_process_injection",
+      "path": "modules/create_remote_thread/t1055_process_injection.xml",
+      "event": "CreateRemoteThread",
+      "onmatch": "include",
+      "rules": 15,
+      "source": "migrated from configurations/modules/techniques/T1055_process_injection.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1055.003",
+        "T1055.004"
+      ],
+      "title": "T1055 process injection: CreateRemoteThread include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "dns_query/baseline_exclude",
+      "path": "modules/dns_query/baseline_exclude.xml",
+      "event": "DnsQuery",
+      "onmatch": "exclude",
+      "rules": 22,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline DnsQuery exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "dns_query/baseline_include",
+      "path": "modules/dns_query/baseline_include.xml",
+      "event": "DnsQuery",
+      "onmatch": "include",
+      "rules": 19,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline DnsQuery include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "dns_query/dc_exclude",
+      "path": "modules/dns_query/dc_exclude.xml",
+      "event": "DnsQuery",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller DnsQuery exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "dns_query/dc_include",
+      "path": "modules/dns_query/dc_include.xml",
+      "event": "DnsQuery",
+      "onmatch": "include",
+      "rules": 4,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller DnsQuery include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "dns_query/noise_global",
+      "path": "modules/dns_query/noise_global.xml",
+      "event": "DnsQuery",
+      "onmatch": "exclude",
+      "rules": 7,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows DnsQuery activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "driver_load/baseline_exclude",
+      "path": "modules/driver_load/baseline_exclude.xml",
+      "event": "DriverLoad",
+      "onmatch": "exclude",
+      "rules": 4,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline DriverLoad exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "driver_load/dc_exclude",
+      "path": "modules/driver_load/dc_exclude.xml",
+      "event": "DriverLoad",
+      "onmatch": "exclude",
+      "rules": 1,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller DriverLoad exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/baseline_exclude",
+      "path": "modules/file_create/baseline_exclude.xml",
+      "event": "FileCreate",
+      "onmatch": "exclude",
+      "rules": 7,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileCreate exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/baseline_include",
+      "path": "modules/file_create/baseline_include.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 16,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileCreate include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/dc_include",
+      "path": "modules/file_create/dc_include.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 9,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller FileCreate include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/noise_common_software",
+      "path": "modules/file_create/noise_common_software.xml",
+      "event": "FileCreate",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from configurations/modules/exclusions/common_software.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common third-party software FileCreate activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/noise_global",
+      "path": "modules/file_create/noise_global.xml",
+      "event": "FileCreate",
+      "onmatch": "exclude",
+      "rules": 11,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows FileCreate activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/noise_microsoft",
+      "path": "modules/file_create/noise_microsoft.xml",
+      "event": "FileCreate",
+      "onmatch": "exclude",
+      "rules": 13,
+      "source": "migrated from configurations/modules/exclusions/microsoft_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: Microsoft software FileCreate activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1003_credential_dumping",
+      "path": "modules/file_create/t1003_credential_dumping.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 5,
+      "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1003.001",
+        "T1003.002",
+        "T1003.003"
+      ],
+      "title": "T1003 credential dumping: FileCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1021_remote_services",
+      "path": "modules/file_create/t1021_remote_services.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 3,
+      "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1021"
+      ],
+      "title": "T1021 remote services: FileCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1047_wmi",
+      "path": "modules/file_create/t1047_wmi.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 1,
+      "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1047"
+      ],
+      "title": "T1047 WMI execution and persistence: FileCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1053_scheduled_task",
+      "path": "modules/file_create/t1053_scheduled_task.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 2,
+      "source": "migrated from configurations/modules/techniques/T1053_scheduled_task.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1053"
+      ],
+      "title": "T1053 scheduled tasks: FileCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create/t1059_command_scripting",
+      "path": "modules/file_create/t1059_command_scripting.xml",
+      "event": "FileCreate",
+      "onmatch": "include",
+      "rules": 5,
+      "source": "migrated from configurations/modules/techniques/T1059_command_scripting.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1059"
+      ],
+      "title": "T1059 command and scripting interpreters: FileCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create_stream_hash/baseline_exclude",
+      "path": "modules/file_create_stream_hash/baseline_exclude.xml",
+      "event": "FileCreateStreamHash",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileCreateStreamHash exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create_stream_hash/noise_global",
+      "path": "modules/file_create_stream_hash/noise_global.xml",
+      "event": "FileCreateStreamHash",
+      "onmatch": "exclude",
+      "rules": 2,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows FileCreateStreamHash activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create_time/baseline_exclude",
+      "path": "modules/file_create_time/baseline_exclude.xml",
+      "event": "FileCreateTime",
+      "onmatch": "exclude",
+      "rules": 5,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileCreateTime exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_create_time/dc_exclude",
+      "path": "modules/file_create_time/dc_exclude.xml",
+      "event": "FileCreateTime",
+      "onmatch": "exclude",
+      "rules": 1,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller FileCreateTime exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_delete/archive_executables",
+      "path": "modules/file_delete/archive_executables.xml",
+      "event": "FileDelete",
+      "onmatch": "include",
+      "rules": 1,
+      "notes": "FileDelete (event 23) copies each matching file to ArchiveDirectory before",
+      "source": "original",
+      "techniques": [
+        "T1070.004"
+      ],
+      "title": "Archive deleted executables",
+      "volume": "low"
+    },
+    {
+      "id": "file_delete/noise_global",
+      "path": "modules/file_delete/noise_global.xml",
+      "event": "FileDelete",
+      "onmatch": "exclude",
+      "rules": 4,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows FileDelete activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_delete_detected/baseline_exclude",
+      "path": "modules/file_delete_detected/baseline_exclude.xml",
+      "event": "FileDeleteDetected",
+      "onmatch": "exclude",
+      "rules": 2,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileDeleteDetected exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_delete_detected/baseline_include",
+      "path": "modules/file_delete_detected/baseline_include.xml",
+      "event": "FileDeleteDetected",
+      "onmatch": "include",
+      "rules": 11,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileDeleteDetected include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_delete_detected/dc_include",
+      "path": "modules/file_delete_detected/dc_include.xml",
+      "event": "FileDeleteDetected",
+      "onmatch": "include",
+      "rules": 3,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller FileDeleteDetected include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "file_executable_detected/baseline_include",
+      "path": "modules/file_executable_detected/baseline_include.xml",
+      "event": "FileExecutableDetected",
+      "onmatch": "include",
+      "rules": 3,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline FileExecutableDetected include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "image_load/baseline_exclude",
+      "path": "modules/image_load/baseline_exclude.xml",
+      "event": "ImageLoad",
+      "onmatch": "exclude",
+      "rules": 7,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline ImageLoad exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "image_load/baseline_include",
+      "path": "modules/image_load/baseline_include.xml",
+      "event": "ImageLoad",
+      "onmatch": "include",
+      "rules": 10,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline ImageLoad include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "image_load/noise_global",
+      "path": "modules/image_load/noise_global.xml",
+      "event": "ImageLoad",
+      "onmatch": "exclude",
+      "rules": 6,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows ImageLoad activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "image_load/t1055_process_injection",
+      "path": "modules/image_load/t1055_process_injection.xml",
+      "event": "ImageLoad",
+      "onmatch": "include",
+      "rules": 11,
+      "source": "migrated from configurations/modules/techniques/T1055_process_injection.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1055"
+      ],
+      "title": "T1055 process injection: ImageLoad include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/baseline_exclude",
+      "path": "modules/network_connect/baseline_exclude.xml",
+      "event": "NetworkConnect",
+      "onmatch": "exclude",
+      "rules": 12,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline NetworkConnect exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/dc_exclude",
+      "path": "modules/network_connect/dc_exclude.xml",
+      "event": "NetworkConnect",
+      "onmatch": "exclude",
+      "rules": 1,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller NetworkConnect exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/dc_include",
+      "path": "modules/network_connect/dc_include.xml",
+      "event": "NetworkConnect",
+      "onmatch": "include",
+      "rules": 9,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller NetworkConnect include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/extended_exclude",
+      "path": "modules/network_connect/extended_exclude.xml",
+      "event": "NetworkConnect",
+      "onmatch": "exclude",
+      "rules": 12,
+      "source": "migrated from configurations/modules/categories/03_network_connections.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended NetworkConnect exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/extended_include",
+      "path": "modules/network_connect/extended_include.xml",
+      "event": "NetworkConnect",
+      "onmatch": "include",
+      "rules": 42,
+      "source": "migrated from configurations/modules/categories/03_network_connections.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended NetworkConnect include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/noise_common_software",
+      "path": "modules/network_connect/noise_common_software.xml",
+      "event": "NetworkConnect",
+      "onmatch": "exclude",
+      "rules": 4,
+      "source": "migrated from configurations/modules/exclusions/common_software.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common third-party software NetworkConnect activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/noise_global",
+      "path": "modules/network_connect/noise_global.xml",
+      "event": "NetworkConnect",
+      "onmatch": "exclude",
+      "rules": 10,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows NetworkConnect activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/noise_microsoft",
+      "path": "modules/network_connect/noise_microsoft.xml",
+      "event": "NetworkConnect",
+      "onmatch": "exclude",
+      "rules": 16,
+      "source": "migrated from configurations/modules/exclusions/microsoft_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: Microsoft software NetworkConnect activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/t1021_remote_services",
+      "path": "modules/network_connect/t1021_remote_services.xml",
+      "event": "NetworkConnect",
+      "onmatch": "include",
+      "rules": 6,
+      "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1021.001",
+        "T1021.002",
+        "T1021.003",
+        "T1021.004",
+        "T1021.006"
+      ],
+      "title": "T1021 remote services: NetworkConnect include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/t1047_wmi",
+      "path": "modules/network_connect/t1047_wmi.xml",
+      "event": "NetworkConnect",
+      "onmatch": "include",
+      "rules": 2,
+      "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1047"
+      ],
+      "title": "T1047 WMI execution and persistence: NetworkConnect include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "network_connect/t1059_command_scripting",
+      "path": "modules/network_connect/t1059_command_scripting.xml",
+      "event": "NetworkConnect",
+      "onmatch": "include",
+      "rules": 3,
+      "source": "migrated from configurations/modules/techniques/T1059_command_scripting.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1059"
+      ],
+      "title": "T1059 command and scripting interpreters: NetworkConnect include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/baseline_exclude",
+      "path": "modules/pipe_event/baseline_exclude.xml",
+      "event": "PipeEvent",
+      "onmatch": "exclude",
+      "rules": 7,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline PipeEvent exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/baseline_include",
+      "path": "modules/pipe_event/baseline_include.xml",
+      "event": "PipeEvent",
+      "onmatch": "include",
+      "rules": 14,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline PipeEvent include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/dc_exclude",
+      "path": "modules/pipe_event/dc_exclude.xml",
+      "event": "PipeEvent",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller PipeEvent exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/dc_include",
+      "path": "modules/pipe_event/dc_include.xml",
+      "event": "PipeEvent",
+      "onmatch": "include",
+      "rules": 6,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller PipeEvent include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/noise_global",
+      "path": "modules/pipe_event/noise_global.xml",
+      "event": "PipeEvent",
+      "onmatch": "exclude",
+      "rules": 9,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows PipeEvent activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "pipe_event/t1021_remote_services",
+      "path": "modules/pipe_event/t1021_remote_services.xml",
+      "event": "PipeEvent",
+      "onmatch": "include",
+      "rules": 5,
+      "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1021.002"
+      ],
+      "title": "T1021 remote services: PipeEvent include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/baseline_exclude",
+      "path": "modules/process_access/baseline_exclude.xml",
+      "event": "ProcessAccess",
+      "onmatch": "exclude",
+      "rules": 5,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline ProcessAccess exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/baseline_include",
+      "path": "modules/process_access/baseline_include.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 10,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline ProcessAccess include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/dc_exclude",
+      "path": "modules/process_access/dc_exclude.xml",
+      "event": "ProcessAccess",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller ProcessAccess exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/dc_include",
+      "path": "modules/process_access/dc_include.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 5,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller ProcessAccess include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/extended_exclude",
+      "path": "modules/process_access/extended_exclude.xml",
+      "event": "ProcessAccess",
+      "onmatch": "exclude",
+      "rules": 14,
+      "source": "migrated from configurations/modules/categories/10_process_access.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended ProcessAccess exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/extended_include",
+      "path": "modules/process_access/extended_include.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 32,
+      "source": "migrated from configurations/modules/categories/10_process_access.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended ProcessAccess include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/noise_global",
+      "path": "modules/process_access/noise_global.xml",
+      "event": "ProcessAccess",
+      "onmatch": "exclude",
+      "rules": 4,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows ProcessAccess activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/t1003_credential_dumping",
+      "path": "modules/process_access/t1003_credential_dumping.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 7,
+      "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1003.001"
+      ],
+      "title": "T1003 credential dumping: ProcessAccess include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_access/t1055_process_injection",
+      "path": "modules/process_access/t1055_process_injection.xml",
+      "event": "ProcessAccess",
+      "onmatch": "include",
+      "rules": 8,
+      "source": "migrated from configurations/modules/techniques/T1055_process_injection.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1055.003",
+        "T1055.011",
+        "T1055.012"
+      ],
+      "title": "T1055 process injection: ProcessAccess include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/baseline_exclude",
+      "path": "modules/process_create/baseline_exclude.xml",
+      "event": "ProcessCreate",
+      "onmatch": "exclude",
+      "rules": 8,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline ProcessCreate exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/dc_exclude",
+      "path": "modules/process_create/dc_exclude.xml",
+      "event": "ProcessCreate",
+      "onmatch": "exclude",
+      "rules": 2,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller ProcessCreate exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/dc_include",
+      "path": "modules/process_create/dc_include.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 43,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller ProcessCreate include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/extended_exclude",
+      "path": "modules/process_create/extended_exclude.xml",
+      "event": "ProcessCreate",
+      "onmatch": "exclude",
+      "rules": 13,
+      "source": "migrated from configurations/modules/categories/01_process_creation.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended ProcessCreate exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/extended_include",
+      "path": "modules/process_create/extended_include.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 52,
+      "source": "migrated from configurations/modules/categories/01_process_creation.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended ProcessCreate include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/noise_common_software",
+      "path": "modules/process_create/noise_common_software.xml",
+      "event": "ProcessCreate",
+      "onmatch": "exclude",
+      "rules": 12,
+      "source": "migrated from configurations/modules/exclusions/common_software.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common third-party software ProcessCreate activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/noise_global",
+      "path": "modules/process_create/noise_global.xml",
+      "event": "ProcessCreate",
+      "onmatch": "exclude",
+      "rules": 11,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows ProcessCreate activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/noise_microsoft",
+      "path": "modules/process_create/noise_microsoft.xml",
+      "event": "ProcessCreate",
+      "onmatch": "exclude",
+      "rules": 19,
+      "source": "migrated from configurations/modules/exclusions/microsoft_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: Microsoft software ProcessCreate activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1003_credential_dumping",
+      "path": "modules/process_create/t1003_credential_dumping.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 30,
+      "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1003.001",
+        "T1003.002",
+        "T1003.003",
+        "T1003.006"
+      ],
+      "title": "T1003 credential dumping: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1021_remote_services",
+      "path": "modules/process_create/t1021_remote_services.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 22,
+      "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1021.001",
+        "T1021.002",
+        "T1021.003",
+        "T1021.004",
+        "T1021.006"
+      ],
+      "title": "T1021 remote services: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1047_wmi",
+      "path": "modules/process_create/t1047_wmi.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 12,
+      "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1047"
+      ],
+      "title": "T1047 WMI execution and persistence: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1053_scheduled_task",
+      "path": "modules/process_create/t1053_scheduled_task.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 18,
+      "source": "migrated from configurations/modules/techniques/T1053_scheduled_task.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1053.005"
+      ],
+      "title": "T1053 scheduled tasks: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1055_process_injection",
+      "path": "modules/process_create/t1055_process_injection.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 18,
+      "source": "migrated from configurations/modules/techniques/T1055_process_injection.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1055.013"
+      ],
+      "title": "T1055 process injection: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "process_create/t1059_command_scripting",
+      "path": "modules/process_create/t1059_command_scripting.xml",
+      "event": "ProcessCreate",
+      "onmatch": "include",
+      "rules": 38,
+      "source": "migrated from configurations/modules/techniques/T1059_command_scripting.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1059.001",
+        "T1059.003"
+      ],
+      "title": "T1059 command and scripting interpreters: ProcessCreate include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "raw_access_read/baseline_exclude",
+      "path": "modules/raw_access_read/baseline_exclude.xml",
+      "event": "RawAccessRead",
+      "onmatch": "exclude",
+      "rules": 5,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline RawAccessRead exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "raw_access_read/dc_exclude",
+      "path": "modules/raw_access_read/dc_exclude.xml",
+      "event": "RawAccessRead",
+      "onmatch": "exclude",
+      "rules": 1,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller RawAccessRead exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "raw_access_read/dc_include",
+      "path": "modules/raw_access_read/dc_include.xml",
+      "event": "RawAccessRead",
+      "onmatch": "include",
+      "rules": 1,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller RawAccessRead include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "raw_access_read/noise_global",
+      "path": "modules/raw_access_read/noise_global.xml",
+      "event": "RawAccessRead",
+      "onmatch": "exclude",
+      "rules": 2,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows RawAccessRead activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "raw_access_read/t1003_credential_dumping",
+      "path": "modules/raw_access_read/t1003_credential_dumping.xml",
+      "event": "RawAccessRead",
+      "onmatch": "include",
+      "rules": 1,
+      "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1003.002"
+      ],
+      "title": "T1003 credential dumping: RawAccessRead include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/baseline_exclude",
+      "path": "modules/registry_event/baseline_exclude.xml",
+      "event": "RegistryEvent",
+      "onmatch": "exclude",
+      "rules": 3,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Baseline RegistryEvent exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/baseline_include",
+      "path": "modules/registry_event/baseline_include.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 25,
+      "source": "migrated from configurations/sysmon-base.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1003.001",
+        "T1484",
+        "T1546.010",
+        "T1546.012",
+        "T1546.015",
+        "T1547.001",
+        "T1547.004",
+        "T1547.005",
+        "T1548.002",
+        "T1562.001",
+        "T1562.004"
+      ],
+      "title": "Baseline RegistryEvent include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/dc_exclude",
+      "path": "modules/registry_event/dc_exclude.xml",
+      "event": "RegistryEvent",
+      "onmatch": "exclude",
+      "rules": 1,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller RegistryEvent exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/dc_include",
+      "path": "modules/registry_event/dc_include.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 13,
+      "source": "migrated from examples/domain-controller-config.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Domain controller RegistryEvent include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/extended_exclude",
+      "path": "modules/registry_event/extended_exclude.xml",
+      "event": "RegistryEvent",
+      "onmatch": "exclude",
+      "rules": 15,
+      "source": "migrated from configurations/modules/categories/13_registry_events.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended RegistryEvent exclude rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/extended_include",
+      "path": "modules/registry_event/extended_include.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 56,
+      "source": "migrated from configurations/modules/categories/13_registry_events.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Extended RegistryEvent include rules",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/noise_common_software",
+      "path": "modules/registry_event/noise_common_software.xml",
+      "event": "RegistryEvent",
+      "onmatch": "exclude",
+      "rules": 2,
+      "source": "migrated from configurations/modules/exclusions/common_software.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common third-party software RegistryEvent activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/noise_global",
+      "path": "modules/registry_event/noise_global.xml",
+      "event": "RegistryEvent",
+      "onmatch": "exclude",
+      "rules": 12,
+      "source": "migrated from configurations/modules/exclusions/global_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: common Windows RegistryEvent activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/noise_microsoft",
+      "path": "modules/registry_event/noise_microsoft.xml",
+      "event": "RegistryEvent",
+      "onmatch": "exclude",
+      "rules": 7,
+      "source": "migrated from configurations/modules/exclusions/microsoft_exclusions.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "title": "Noise: Microsoft software RegistryEvent activity",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1003_credential_dumping",
+      "path": "modules/registry_event/t1003_credential_dumping.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 3,
+      "source": "migrated from configurations/modules/techniques/T1003_credential_dumping.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1003.005"
+      ],
+      "title": "T1003 credential dumping: RegistryEvent include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1021_remote_services",
+      "path": "modules/registry_event/t1021_remote_services.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 2,
+      "source": "migrated from configurations/modules/techniques/T1021_remote_services.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1021.002"
+      ],
+      "title": "T1021 remote services: RegistryEvent include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "registry_event/t1053_scheduled_task",
+      "path": "modules/registry_event/t1053_scheduled_task.xml",
+      "event": "RegistryEvent",
+      "onmatch": "include",
+      "rules": 5,
+      "source": "migrated from configurations/modules/techniques/T1053_scheduled_task.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1053"
+      ],
+      "title": "T1053 scheduled tasks: RegistryEvent include",
+      "volume": "unmeasured"
+    },
+    {
+      "id": "wmi_event/t1047_wmi",
+      "path": "modules/wmi_event/t1047_wmi.xml",
+      "event": "WmiEvent",
+      "onmatch": "include",
+      "rules": 3,
+      "source": "migrated from configurations/modules/techniques/T1047_wmi_execution.xml",
+      "status": "migrated in phase 2; review in phase 3",
+      "techniques": [
+        "T1047"
+      ],
+      "title": "T1047 WMI execution and persistence: WmiEvent include",
+      "volume": "unmeasured"
+    }
+  ],
+  "profiles": [
+    {
+      "name": "balanced",
+      "description": "Default for workstations and servers: broad process, network and driver visibility with selective file, registry and access events.",
+      "extends": null,
+      "schema": "4.90",
+      "settings": {
+        "hash_algorithms": [
+          "SHA256",
+          "IMPHASH"
+        ],
+        "check_revocation": true,
+        "dns_lookup": false
+      },
+      "events": {
+        "ProcessCreate": "all",
+        "FileCreateTime": "all",
+        "NetworkConnect": "all",
+        "ProcessTerminate": "off",
+        "DriverLoad": "all",
+        "ImageLoad": "selective",
+        "CreateRemoteThread": "all",
+        "RawAccessRead": "all",
+        "ProcessAccess": "selective",
+        "FileCreate": "selective",
+        "RegistryEvent": "selective",
+        "FileCreateStreamHash": "all",
+        "PipeEvent": "selective",
+        "WmiEvent": "all",
+        "DnsQuery": "selective",
+        "FileDelete": "off",
+        "ClipboardChange": "off",
+        "ProcessTampering": "all",
+        "FileDeleteDetected": "selective",
+        "FileBlockExecutable": "off",
+        "FileBlockShredding": "off",
+        "FileExecutableDetected": "selective"
+      },
+      "modules": [
+        "create_remote_thread/baseline_exclude",
+        "create_remote_thread/t1055_process_injection",
+        "dns_query/baseline_exclude",
+        "dns_query/baseline_include",
+        "driver_load/baseline_exclude",
+        "file_create/baseline_exclude",
+        "file_create/baseline_include",
+        "file_create/t1003_credential_dumping",
+        "file_create/t1021_remote_services",
+        "file_create/t1047_wmi",
+        "file_create/t1053_scheduled_task",
+        "file_create/t1059_command_scripting",
+        "file_create_stream_hash/baseline_exclude",
+        "file_create_time/baseline_exclude",
+        "file_delete_detected/baseline_exclude",
+        "file_delete_detected/baseline_include",
+        "file_executable_detected/baseline_include",
+        "image_load/baseline_exclude",
+        "image_load/baseline_include",
+        "image_load/t1055_process_injection",
+        "network_connect/baseline_exclude",
+        "network_connect/t1021_remote_services",
+        "network_connect/t1047_wmi",
+        "network_connect/t1059_command_scripting",
+        "pipe_event/baseline_exclude",
+        "pipe_event/baseline_include",
+        "pipe_event/t1021_remote_services",
+        "process_access/baseline_exclude",
+        "process_access/baseline_include",
+        "process_access/t1003_credential_dumping",
+        "process_access/t1055_process_injection",
+        "process_create/baseline_exclude",
+        "process_create/t1003_credential_dumping",
+        "process_create/t1021_remote_services",
+        "process_create/t1047_wmi",
+        "process_create/t1053_scheduled_task",
+        "process_create/t1055_process_injection",
+        "process_create/t1059_command_scripting",
+        "raw_access_read/baseline_exclude",
+        "raw_access_read/t1003_credential_dumping",
+        "registry_event/baseline_exclude",
+        "registry_event/baseline_include",
+        "registry_event/t1003_credential_dumping",
+        "registry_event/t1021_remote_services",
+        "registry_event/t1053_scheduled_task",
+        "wmi_event/t1047_wmi"
+      ],
+      "output": "sysmon-balanced.xml"
+    },
+    {
+      "name": "dc",
+      "description": "Domain controllers: balanced plus DC-specific detections and noise filters.",
+      "extends": "balanced",
+      "schema": "4.90",
+      "settings": {
+        "hash_algorithms": [
+          "SHA256",
+          "IMPHASH"
+        ],
+        "check_revocation": true,
+        "dns_lookup": false
+      },
+      "events": {
+        "ProcessCreate": "all",
+        "FileCreateTime": "all",
+        "NetworkConnect": "all",
+        "ProcessTerminate": "off",
+        "DriverLoad": "all",
+        "ImageLoad": "selective",
+        "CreateRemoteThread": "all",
+        "RawAccessRead": "all",
+        "ProcessAccess": "selective",
+        "FileCreate": "selective",
+        "RegistryEvent": "selective",
+        "FileCreateStreamHash": "all",
+        "PipeEvent": "selective",
+        "WmiEvent": "all",
+        "DnsQuery": "selective",
+        "FileDelete": "off",
+        "ClipboardChange": "off",
+        "ProcessTampering": "all",
+        "FileDeleteDetected": "selective",
+        "FileBlockExecutable": "off",
+        "FileBlockShredding": "off",
+        "FileExecutableDetected": "selective"
+      },
+      "modules": [
+        "create_remote_thread/baseline_exclude",
+        "create_remote_thread/t1055_process_injection",
+        "dns_query/baseline_exclude",
+        "dns_query/baseline_include",
+        "driver_load/baseline_exclude",
+        "file_create/baseline_exclude",
+        "file_create/baseline_include",
+        "file_create/t1003_credential_dumping",
+        "file_create/t1021_remote_services",
+        "file_create/t1047_wmi",
+        "file_create/t1053_scheduled_task",
+        "file_create/t1059_command_scripting",
+        "file_create_stream_hash/baseline_exclude",
+        "file_create_time/baseline_exclude",
+        "file_delete_detected/baseline_exclude",
+        "file_delete_detected/baseline_include",
+        "file_executable_detected/baseline_include",
+        "image_load/baseline_exclude",
+        "image_load/baseline_include",
+        "image_load/t1055_process_injection",
+        "network_connect/baseline_exclude",
+        "network_connect/t1021_remote_services",
+        "network_connect/t1047_wmi",
+        "network_connect/t1059_command_scripting",
+        "pipe_event/baseline_exclude",
+        "pipe_event/baseline_include",
+        "pipe_event/t1021_remote_services",
+        "process_access/baseline_exclude",
+        "process_access/baseline_include",
+        "process_access/t1003_credential_dumping",
+        "process_access/t1055_process_injection",
+        "process_create/baseline_exclude",
+        "process_create/t1003_credential_dumping",
+        "process_create/t1021_remote_services",
+        "process_create/t1047_wmi",
+        "process_create/t1053_scheduled_task",
+        "process_create/t1055_process_injection",
+        "process_create/t1059_command_scripting",
+        "raw_access_read/baseline_exclude",
+        "raw_access_read/t1003_credential_dumping",
+        "registry_event/baseline_exclude",
+        "registry_event/baseline_include",
+        "registry_event/t1003_credential_dumping",
+        "registry_event/t1021_remote_services",
+        "registry_event/t1053_scheduled_task",
+        "wmi_event/t1047_wmi",
+        "dns_query/dc_exclude",
+        "dns_query/dc_include",
+        "driver_load/dc_exclude",
+        "file_create/dc_include",
+        "file_create_time/dc_exclude",
+        "file_delete_detected/dc_include",
+        "network_connect/dc_exclude",
+        "network_connect/dc_include",
+        "pipe_event/dc_exclude",
+        "pipe_event/dc_include",
+        "process_access/dc_exclude",
+        "process_access/dc_include",
+        "process_create/dc_exclude",
+        "process_create/dc_include",
+        "raw_access_read/dc_exclude",
+        "raw_access_read/dc_include",
+        "registry_event/dc_exclude",
+        "registry_event/dc_include"
+      ],
+      "output": "sysmon-dc.xml"
+    },
+    {
+      "name": "verbose",
+      "description": "Incident response and research: every event type except clipboard and blocking, minus known noise. Archives deleted executables.",
+      "extends": null,
+      "schema": "4.90",
+      "settings": {
+        "hash_algorithms": [
+          "SHA256",
+          "IMPHASH"
+        ],
+        "check_revocation": true,
+        "dns_lookup": false,
+        "archive_directory": "SysmonArchive"
+      },
+      "events": {
+        "ProcessCreate": "all",
+        "FileCreateTime": "all",
+        "NetworkConnect": "all",
+        "ProcessTerminate": "all",
+        "DriverLoad": "all",
+        "ImageLoad": "all",
+        "CreateRemoteThread": "all",
+        "RawAccessRead": "all",
+        "ProcessAccess": "all",
+        "FileCreate": "all",
+        "RegistryEvent": "all",
+        "FileCreateStreamHash": "all",
+        "PipeEvent": "all",
+        "WmiEvent": "all",
+        "DnsQuery": "all",
+        "FileDelete": "selective",
+        "ClipboardChange": "off",
+        "ProcessTampering": "all",
+        "FileDeleteDetected": "all",
+        "FileBlockExecutable": "off",
+        "FileBlockShredding": "off",
+        "FileExecutableDetected": "all"
+      },
+      "modules": [
+        "create_remote_thread/baseline_exclude",
+        "create_remote_thread/noise_global",
+        "dns_query/baseline_exclude",
+        "dns_query/noise_global",
+        "driver_load/baseline_exclude",
+        "file_create/baseline_exclude",
+        "file_create/noise_common_software",
+        "file_create/noise_global",
+        "file_create/noise_microsoft",
+        "file_create_stream_hash/baseline_exclude",
+        "file_create_stream_hash/noise_global",
+        "file_create_time/baseline_exclude",
+        "file_delete/noise_global",
+        "file_delete_detected/baseline_exclude",
+        "image_load/baseline_exclude",
+        "image_load/noise_global",
+        "network_connect/baseline_exclude",
+        "network_connect/noise_common_software",
+        "network_connect/noise_global",
+        "network_connect/noise_microsoft",
+        "pipe_event/baseline_exclude",
+        "pipe_event/noise_global",
+        "process_access/baseline_exclude",
+        "process_access/noise_global",
+        "process_create/baseline_exclude",
+        "process_create/noise_common_software",
+        "process_create/noise_global",
+        "process_create/noise_microsoft",
+        "raw_access_read/baseline_exclude",
+        "raw_access_read/noise_global",
+        "registry_event/baseline_exclude",
+        "registry_event/noise_common_software",
+        "registry_event/noise_global",
+        "registry_event/noise_microsoft",
+        "file_delete/archive_executables"
+      ],
+      "output": "sysmon-verbose.xml"
+    }
+  ]
+}

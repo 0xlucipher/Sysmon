@@ -1,0 +1,33 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Baseline ProcessAccess include rules
+  volume: unmeasured
+  source: migrated from configurations/sysmon-base.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="process_access/baseline_include" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <!-- Any access to LSASS (after exclusions) -->
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+        <!-- Access to security processes -->
+        <TargetImage condition="end with">\csrss.exe</TargetImage>
+        <TargetImage condition="end with">\services.exe</TargetImage>
+        <TargetImage condition="end with">\winlogon.exe</TargetImage>
+        <!-- Access patterns indicative of injection -->
+        <CallTrace condition="contains">UNKNOWN</CallTrace>
+        <!-- Dangerous access rights -->
+        <GrantedAccess condition="is">0x1F0FFF</GrantedAccess>
+        <!-- PROCESS_ALL_ACCESS -->
+        <GrantedAccess condition="is">0x1F1FFF</GrantedAccess>
+        <!-- PROCESS_ALL_ACCESS -->
+        <GrantedAccess condition="is">0x1F2FFF</GrantedAccess>
+        <!-- PROCESS_ALL_ACCESS -->
+        <GrantedAccess condition="is">0x1F3FFF</GrantedAccess>
+        <!-- PROCESS_ALL_ACCESS -->
+        <GrantedAccess condition="is">0x1FFFFF</GrantedAccess>
+        <!-- PROCESS_ALL_ACCESS -->
+      </ProcessAccess>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

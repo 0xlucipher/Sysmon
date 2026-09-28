@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  title: Noise: common Windows RawAccessRead activity
+  volume: unmeasured
+  source: migrated from configurations/modules/exclusions/global_exclusions.xml
+  status: migrated in phase 2; review in phase 3
+-->
+  <EventFiltering>
+    <RuleGroup name="raw_access_read/noise_global" groupRelation="or">
+      <RawAccessRead onmatch="exclude">
+        <!-- Legitimate system services -->
+        <Image condition="is">C:\Windows\System32\svchost.exe</Image>
+        <Image condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+        <!-- Backup software (add your backup solution) -->
+        <!-- <Image condition="contains">Veeam</Image> -->
+        <!-- <Image condition="contains">Backup</Image> -->
+      </RawAccessRead>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
