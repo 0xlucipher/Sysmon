@@ -33,6 +33,10 @@ jobs:
       - name: Apply every configuration with sysmon -c
         shell: pwsh
         run: ./testing/Test-SysmonLoad.ps1 -Path configurations, examples
+      - name: Probe which mistakes Sysmon rejects (informational)
+        if: always()
+        shell: pwsh
+        run: ./testing/Test-SysmonLoad.ps1 -Path testing/probes -OutputDirectory sysmon-load-results/probes -Probe
       - uses: actions/upload-artifact@v4
         if: always()
         with:
