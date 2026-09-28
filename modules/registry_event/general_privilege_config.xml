@@ -1,0 +1,16 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: UAC policy and Remote Desktop configuration
+    techniques: T1548.002, T1021.001
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/general_privilege_config" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System</TargetObject>
+        <TargetObject condition="contains">\SYSTEM\CurrentControlSet\Control\Terminal Server</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

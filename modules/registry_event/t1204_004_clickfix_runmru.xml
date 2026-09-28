@@ -1,0 +1,17 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Commands typed into the Run dialog (RunMRU), the trace ClickFix leaves
+    techniques: T1204.004
+    sigma: 7a1b4c5e-8f3d-4b9a-7c2e-1f4a5b8c6d9e, a7df0e9e-91a5-459a-a003-4cde67c2ff5d
+    volume: unmeasured
+    source: original
+    notes: Low volume: only written when a user runs something from Win+R.
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/t1204_004_clickfix_runmru" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

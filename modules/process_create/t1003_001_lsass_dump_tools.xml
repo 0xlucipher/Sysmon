@@ -1,0 +1,23 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: LSASS dumping with built-in or common tools
+    techniques: T1003.001
+    sigma: 646ea171-dded-4578-8a4d-65e9822892e3, 5afee48e-67dd-4e03-a783-f74259dcf998
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1003_001_lsass_dump_tools" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <CommandLine condition="contains">comsvcs</CommandLine>
+          <CommandLine condition="contains any">MiniDump;#24; 24 </CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <CommandLine condition="contains any">procdump;-ma ;/ma </CommandLine>
+          <CommandLine condition="contains">lsass</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

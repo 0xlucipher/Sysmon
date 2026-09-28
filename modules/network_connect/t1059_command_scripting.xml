@@ -2,6 +2,7 @@
   <!--
   title: T1059 command and scripting interpreters: NetworkConnect include
   techniques: T1059
+  sigma: 992a6cae-db6a-43c8-9cec-76d7195c96fc
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1059_command_scripting.xml
   status: migrated in phase 2; review in phase 3

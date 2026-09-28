@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sysmonlint  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data"
 
 # Filterable events in Sysmon event-ID order.
 EVENT_IDS = {
@@ -191,6 +192,76 @@ def profile_names(profiles_dir: Path) -> list[str]:
 
 
 # --------------------------------------------------------------------------
+# Reference data (data/attack.json, data/sigma.json; see tools/refdata.py)
+
+# Sigma logsource category -> Sysmon events. Kept in sync with tools/refdata.py.
+SIGMA_CATEGORY_EVENTS = {
+    "process_creation": ["ProcessCreate"], "file_change": ["FileCreateTime"],
+    "network_connection": ["NetworkConnect"], "driver_load": ["DriverLoad"],
+    "image_load": ["ImageLoad"], "create_remote_thread": ["CreateRemoteThread"],
+    "raw_access_thread": ["RawAccessRead"], "process_access": ["ProcessAccess"],
+    "file_event": ["FileCreate"], "registry_add": ["RegistryEvent"],
+    "registry_delete": ["RegistryEvent"], "registry_set": ["RegistryEvent"],
+    "registry_rename": ["RegistryEvent"], "registry_event": ["RegistryEvent"],
+    "create_stream_hash": ["FileCreateStreamHash"], "pipe_created": ["PipeEvent"],
+    "wmi_event": ["WmiEvent"], "dns_query": ["DnsQuery"],
+    "file_delete": ["FileDelete", "FileDeleteDetected"],
+    "clipboard_change": ["ClipboardChange"], "process_tampering": ["ProcessTampering"],
+    "file_block_executable": ["FileBlockExecutable"],
+    "file_block_shredding": ["FileBlockShredding"],
+    "file_executable_detected": ["FileExecutableDetected"],
+}
+
+
+@dataclass
+class RefData:
+    attack_version: str
+    techniques: dict
+    sigma_release: str
+    sigma: dict
+
+    def technique_name(self, tid: str) -> str:
+        return self.techniques.get(tid, {}).get("name", "?")
+
+    def sigma_url(self, rid: str) -> str:
+        return (f"https://github.com/SigmaHQ/sigma/blob/{self.sigma_release}/"
+                f"{self.sigma[rid]['path']}")
+
+
+def load_refdata(data_dir: Path = DATA) -> RefData:
+    attack = json.loads((data_dir / "attack.json").read_text(encoding="utf-8"))
+    sigma = json.loads((data_dir / "sigma.json").read_text(encoding="utf-8"))
+    return RefData(attack["version"], attack["techniques"], sigma["release"], sigma["rules"])
+
+
+def validate_references(modules: dict[str, Module], ref: RefData) -> None:
+    """Fail on unknown/revoked ATT&CK IDs and on Sigma rules that cannot match the module's event."""
+    problems = []
+    for m in modules.values():
+        for tid in m.techniques:
+            t = ref.techniques.get(tid)
+            if t is None:
+                problems.append(f"{m.id}: unknown ATT&CK technique {tid} (ATT&CK {ref.attack_version})")
+            elif "revoked_by" in t:
+                problems.append(f"{m.id}: {tid} was revoked in ATT&CK {ref.attack_version}; "
+                                f"use {t['revoked_by']} ({ref.technique_name(t['revoked_by'])})")
+            elif t.get("deprecated"):
+                problems.append(f"{m.id}: {tid} is deprecated in ATT&CK {ref.attack_version}")
+        for rid in m.meta.get("sigma", []):
+            rule = ref.sigma.get(rid)
+            if rule is None:
+                problems.append(f"{m.id}: Sigma rule {rid} not in SigmaHQ {ref.sigma_release} "
+                                "(Windows, Sysmon log sources)")
+            elif m.event not in SIGMA_CATEGORY_EVENTS.get(rule["category"], []):
+                problems.append(f"{m.id}: Sigma rule {rid} ({rule['title']}) reads "
+                                f"'{rule['category']}', which {m.event} does not produce")
+        if m.meta.get("sigma") and m.onmatch != "include":
+            problems.append(f"{m.id}: only include modules may list Sigma rules")
+    if problems:
+        raise BuildError("module metadata:\n  " + "\n  ".join(problems))
+
+
+# --------------------------------------------------------------------------
 # Building
 
 def _rule_name(mod: Module) -> str:
@@ -299,9 +370,80 @@ def build_profile(name: str, profiles_dir: Path, modules: dict[str, Module]) -> 
     return profile, render(root)
 
 
-def catalog(modules: dict[str, Module], profiles: list[Profile]) -> str:
+def coverage(modules: dict[str, Module], profiles: list[Profile]) -> dict[str, dict]:
+    """Per technique: which modules declare it, and how each profile collects its events.
+
+    For each profile, the states that apply across the technique's modules:
+      "all"    an event a module watches is logged in full (mode all);
+      "rules"  the module is in the profile and its include rules are active.
+    An empty list means the profile collects none of the technique's events.
+    """
+    out: dict[str, dict] = {}
+    for m in sorted(modules.values(), key=lambda m: m.id):
+        if m.onmatch != "include":
+            continue
+        for tid in m.techniques:
+            entry = out.setdefault(tid, {"modules": [], "events": [], "sigma": [],
+                                         "profiles": {p.name: [] for p in profiles}})
+            entry["modules"].append(m.id)
+            if m.event not in entry["events"]:
+                entry["events"].append(m.event)
+            entry["sigma"] += [r for r in m.meta.get("sigma", []) if r not in entry["sigma"]]
+            for p in profiles:
+                mode = p.events.get(m.event, "off")
+                state = "all" if mode == "all" else (
+                    "rules" if mode == "selective" and m.id in p.modules else None)
+                if state and state not in entry["profiles"][p.name]:
+                    entry["profiles"][p.name].append(state)
+    for entry in out.values():
+        entry["events"].sort()
+        for states in entry["profiles"].values():
+            states.sort()
+    return dict(sorted(out.items()))
+
+
+def coverage_markdown(cov: dict[str, dict], profiles: list[Profile], ref: RefData) -> str:
+    label = {"all": "all events", "rules": "rules"}
+    names = [p.name for p in profiles]
+
+    def cell(states: list[str]) -> str:
+        return " + ".join(label[s] for s in states) or "–"
+
+    lines = [
+        "# ATT&CK coverage",
+        "",
+        "GENERATED by `tools/sysmongen.py` from module metadata. Do not edit.",
+        "",
+        f"ATT&CK {ref.attack_version} · SigmaHQ {ref.sigma_release}. Per profile: **all events** = an",
+        "event type the technique's modules watch is logged in full; **rules** = the modules'",
+        "include rules are active on a selectively logged event; **–** = not collected.",
+        "Sigma = SigmaHQ detections that read this telemetry.",
+        "Replay = an Atomic Red Team test proved the events appear (phase 4).",
+        "",
+        "| Technique | Tactics | " + " | ".join(names) + " | Sysmon events | Sigma | Replay |",
+        "|---|---|" + "---|" * len(names) + "---|---|---|",
+    ]
+    for tid, e in cov.items():
+        t = ref.techniques.get(tid, {})
+        lines.append(
+            f"| {tid} {t.get('name', '?')} | {', '.join(t.get('tactics', []))} | "
+            + " | ".join(cell(e["profiles"][n]) for n in names)
+            + f" | {', '.join(e['events'])} | {len(e['sigma'])} | not yet |")
+    lines += ["", "## Modules and Sigma rules per technique", ""]
+    for tid, e in cov.items():
+        lines += [f"### {tid} {ref.technique_name(tid)}", ""]
+        lines += [f"- module `{mid}`" for mid in e["modules"]]
+        lines += [f"- Sigma [{ref.sigma[r]['title']}]({ref.sigma_url(r)}) ({ref.sigma[r]['level']})"
+                  for r in e["sigma"]]
+        lines.append("")
+    return "\n".join(lines)
+
+
+def catalog(modules: dict[str, Module], profiles: list[Profile], ref: RefData,
+            cov: dict[str, dict]) -> str:
     data = {
         "format": 1,
+        "references": {"attack": ref.attack_version, "sigma": ref.sigma_release},
         "schemas": list(SCHEMAS),
         "events": {e: {"id": i, "blocking": e in sysmonlint.BLOCKING_EVENTS}
                    for e, i in EVENT_IDS.items()},
@@ -329,13 +471,21 @@ def catalog(modules: dict[str, Module], profiles: list[Profile]) -> str:
             }
             for p in profiles
         ],
+        "coverage": {
+            tid: {"name": ref.technique_name(tid),
+                  "tactics": ref.techniques.get(tid, {}).get("tactics", []), **e}
+            for tid, e in cov.items()
+        },
     }
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
-def build_all(modules_dir: Path, profiles_dir: Path, verbose: bool = False) -> dict[str, str]:
-    """Return {output filename: content} for every profile plus the catalog."""
+def build_all(modules_dir: Path, profiles_dir: Path, verbose: bool = False,
+              data_dir: Path = DATA) -> dict[str, str]:
+    """Return {output filename: content}: every profile, the catalog and the coverage matrix."""
     modules = load_modules(modules_dir)
+    ref = load_refdata(data_dir)
+    validate_references(modules, ref)
     outputs: dict[str, str] = {}
     profiles = []
     for name in profile_names(profiles_dir):
@@ -351,7 +501,9 @@ def build_all(modules_dir: Path, profiles_dir: Path, verbose: bool = False) -> d
     unused = sorted(set(modules) - {m for p in profiles for m in p.modules})
     if unused:
         print(f"  {len(unused)} module(s) not used by any profile: {', '.join(unused)}")
-    outputs["catalog.json"] = catalog(modules, profiles)
+    cov = coverage(modules, profiles)
+    outputs["catalog.json"] = catalog(modules, profiles, ref, cov)
+    outputs["coverage.md"] = coverage_markdown(cov, profiles, ref)
     return outputs
 
 

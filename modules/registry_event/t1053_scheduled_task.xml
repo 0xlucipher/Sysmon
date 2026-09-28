@@ -1,7 +1,8 @@
 <Sysmon schemaversion="4.90">
   <!--
   title: T1053 scheduled tasks: RegistryEvent include
-  techniques: T1053
+  techniques: T1053.005
+  sigma: 4720b7df-40c3-48fd-bbdf-fd4b3c464f0d, 5b16df71-8615-4f7f-ac9b-6c43c0509e61
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1053_scheduled_task.xml
   status: migrated in phase 2; review in phase 3
@@ -10,6 +11,7 @@
     <RuleGroup name="registry_event/t1053_scheduled_task" groupRelation="or">
       <RegistryEvent onmatch="include">
         <!-- Task creation in TaskCache -->
+        <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache</TargetObject>
         <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\</TargetObject>
         <!-- Task tree modifications -->
         <TargetObject condition="contains">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\</TargetObject>

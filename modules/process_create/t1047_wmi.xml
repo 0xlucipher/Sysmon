@@ -2,6 +2,7 @@
   <!--
   title: T1047 WMI execution and persistence: ProcessCreate include
   techniques: T1047
+  sigma: 3c89a1e8-0fba-449e-8f1b-8409d6267ec8, f6d1dd2f-b8ce-40ca-bc23-062efb686b34, 8a582fe2-0882-4b89-a82a-da6b2dc32937
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1047_wmi_execution.xml
   status: migrated in phase 2; review in phase 3

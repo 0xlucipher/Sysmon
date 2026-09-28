@@ -1,0 +1,16 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Copies of ntds.dit written anywhere
+    techniques: T1003.003
+    sigma: 11b1ed55-154d-4e82-8ad7-83739298f720, 4e7050dd-e548-483f-b7d6-527ab4fa784d, 3a8da4e0-36c1-40d2-8b29-b3e890d5172a
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_create/t1003_003_ntds" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="end with">\ntds.dit</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

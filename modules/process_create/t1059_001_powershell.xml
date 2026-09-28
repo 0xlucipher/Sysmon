@@ -1,0 +1,29 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: PowerShell with encoded, hidden or download-cradle command lines
+    techniques: T1059.001, T1027.010
+    sigma: e32d4572-9826-4738-b651-95fa63747e8a, f26c6093-6f14-4b12-800f-0fcb46f5ffd0, 88f680b8-070e-402c-ae11-d2914f2257f1, d7bcd677-645d-4691-a8d4-7a5602b780d1
+    volume: unmeasured
+    source: original
+    notes: OriginalFileName catches renamed powershell.exe copies.
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1059_001_powershell" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is any">PowerShell.EXE;pwsh.dll</OriginalFileName>
+          <CommandLine condition="contains any"> -enc; -encodedcommand; -ec ;FromBase64String</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is any">PowerShell.EXE;pwsh.dll</OriginalFileName>
+          <CommandLine condition="contains any">-w hidden;-windowstyle hidden;-nop -w;-noni -w</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is any">PowerShell.EXE;pwsh.dll</OriginalFileName>
+          <CommandLine condition="contains any">DownloadString;DownloadFile;Invoke-WebRequest;iwr ;Net.WebClient;Start-BitsTransfer</CommandLine>
+          <CommandLine condition="contains any">IEX;Invoke-Expression;| iex</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

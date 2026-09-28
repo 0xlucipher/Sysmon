@@ -1,0 +1,20 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Event log clearing and logging changes via wevtutil / PowerShell
+    techniques: T1685.005, T1685.001
+    sigma: cc36992a-4671-4f21-a91d-6c2b72a2edf5
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1685_005_clear_event_logs" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\wevtutil.exe</Image>
+          <CommandLine condition="contains any"> cl ; clear-log ;sl ;set-log </CommandLine>
+        </Rule>
+        <CommandLine condition="contains any">Clear-EventLog;Remove-EventLog;Limit-EventLog;Clear-WinEvent</CommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

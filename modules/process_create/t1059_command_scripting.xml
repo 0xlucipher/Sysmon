@@ -1,7 +1,8 @@
 <Sysmon schemaversion="4.90">
   <!--
   title: T1059 command and scripting interpreters: ProcessCreate include
-  techniques: T1059.001, T1059.003
+  techniques: T1059.005, T1059.007
+  sigma: cea72823-df4d-4567-950c-0b579eaf0846
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1059_command_scripting.xml
   status: migrated in phase 2; review in phase 3

@@ -26,6 +26,27 @@ jobs:
       - name: Generated configs are up to date
         run: python tools/sysmongen.py build --check
 
+  reference-data:
+    name: Reference data matches pinned ATT&CK and Sigma
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch pinned sources
+        run: |
+          ATTACK=$(python -c "import json; print(json.load(open('data/versions.json'))['attack'])")
+          SIGMA=$(python -c "import json; print(json.load(open('data/versions.json'))['sigma'])")
+          git clone -q --depth 1 --branch "$ATTACK" --filter=blob:none --sparse \
+            https://github.com/mitre-attack/attack-stix-data "$RUNNER_TEMP/attack"
+          git -C "$RUNNER_TEMP/attack" sparse-checkout set --no-cone /enterprise-attack/enterprise-attack.json
+          git clone -q --depth 1 --branch "$SIGMA" --filter=blob:none --sparse \
+            https://github.com/SigmaHQ/sigma "$RUNNER_TEMP/sigma"
+          git -C "$RUNNER_TEMP/sigma" sparse-checkout set rules/windows
+      - name: Check data/
+        run: python tools/refdata.py --attack "$RUNNER_TEMP/attack" --sigma "$RUNNER_TEMP/sigma" --check
+
   sysmon-load:
     name: Load configs into Sysmon
     needs: lint

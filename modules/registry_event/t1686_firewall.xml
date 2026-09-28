@@ -1,0 +1,16 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Windows Firewall policy changes
+    techniques: T1686
+    sigma: 974515da-6cc5-4c95-ae65-f97f9150ec7f
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="registry_event/t1686_firewall" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

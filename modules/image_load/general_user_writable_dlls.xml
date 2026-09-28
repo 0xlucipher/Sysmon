@@ -1,0 +1,27 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: DLLs loaded from user-writable paths, and unsigned DLLs in LSASS/CSRSS
+    techniques: T1574.001, T1547.005
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+    notes: Broad on user profiles; volume to be measured in phase 4.
+  -->
+  <EventFiltering>
+    <RuleGroup name="image_load/general_user_writable_dlls" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="end with">\lsass.exe</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+        <Rule groupRelation="and">
+          <Image condition="end with">\csrss.exe</Image>
+          <Signed condition="is">false</Signed>
+        </Rule>
+        <ImageLoaded condition="begin with">C:\Users\</ImageLoaded>
+        <ImageLoaded condition="begin with">C:\ProgramData\</ImageLoaded>
+        <ImageLoaded condition="begin with">C:\Windows\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains">\AppData\Local\Temp\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

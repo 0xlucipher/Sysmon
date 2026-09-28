@@ -1,0 +1,23 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: System binary names running from the wrong directory, and renamed system tools
+    techniques: T1036.005, T1036.003
+    sigma: 2569ed8c-1147-498a-9b8c-2ad3656b10ed, e22a6eb2-f8a5-44b5-8b44-a2dbd47b1144, 3dfd06d2-eaf4-4532-9555-68aca59f57c4
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1036_masquerading" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <Image condition="contains any">\svchost.exe;\lsass.exe;\csrss.exe;\services.exe;\smss.exe;\winlogon.exe;\wininit.exe;\explorer.exe;\spoolsv.exe;\taskhostw.exe</Image>
+          <Image condition="not begin with">C:\Windows\</Image>
+        </Rule>
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is any">Cmd.Exe;PowerShell.EXE;RUNDLL32.EXE;REGSVR32.EXE;MSHTA.EXE;CertUtil.exe;wscript.exe;cscript.exe</OriginalFileName>
+          <Image condition="excludes all">\cmd.exe;\powershell.exe;\rundll32.exe;\regsvr32.exe;\mshta.exe;\certutil.exe;\wscript.exe;\cscript.exe</Image>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

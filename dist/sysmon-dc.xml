@@ -33,48 +33,81 @@
     create_remote_thread/baseline_exclude
     create_remote_thread/t1055_process_injection
     dns_query/baseline_exclude
-    dns_query/baseline_include
+    dns_query/general_c2_infrastructure
+    dns_query/t1218_proxy_binaries
     driver_load/baseline_exclude
     file_create/baseline_exclude
-    file_create/baseline_include
+    file_create/general_user_writable_payloads
+    file_create/t1003_001_dump_files
+    file_create/t1003_003_ntds
     file_create/t1003_credential_dumping
     file_create/t1021_remote_services
     file_create/t1047_wmi
     file_create/t1053_scheduled_task
     file_create/t1059_command_scripting
+    file_create/t1547_001_startup_folder
     file_create_stream_hash/baseline_exclude
     file_create_time/baseline_exclude
     file_delete_detected/baseline_exclude
-    file_delete_detected/baseline_include
-    file_executable_detected/baseline_include
+    file_delete_detected/general_anti_forensics
+    file_delete_detected/t1490_backups
+    file_delete_detected/t1685_005_log_files
+    file_executable_detected/t1105_dropped_executables
     image_load/baseline_exclude
-    image_load/baseline_include
+    image_load/general_user_writable_dlls
+    image_load/t1003_001_lsass_dump_dlls
     image_load/t1055_process_injection
+    image_load/t1059_001_powershell_unmanaged
     network_connect/baseline_exclude
     network_connect/t1021_remote_services
     network_connect/t1047_wmi
     network_connect/t1059_command_scripting
     pipe_event/baseline_exclude
-    pipe_event/baseline_include
+    pipe_event/t1021_002_remote_exec
     pipe_event/t1021_remote_services
+    pipe_event/t1055_c2_frameworks
     process_access/baseline_exclude
-    process_access/baseline_include
+    process_access/t1003_001_lsass_any
     process_access/t1003_credential_dumping
     process_access/t1055_process_injection
+    process_access/t1055_suspicious_access
     process_create/baseline_exclude
+    process_create/t1003_001_lsass_dump_tools
+    process_create/t1003_003_ntds
     process_create/t1003_credential_dumping
     process_create/t1021_remote_services
+    process_create/t1027_obfuscation
+    process_create/t1036_masquerading
     process_create/t1047_wmi
     process_create/t1053_scheduled_task
     process_create/t1055_process_injection
+    process_create/t1059_001_powershell
+    process_create/t1059_003_cmd
     process_create/t1059_command_scripting
+    process_create/t1105_ingress_tool_transfer
+    process_create/t1204_004_clickfix
+    process_create/t1218_005_mshta
+    process_create/t1218_010_regsvr32
+    process_create/t1218_011_rundll32
+    process_create/t1490_inhibit_recovery
+    process_create/t1543_003_services
+    process_create/t1685_005_clear_event_logs
+    process_create/t1685_disable_security_tools
+    process_tampering/t1055_012_hollowing
     raw_access_read/baseline_exclude
     raw_access_read/t1003_credential_dumping
     registry_event/baseline_exclude
-    registry_event/baseline_include
+    registry_event/general_credential_config
+    registry_event/general_persistence
+    registry_event/general_privilege_config
     registry_event/t1003_credential_dumping
     registry_event/t1021_remote_services
     registry_event/t1053_scheduled_task
+    registry_event/t1204_004_clickfix_runmru
+    registry_event/t1543_003_services
+    registry_event/t1547_001_run_keys
+    registry_event/t1685_disable_security_tools
+    registry_event/t1686_firewall
     wmi_event/t1047_wmi
     dns_query/dc_exclude
     dns_query/dc_include
@@ -264,30 +297,24 @@
     <!-- Event 7: ImageLoad (selective) -->
     <RuleGroup name="ImageLoad include" groupRelation="or">
       <ImageLoad onmatch="include">
-        <!-- module: image_load/baseline_include -->
-        <!-- Unsigned DLLs loaded into sensitive processes -->
-        <Rule groupRelation="and" name="module=image_load/baseline_include">
+        <!-- module: image_load/general_user_writable_dlls -->
+        <Rule groupRelation="and" name="module=image_load/general_user_writable_dlls">
           <Image condition="end with">\lsass.exe</Image>
           <Signed condition="is">false</Signed>
         </Rule>
-        <Rule groupRelation="and" name="module=image_load/baseline_include">
+        <Rule groupRelation="and" name="module=image_load/general_user_writable_dlls">
           <Image condition="end with">\csrss.exe</Image>
           <Signed condition="is">false</Signed>
         </Rule>
-        <!-- DLLs loaded from suspicious paths -->
-        <ImageLoaded condition="begin with" name="module=image_load/baseline_include">C:\Users\</ImageLoaded>
-        <ImageLoaded condition="begin with" name="module=image_load/baseline_include">C:\ProgramData\</ImageLoaded>
-        <ImageLoaded condition="begin with" name="module=image_load/baseline_include">C:\Windows\Temp\</ImageLoaded>
-        <ImageLoaded condition="contains" name="module=image_load/baseline_include">\AppData\Local\Temp\</ImageLoaded>
-        <!-- Known malicious or abuse-prone DLLs -->
-        <ImageLoaded condition="end with" name="module=image_load/baseline_include">\comsvcs.dll</ImageLoaded>
-        <!-- Used for LSASS dumping -->
-        <ImageLoaded condition="end with" name="module=image_load/baseline_include">\samlib.dll</ImageLoaded>
-        <!-- SAM database access -->
-        <ImageLoaded condition="end with" name="module=image_load/baseline_include">\vaultcli.dll</ImageLoaded>
-        <!-- Credential vault -->
-        <ImageLoaded condition="end with" name="module=image_load/baseline_include">\wdigest.dll</ImageLoaded>
-        <!-- Credential theft -->
+        <ImageLoaded condition="begin with" name="module=image_load/general_user_writable_dlls">C:\Users\</ImageLoaded>
+        <ImageLoaded condition="begin with" name="module=image_load/general_user_writable_dlls">C:\ProgramData\</ImageLoaded>
+        <ImageLoaded condition="begin with" name="module=image_load/general_user_writable_dlls">C:\Windows\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains" name="module=image_load/general_user_writable_dlls">\AppData\Local\Temp\</ImageLoaded>
+        <!-- module: image_load/t1003_001_lsass_dump_dlls -->
+        <ImageLoaded condition="end with" name="module=image_load/t1003_001_lsass_dump_dlls">\comsvcs.dll</ImageLoaded>
+        <ImageLoaded condition="end with" name="module=image_load/t1003_001_lsass_dump_dlls">\samlib.dll</ImageLoaded>
+        <ImageLoaded condition="end with" name="module=image_load/t1003_001_lsass_dump_dlls">\vaultcli.dll</ImageLoaded>
+        <ImageLoaded condition="end with" name="module=image_load/t1003_001_lsass_dump_dlls">\wdigest.dll</ImageLoaded>
         <!-- module: image_load/t1055_process_injection -->
         <!-- Unsigned DLLs loaded into system processes -->
         <Rule groupRelation="and" name="technique_id=T1055,module=image_load/t1055_process_injection">
@@ -335,6 +362,15 @@
         </Rule>
         <!-- Reflective DLL injection indicators -->
         <ImageLoaded condition="contains" name="technique_id=T1055,module=image_load/t1055_process_injection">ReflectiveLoader</ImageLoaded>
+        <!-- module: image_load/t1059_001_powershell_unmanaged -->
+        <Rule groupRelation="and" name="technique_id=T1059.001,module=image_load/t1059_001_powershell_unmanaged">
+          <ImageLoaded condition="end with">\System.Management.Automation.dll</ImageLoaded>
+          <Image condition="excludes all">\powershell.exe;\pwsh.exe;\powershell_ise.exe;\WindowsPowerShell\;\PowerShell\7\</Image>
+        </Rule>
+        <Rule groupRelation="and" name="technique_id=T1059.001,module=image_load/t1059_001_powershell_unmanaged">
+          <ImageLoaded condition="end with">\System.Management.Automation.ni.dll</ImageLoaded>
+          <Image condition="excludes all">\powershell.exe;\pwsh.exe;\powershell_ise.exe;\WindowsPowerShell\;\PowerShell\7\</Image>
+        </Rule>
       </ImageLoad>
     </RuleGroup>
     <RuleGroup name="ImageLoad exclude" groupRelation="or">
@@ -416,26 +452,11 @@
     <!-- Event 10: ProcessAccess (selective) -->
     <RuleGroup name="ProcessAccess include" groupRelation="or">
       <ProcessAccess onmatch="include">
-        <!-- module: process_access/baseline_include -->
-        <!-- Any access to LSASS (after exclusions) -->
-        <TargetImage condition="end with" name="module=process_access/baseline_include">\lsass.exe</TargetImage>
-        <!-- Access to security processes -->
-        <TargetImage condition="end with" name="module=process_access/baseline_include">\csrss.exe</TargetImage>
-        <TargetImage condition="end with" name="module=process_access/baseline_include">\services.exe</TargetImage>
-        <TargetImage condition="end with" name="module=process_access/baseline_include">\winlogon.exe</TargetImage>
-        <!-- Access patterns indicative of injection -->
-        <CallTrace condition="contains" name="module=process_access/baseline_include">UNKNOWN</CallTrace>
-        <!-- Dangerous access rights -->
-        <GrantedAccess condition="is" name="module=process_access/baseline_include">0x1F0FFF</GrantedAccess>
-        <!-- PROCESS_ALL_ACCESS -->
-        <GrantedAccess condition="is" name="module=process_access/baseline_include">0x1F1FFF</GrantedAccess>
-        <!-- PROCESS_ALL_ACCESS -->
-        <GrantedAccess condition="is" name="module=process_access/baseline_include">0x1F2FFF</GrantedAccess>
-        <!-- PROCESS_ALL_ACCESS -->
-        <GrantedAccess condition="is" name="module=process_access/baseline_include">0x1F3FFF</GrantedAccess>
-        <!-- PROCESS_ALL_ACCESS -->
-        <GrantedAccess condition="is" name="module=process_access/baseline_include">0x1FFFFF</GrantedAccess>
-        <!-- PROCESS_ALL_ACCESS -->
+        <!-- module: process_access/t1003_001_lsass_any -->
+        <TargetImage condition="end with" name="technique_id=T1003.001,module=process_access/t1003_001_lsass_any">\lsass.exe</TargetImage>
+        <TargetImage condition="end with" name="technique_id=T1003.001,module=process_access/t1003_001_lsass_any">\csrss.exe</TargetImage>
+        <TargetImage condition="end with" name="technique_id=T1003.001,module=process_access/t1003_001_lsass_any">\services.exe</TargetImage>
+        <TargetImage condition="end with" name="technique_id=T1003.001,module=process_access/t1003_001_lsass_any">\winlogon.exe</TargetImage>
         <!-- module: process_access/t1003_credential_dumping -->
         <Rule groupRelation="and" name="technique_id=T1003.001,module=process_access/t1003_credential_dumping">
           <TargetImage condition="end with">\lsass.exe</TargetImage>
@@ -511,6 +532,9 @@
         <Rule groupRelation="and" name="module=process_access/t1055_process_injection">
           <CallTrace condition="contains">user32.dll!SetWindowLong</CallTrace>
         </Rule>
+        <!-- module: process_access/t1055_suspicious_access -->
+        <CallTrace condition="contains" name="technique_id=T1055,module=process_access/t1055_suspicious_access">UNKNOWN</CallTrace>
+        <GrantedAccess condition="is any" name="technique_id=T1055,module=process_access/t1055_suspicious_access">0x1F0FFF;0x1F1FFF;0x1F2FFF;0x1F3FFF;0x1FFFFF</GrantedAccess>
         <!-- module: process_access/dc_include -->
         <!-- LSASS (CRITICAL - most targeted on DCs) -->
         <TargetImage condition="end with" name="module=process_access/dc_include">\lsass.exe</TargetImage>
@@ -563,64 +587,60 @@
     <!-- Event 11: FileCreate (selective) -->
     <RuleGroup name="FileCreate include" groupRelation="or">
       <FileCreate onmatch="include">
-        <!-- module: file_create/baseline_include -->
-        <!-- Executables in user-writable directories -->
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <!-- module: file_create/general_user_writable_payloads -->
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.exe</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.dll</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.sys</TargetFilename>
         </Rule>
-        <!-- Scripts in user directories -->
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.ps1</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.bat</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.vbs</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Users\</TargetFilename>
           <TargetFilename condition="end with">.js</TargetFilename>
         </Rule>
-        <!-- Executables in system temp -->
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="begin with">C:\Windows\Temp\</TargetFilename>
           <TargetFilename condition="end with">.exe</TargetFilename>
         </Rule>
-        <!-- Files in Recycle Bin (data hiding) -->
-        <TargetFilename condition="contains" name="module=file_create/baseline_include">\$Recycle.Bin\</TargetFilename>
-        <!-- Web shells in webroot directories -->
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <TargetFilename condition="contains" name="module=file_create/general_user_writable_payloads">\$Recycle.Bin\</TargetFilename>
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
           <TargetFilename condition="end with">.asp</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
           <TargetFilename condition="end with">.aspx</TargetFilename>
         </Rule>
-        <Rule groupRelation="and" name="module=file_create/baseline_include">
+        <Rule groupRelation="and" name="module=file_create/general_user_writable_payloads">
           <TargetFilename condition="contains">\inetpub\wwwroot\</TargetFilename>
           <TargetFilename condition="end with">.php</TargetFilename>
         </Rule>
-        <!-- Startup folder (persistence) -->
-        <TargetFilename condition="contains" name="module=file_create/baseline_include">\Microsoft\Windows\Start Menu\Programs\Startup\</TargetFilename>
-        <!-- HTA files (phishing vector) -->
-        <TargetFilename condition="end with" name="module=file_create/baseline_include">.hta</TargetFilename>
-        <!-- ISO/IMG files (malware delivery) -->
-        <TargetFilename condition="end with" name="module=file_create/baseline_include">.iso</TargetFilename>
-        <TargetFilename condition="end with" name="module=file_create/baseline_include">.img</TargetFilename>
+        <TargetFilename condition="end with" name="module=file_create/general_user_writable_payloads">.hta</TargetFilename>
+        <TargetFilename condition="end with" name="module=file_create/general_user_writable_payloads">.iso</TargetFilename>
+        <TargetFilename condition="end with" name="module=file_create/general_user_writable_payloads">.img</TargetFilename>
+        <!-- module: file_create/t1003_001_dump_files -->
+        <TargetFilename condition="end with" name="technique_id=T1003.001,module=file_create/t1003_001_dump_files">.dmp</TargetFilename>
+        <TargetFilename condition="contains" name="technique_id=T1003.001,module=file_create/t1003_001_dump_files">lsass</TargetFilename>
+        <!-- module: file_create/t1003_003_ntds -->
+        <TargetFilename condition="end with" name="technique_id=T1003.003,module=file_create/t1003_003_ntds">\ntds.dit</TargetFilename>
         <!-- module: file_create/t1003_credential_dumping -->
         <!-- from RuleGroup T1003.001_LSASS_Memory -->
         <TargetFilename condition="contains" name="module=file_create/t1003_credential_dumping">lsass</TargetFilename>
@@ -641,16 +661,16 @@
           <TargetFilename condition="is not">C:\Windows\NTDS\ntds.dit</TargetFilename>
         </Rule>
         <!-- module: file_create/t1021_remote_services -->
-        <TargetFilename condition="contains" name="technique_id=T1021,module=file_create/t1021_remote_services">\C$\</TargetFilename>
-        <TargetFilename condition="contains" name="technique_id=T1021,module=file_create/t1021_remote_services">\ADMIN$\</TargetFilename>
-        <TargetFilename condition="contains" name="technique_id=T1021,module=file_create/t1021_remote_services">\IPC$\</TargetFilename>
+        <TargetFilename condition="contains" name="technique_id=T1021.002,module=file_create/t1021_remote_services">\C$\</TargetFilename>
+        <TargetFilename condition="contains" name="technique_id=T1021.002,module=file_create/t1021_remote_services">\ADMIN$\</TargetFilename>
+        <TargetFilename condition="contains" name="technique_id=T1021.002,module=file_create/t1021_remote_services">\IPC$\</TargetFilename>
         <!-- module: file_create/t1047_wmi -->
         <TargetFilename condition="end with" name="technique_id=T1047,module=file_create/t1047_wmi">.mof</TargetFilename>
         <!-- module: file_create/t1053_scheduled_task -->
         <!-- Task definitions -->
-        <TargetFilename condition="begin with" name="technique_id=T1053,module=file_create/t1053_scheduled_task">C:\Windows\System32\Tasks\</TargetFilename>
+        <TargetFilename condition="begin with" name="technique_id=T1053.005,module=file_create/t1053_scheduled_task">C:\Windows\System32\Tasks\</TargetFilename>
         <!-- Task backup/export -->
-        <Rule groupRelation="and" name="technique_id=T1053,module=file_create/t1053_scheduled_task">
+        <Rule groupRelation="and" name="technique_id=T1053.005,module=file_create/t1053_scheduled_task">
           <TargetFilename condition="end with">.xml</TargetFilename>
           <TargetFilename condition="contains">Task</TargetFilename>
         </Rule>
@@ -676,6 +696,8 @@
           <TargetFilename condition="contains">\AppData\Local\Temp\</TargetFilename>
           <TargetFilename condition="end with">.cmd</TargetFilename>
         </Rule>
+        <!-- module: file_create/t1547_001_startup_folder -->
+        <TargetFilename condition="contains" name="technique_id=T1547.001,module=file_create/t1547_001_startup_folder">\Microsoft\Windows\Start Menu\Programs\Startup\</TargetFilename>
         <!-- module: file_create/dc_include -->
         <!-- NTDS.dit (AD database) - ANY access is suspicious -->
         <TargetFilename condition="contains" name="module=file_create/dc_include">ntds.dit</TargetFilename>
@@ -735,51 +757,23 @@
     <!-- Event 12-14: RegistryEvent (selective) -->
     <RuleGroup name="RegistryEvent include" groupRelation="or">
       <RegistryEvent onmatch="include">
-        <!-- module: registry_event/baseline_include -->
-        <!-- Run Keys (T1547.001) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Microsoft\Windows\CurrentVersion\RunOnce</TargetObject>
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Microsoft\Windows\CurrentVersion\RunServices</TargetObject>
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Microsoft\Windows\CurrentVersion\RunServicesOnce</TargetObject>
-        <!-- Startup approved -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run</TargetObject>
-        <!-- Group Policy scripts (T1484) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts</TargetObject>
-        <!-- Winlogon (T1547.004) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Microsoft\Windows NT\CurrentVersion\Winlogon</TargetObject>
-        <!-- Image File Execution Options (T1546.012) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options</TargetObject>
-        <!-- Services -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\System\CurrentControlSet\Services\</TargetObject>
-        <!-- Scheduled Tasks -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache</TargetObject>
-        <!-- Active Setup (persistence) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Active Setup\Installed Components</TargetObject>
-        <!-- AppInit DLLs (T1546.010) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
-        <!-- LSA (credential theft) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SYSTEM\CurrentControlSet\Control\Lsa</TargetObject>
-        <!-- Security providers (T1547.005) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SYSTEM\CurrentControlSet\Control\SecurityProviders</TargetObject>
-        <!-- WDigest (credential caching - T1003.001) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest</TargetObject>
-        <!-- Windows Defender (T1562.001) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Windows Defender\</TargetObject>
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Policies\Microsoft\Windows Defender\</TargetObject>
-        <!-- Firewall (T1562.004) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy</TargetObject>
-        <!-- UAC settings (T1548.002) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System</TargetObject>
-        <!-- Terminal Services / RDP -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\SYSTEM\CurrentControlSet\Control\Terminal Server</TargetObject>
-        <!-- COM hijacking (T1546.015) -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Software\Classes\CLSID\</TargetObject>
-        <!-- Office macros -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Software\Microsoft\Office\</TargetObject>
-        <!-- Browser extensions -->
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Software\Google\Chrome\Extensions</TargetObject>
-        <TargetObject condition="contains" name="module=registry_event/baseline_include">\Software\Mozilla\Firefox\Extensions</TargetObject>
+        <!-- module: registry_event/general_credential_config -->
+        <TargetObject condition="contains" name="module=registry_event/general_credential_config">\SYSTEM\CurrentControlSet\Control\Lsa</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_credential_config">\SYSTEM\CurrentControlSet\Control\SecurityProviders</TargetObject>
+        <!-- module: registry_event/general_persistence -->
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\Microsoft\Windows NT\CurrentVersion\Winlogon</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\SOFTWARE\Microsoft\Active Setup\Installed Components</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\Software\Classes\CLSID\</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\Software\Microsoft\Office\</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\Software\Google\Chrome\Extensions</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_persistence">\Software\Mozilla\Firefox\Extensions</TargetObject>
+        <!-- module: registry_event/general_privilege_config -->
+        <TargetObject condition="contains" name="module=registry_event/general_privilege_config">\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System</TargetObject>
+        <TargetObject condition="contains" name="module=registry_event/general_privilege_config">\SYSTEM\CurrentControlSet\Control\Terminal Server</TargetObject>
         <!-- module: registry_event/t1003_credential_dumping -->
         <!-- from RuleGroup T1003.005_Cached_Creds -->
         <TargetObject condition="contains" name="technique_id=T1003.005,module=registry_event/t1003_credential_dumping">\SECURITY\Cache</TargetObject>
@@ -801,15 +795,32 @@
         </Rule>
         <!-- module: registry_event/t1053_scheduled_task -->
         <!-- Task creation in TaskCache -->
-        <TargetObject condition="contains" name="technique_id=T1053,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1053.005,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1053.005,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\</TargetObject>
         <!-- Task tree modifications -->
-        <TargetObject condition="contains" name="technique_id=T1053,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1053.005,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tree\</TargetObject>
         <!-- Plain (non-folder) tasks -->
-        <TargetObject condition="contains" name="technique_id=T1053,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Plain\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1053.005,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Plain\</TargetObject>
         <!-- Logon triggers -->
-        <TargetObject condition="contains" name="technique_id=T1053,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Logon\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1053.005,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Logon\</TargetObject>
         <!-- Boot triggers -->
-        <TargetObject condition="contains" name="technique_id=T1053,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Boot\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1053.005,module=registry_event/t1053_scheduled_task">\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Boot\</TargetObject>
+        <!-- module: registry_event/t1204_004_clickfix_runmru -->
+        <TargetObject condition="contains" name="technique_id=T1204.004,module=registry_event/t1204_004_clickfix_runmru">\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU\</TargetObject>
+        <!-- module: registry_event/t1543_003_services -->
+        <TargetObject condition="contains" name="technique_id=T1543.003,module=registry_event/t1543_003_services">\System\CurrentControlSet\Services\</TargetObject>
+        <!-- module: registry_event/t1547_001_run_keys -->
+        <TargetObject condition="contains" name="technique_id=T1547.001,module=registry_event/t1547_001_run_keys">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1547.001,module=registry_event/t1547_001_run_keys">\Microsoft\Windows\CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1547.001,module=registry_event/t1547_001_run_keys">\Microsoft\Windows\CurrentVersion\RunServices</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1547.001,module=registry_event/t1547_001_run_keys">\Microsoft\Windows\CurrentVersion\RunServicesOnce</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1547.001,module=registry_event/t1547_001_run_keys">\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run</TargetObject>
+        <!-- module: registry_event/t1685_disable_security_tools -->
+        <TargetObject condition="contains" name="technique_id=T1685,module=registry_event/t1685_disable_security_tools">\SOFTWARE\Microsoft\Windows Defender\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1685,module=registry_event/t1685_disable_security_tools">\SOFTWARE\Policies\Microsoft\Windows Defender\</TargetObject>
+        <TargetObject condition="contains" name="technique_id=T1685,module=registry_event/t1685_disable_security_tools">\SYSTEM\CurrentControlSet\Services\WinDefend\</TargetObject>
+        <!-- module: registry_event/t1686_firewall -->
+        <TargetObject condition="contains" name="technique_id=T1686,module=registry_event/t1686_firewall">\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy</TargetObject>
         <!-- module: registry_event/dc_include -->
         <!-- Persistence -->
         <TargetObject condition="contains" name="module=registry_event/dc_include">\Microsoft\Windows\CurrentVersion\Run</TargetObject>
@@ -867,28 +878,11 @@
     <!-- Event 17-18: PipeEvent (selective) -->
     <RuleGroup name="PipeEvent include" groupRelation="or">
       <PipeEvent onmatch="include">
-        <!-- module: pipe_event/baseline_include -->
-        <!-- Cobalt Strike default pipes -->
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">msagent_</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">MSSE-</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">postex_</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">postex_ssh_</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">status_</PipeName>
-        <!-- Metasploit Meterpreter -->
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">meterpreter</PipeName>
-        <!-- PSExec (lateral movement - can be legitimate) -->
-        <PipeName condition="begin with" name="module=pipe_event/baseline_include">\\PSEXESVC</PipeName>
-        <!-- PsExec alternatives -->
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">paexec</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">remcom</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">csexec</PipeName>
-        <!-- PowerShell remoting -->
-        <PipeName condition="begin with" name="module=pipe_event/baseline_include">\\PSHost</PipeName>
-        <!-- WMI -->
-        <PipeName condition="begin with" name="module=pipe_event/baseline_include">\\WMIC</PipeName>
-        <!-- Common malware pipes -->
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">\\NamedPipe\\</PipeName>
-        <PipeName condition="contains" name="module=pipe_event/baseline_include">\\cromepipe</PipeName>
+        <!-- module: pipe_event/t1021_002_remote_exec -->
+        <PipeName condition="begin with" name="module=pipe_event/t1021_002_remote_exec">\PSEXESVC</PipeName>
+        <PipeName condition="contains any" name="module=pipe_event/t1021_002_remote_exec">paexec;remcom;csexec</PipeName>
+        <PipeName condition="begin with" name="module=pipe_event/t1021_002_remote_exec">\PSHost</PipeName>
+        <PipeName condition="begin with" name="module=pipe_event/t1021_002_remote_exec">\WMIC</PipeName>
         <!-- module: pipe_event/t1021_remote_services -->
         <!-- PSExec -->
         <PipeName condition="begin with" name="technique_id=T1021.002,module=pipe_event/t1021_remote_services">\\PSEXESVC</PipeName>
@@ -900,6 +894,9 @@
         <PipeName condition="contains" name="technique_id=T1021.002,module=pipe_event/t1021_remote_services">csexec</PipeName>
         <!-- WinExe -->
         <PipeName condition="contains" name="technique_id=T1021.002,module=pipe_event/t1021_remote_services">winexesvc</PipeName>
+        <!-- module: pipe_event/t1055_c2_frameworks -->
+        <PipeName condition="contains any" name="technique_id=T1055,module=pipe_event/t1055_c2_frameworks">msagent_;MSSE-;postex_;status_;meterpreter</PipeName>
+        <PipeName condition="contains any" name="technique_id=T1055,module=pipe_event/t1055_c2_frameworks">\NamedPipe\;\cromepipe</PipeName>
         <!-- module: pipe_event/dc_include -->
         <!-- PSExec -->
         <PipeName condition="contains" name="module=pipe_event/dc_include">PSEXESVC</PipeName>
@@ -941,33 +938,29 @@
     <!-- Event 22: DnsQuery (selective) -->
     <RuleGroup name="DnsQuery include" groupRelation="or">
       <DnsQuery onmatch="include">
-        <!-- module: dns_query/baseline_include -->
-        <!-- Dynamic DNS services (common for C2) -->
-        <QueryName condition="end with" name="module=dns_query/baseline_include">duckdns.org</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">no-ip.com</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">no-ip.org</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">ddns.net</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">freedns.afraid.org</QueryName>
-        <!-- Tunneling services -->
-        <QueryName condition="end with" name="module=dns_query/baseline_include">ngrok.io</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">serveo.net</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">localtunnel.me</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">portmap.io</QueryName>
-        <!-- Suspicious TLDs -->
-        <QueryName condition="end with" name="module=dns_query/baseline_include">.tk</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">.ml</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">.ga</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">.cf</QueryName>
-        <QueryName condition="end with" name="module=dns_query/baseline_include">.gq</QueryName>
-        <!-- Tor -->
-        <QueryName condition="end with" name="module=dns_query/baseline_include">.onion</QueryName>
-        <QueryName condition="contains" name="module=dns_query/baseline_include">tor2web</QueryName>
-        <!-- Cryptomining pools -->
-        <QueryName condition="contains" name="module=dns_query/baseline_include">coinminer</QueryName>
-        <QueryName condition="contains" name="module=dns_query/baseline_include">cryptonight</QueryName>
-        <QueryName condition="contains" name="module=dns_query/baseline_include">xmrig</QueryName>
-        <!-- Unusually long domains (DGA, tunneling) -->
-        <!-- Note: QueryName length not directly filterable, handled in SIEM -->
+        <!-- module: dns_query/general_c2_infrastructure -->
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">duckdns.org</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">no-ip.com</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">no-ip.org</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">ddns.net</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">freedns.afraid.org</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">ngrok.io</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">ngrok-free.app</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">serveo.net</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">localtunnel.me</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">portmap.io</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">trycloudflare.com</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">.tk</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">.ml</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">.ga</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">.cf</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">.gq</QueryName>
+        <QueryName condition="end with" name="module=dns_query/general_c2_infrastructure">.onion</QueryName>
+        <QueryName condition="contains any" name="module=dns_query/general_c2_infrastructure">tor2web;coinminer;cryptonight;xmrig</QueryName>
+        <!-- module: dns_query/t1218_proxy_binaries -->
+        <Image condition="end with" name="module=dns_query/t1218_proxy_binaries">\regsvr32.exe</Image>
+        <Image condition="end with" name="module=dns_query/t1218_proxy_binaries">\mshta.exe</Image>
+        <Image condition="end with" name="module=dns_query/t1218_proxy_binaries">\rundll32.exe</Image>
         <!-- module: dns_query/dc_include -->
         <!-- Suspicious TLDs -->
         <QueryName condition="end with" name="module=dns_query/dc_include">.tk</QueryName>
@@ -1035,27 +1028,18 @@
     <!-- Event 26: FileDeleteDetected (selective) -->
     <RuleGroup name="FileDeleteDetected include" groupRelation="or">
       <FileDeleteDetected onmatch="include">
-        <!-- module: file_delete_detected/baseline_include -->
-        <!-- from RuleGroup FileDelete -->
-        <!-- Security event logs -->
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\Windows\System32\winevt\Logs\</TargetFilename>
-        <!-- Sysmon logs -->
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\Sysmon.evtx</TargetFilename>
-        <!-- Backup files -->
-        <TargetFilename condition="end with" name="module=file_delete_detected/baseline_include">.bak</TargetFilename>
-        <TargetFilename condition="end with" name="module=file_delete_detected/baseline_include">.backup</TargetFilename>
-        <!-- Shadow copy components (ransomware) -->
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\System Volume Information\</TargetFilename>
-        <!-- Recycle bin (anti-forensics) -->
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\$Recycle.Bin\</TargetFilename>
-        <!-- Prefetch files (anti-forensics) -->
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\Windows\Prefetch\</TargetFilename>
-        <!-- from RuleGroup FileDeleteDetected -->
-        <!-- Same strategy as Event ID 23 -->
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\Windows\System32\winevt\Logs\</TargetFilename>
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\Sysmon.evtx</TargetFilename>
-        <TargetFilename condition="end with" name="module=file_delete_detected/baseline_include">.bak</TargetFilename>
-        <TargetFilename condition="contains" name="module=file_delete_detected/baseline_include">\System Volume Information\</TargetFilename>
+        <!-- module: file_delete_detected/general_anti_forensics -->
+        <TargetFilename condition="contains" name="technique_id=T1070.004,module=file_delete_detected/general_anti_forensics">\Windows\Prefetch\</TargetFilename>
+        <TargetFilename condition="contains" name="technique_id=T1070.004,module=file_delete_detected/general_anti_forensics">\$Recycle.Bin\</TargetFilename>
+        <!-- module: file_delete_detected/t1490_backups -->
+        <TargetFilename condition="end with" name="technique_id=T1490,module=file_delete_detected/t1490_backups">.bak</TargetFilename>
+        <TargetFilename condition="end with" name="technique_id=T1490,module=file_delete_detected/t1490_backups">.backup</TargetFilename>
+        <TargetFilename condition="end with" name="technique_id=T1490,module=file_delete_detected/t1490_backups">.vbk</TargetFilename>
+        <TargetFilename condition="end with" name="technique_id=T1490,module=file_delete_detected/t1490_backups">.vib</TargetFilename>
+        <TargetFilename condition="contains" name="technique_id=T1490,module=file_delete_detected/t1490_backups">\System Volume Information\</TargetFilename>
+        <!-- module: file_delete_detected/t1685_005_log_files -->
+        <TargetFilename condition="contains" name="module=file_delete_detected/t1685_005_log_files">\Windows\System32\winevt\Logs\</TargetFilename>
+        <TargetFilename condition="contains" name="module=file_delete_detected/t1685_005_log_files">\Sysmon.evtx</TargetFilename>
         <!-- module: file_delete_detected/dc_include -->
         <!-- Event logs (critical on DCs) -->
         <TargetFilename condition="contains" name="module=file_delete_detected/dc_include">\winevt\Logs\</TargetFilename>
@@ -1091,12 +1075,10 @@
     <!-- Event 29: FileExecutableDetected (selective) -->
     <RuleGroup name="FileExecutableDetected include" groupRelation="or">
       <FileExecutableDetected onmatch="include">
-        <!-- module: file_executable_detected/baseline_include -->
-        <!-- Executables in temp directories -->
-        <TargetFilename condition="begin with" name="module=file_executable_detected/baseline_include">C:\Windows\Temp\</TargetFilename>
-        <TargetFilename condition="contains" name="module=file_executable_detected/baseline_include">\AppData\Local\Temp\</TargetFilename>
-        <!-- Executables in user downloads -->
-        <TargetFilename condition="contains" name="module=file_executable_detected/baseline_include">\Downloads\</TargetFilename>
+        <!-- module: file_executable_detected/t1105_dropped_executables -->
+        <TargetFilename condition="begin with" name="module=file_executable_detected/t1105_dropped_executables">C:\Windows\Temp\</TargetFilename>
+        <TargetFilename condition="contains" name="module=file_executable_detected/t1105_dropped_executables">\AppData\Local\Temp\</TargetFilename>
+        <TargetFilename condition="contains" name="module=file_executable_detected/t1105_dropped_executables">\Downloads\</TargetFilename>
       </FileExecutableDetected>
     </RuleGroup>
   </EventFiltering>

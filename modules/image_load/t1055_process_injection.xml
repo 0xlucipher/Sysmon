@@ -2,6 +2,7 @@
   <!--
   title: T1055 process injection: ImageLoad include
   techniques: T1055
+  sigma: 4508a70e-97ef-4300-b62b-ff27992990ea
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1055_process_injection.xml
   status: migrated in phase 2; review in phase 3

@@ -2,6 +2,7 @@
   <!--
   title: T1053 scheduled tasks: ProcessCreate include
   techniques: T1053.005
+  sigma: f2c64357-b1d2-41b7-849f-34d2682c0fad, 8a8379b8-780b-4dbf-b1e9-31c8d112fefb, 39019a4e-317f-4ce3-ae63-309a8c6b53c5
   volume: unmeasured
   source: migrated from configurations/modules/techniques/T1053_scheduled_task.xml
   status: migrated in phase 2; review in phase 3

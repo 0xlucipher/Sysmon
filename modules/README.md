@@ -36,7 +36,12 @@ Rules:
 - Exactly **one** RuleGroup holding **one** event filter.
 - The first comment inside `<Sysmon>` is metadata (`key: value` lines). `title` is
   required. `techniques`, `sigma` and `atomics` are comma-separated lists.
-  `min_schema` (4.90 or 4.91) stops a profile targeting an older schema from using it.
+- `techniques` must be current ATT&CK IDs (see `data/attack.json`). A revoked ID
+  fails the build and names its replacement, e.g. `T1562.001` → `T1685`.
+- `sigma` lists SigmaHQ rule IDs (see `data/sigma.json`). Each rule must read a log
+  source this module's event produces, e.g. `process_creation` for ProcessCreate.
+  Only include modules list Sigma rules.
+- `min_schema` (4.90 or 4.91) stops a profile targeting an older schema from using it.
 - `source` is `original`, or the project a rule was borrowed from, with its licence.
 - Include rules get a RuleName stamped at build time
   (`technique_id=<id>,module=<module id>` when the module has one technique),
@@ -64,8 +69,8 @@ include module for that event. Keep exclusions narrow:
 
 | Prefix | Meaning |
 |---|---|
-| `t<id>_…` | Detection rules for one ATT&CK technique family |
-| `baseline_include` / `baseline_exclude` | Rules migrated from the original `sysmon-base.xml` (split into technique modules in phase 3) |
+| `t<id>_…` | Rules for one ATT&CK technique (or a few closely related ones), e.g. `t1003_001_lsass_any` |
+| `general_…` | Useful rules that span several techniques; the reason is in the title |
+| `baseline_exclude` | Exclusions migrated from the original `sysmon-base.xml` |
 | `dc_…` | Domain-controller rules (`dc` profile) |
 | `noise_…` | Known-benign activity, for `all`-mode events |
-| `extended_…` | Broader optional rule sets, not used by a shipped profile |

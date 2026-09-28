@@ -1,0 +1,17 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Memory dump files and credential-dumper artefacts
+    techniques: T1003.001
+    sigma: 6902955a-01b7-432c-b32a-6f5f81d8f625, 8fbf3271-1ef6-4e94-8210-03c2317947f6, 93d94efc-d7ad-4161-ad7d-1638c4f908d8
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_create/t1003_001_dump_files" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="end with">.dmp</TargetFilename>
+        <TargetFilename condition="contains">lsass</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,17 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Deletion of event log files
+    techniques: T1685.005, T1070.004
+    sigma: 63c779ba-f638-40a0-a593-ddd45e8b1ddc
+    volume: unmeasured
+    source: migrated from configurations/sysmon-base.xml (phase 2), regrouped by technique in phase 3
+  -->
+  <EventFiltering>
+    <RuleGroup name="file_delete_detected/t1685_005_log_files" groupRelation="or">
+      <FileDeleteDetected onmatch="include">
+        <TargetFilename condition="contains">\Windows\System32\winevt\Logs\</TargetFilename>
+        <TargetFilename condition="contains">\Sysmon.evtx</TargetFilename>
+      </FileDeleteDetected>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

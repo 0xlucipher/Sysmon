@@ -1,0 +1,21 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Decoding and obfuscation utilities (certutil decode, base64 blobs)
+    techniques: T1027, T1140
+    sigma: cc9cbe82-7bc0-4ef5-bc23-bbfb83947be7, 22e58743-4ac8-4a9f-bf19-00a0428d8c5f, e32d4572-9826-4738-b651-95fa63747e8a
+    volume: unmeasured
+    source: original
+    notes: The TVqQ... strings are a base64-encoded PE ("MZ") header on the command line.
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1027_obfuscation" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">CertUtil.exe</OriginalFileName>
+          <CommandLine condition="contains any">-decode;/decode;-decodehex;/decodehex;-encode;/encode</CommandLine>
+        </Rule>
+        <CommandLine condition="contains any">TVqQAAMAAAAEAAAA;TVpQAAIAAAAEAA;TVqAAAEAAAAEABAA</CommandLine>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

@@ -1,0 +1,23 @@
+<Sysmon schemaversion="4.90">
+  <!--
+    title: Rundll32 loading DLLs from user-writable paths, URLs or without arguments
+    techniques: T1218.011
+    sigma: 5bb68627-3198-40ca-b458-49f973db8752, 2569ed8c-1147-498a-9b8c-2ad3656b10ed, ae9c6a7c-9521-42a6-915e-5aaa8689d529
+    volume: unmeasured
+    source: original
+  -->
+  <EventFiltering>
+    <RuleGroup name="process_create/t1218_011_rundll32" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">RUNDLL32.EXE</OriginalFileName>
+          <CommandLine condition="contains any">\AppData\;\Users\Public\;\ProgramData\;\Temp\;http:;https:;\\;javascript:</CommandLine>
+        </Rule>
+        <Rule groupRelation="and">
+          <OriginalFileName condition="is">RUNDLL32.EXE</OriginalFileName>
+          <CommandLine condition="end with">rundll32.exe</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
