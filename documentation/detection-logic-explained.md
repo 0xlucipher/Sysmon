@@ -1,6 +1,6 @@
 # Detection Logic Explained
 
-This document explains the rationale and methodology behind key detection rules in the Sysmon Ultimate configuration.
+This document explains the rationale and methodology behind key detection rules in sysmon-config.
 
 ## Table of Contents
 
@@ -527,4 +527,4 @@ Action: Alert SOC + Investigate source/target systems
 
 **Document Version:** 1.0.0
 **Last Updated:** 2025-10-30
-**Maintained by:** Sysmon Ultimate Configuration Project
+**Maintained by:** sysmon-config

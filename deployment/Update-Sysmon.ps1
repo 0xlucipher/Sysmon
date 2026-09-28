@@ -51,11 +51,23 @@ param(
 #Requires -Version 5.1
 #Requires -RunAsAdministrator
 
+function Get-InstalledSysmonExe {
+    # Standalone Sysmon runs as "Sysmon64" (or "Sysmon" on 32-bit); built-in
+    # Windows Sysmon also registers a service. Use whichever is installed.
+    foreach ($name in 'Sysmon64', 'Sysmon') {
+        $svc = Get-CimInstance Win32_Service -Filter "Name='$name'" -ErrorAction SilentlyContinue
+        if ($svc) {
+            return ($svc.PathName -replace '^"([^"]+)".*$', '$1' -replace '^(\S+\.exe).*$', '$1')
+        }
+    }
+    return $null
+}
+
 function Update-Configuration {
     # Check Sysmon installation
-    $sysmon = Get-Service -Name 'Sysmon64' -ErrorAction SilentlyContinue
-    if (-not $sysmon) {
-        Write-Host "ERROR: Sysmon64 service not found. Install Sysmon first." -ForegroundColor Red
+    $sysmonExe = Get-InstalledSysmonExe
+    if (-not $sysmonExe) {
+        Write-Host "ERROR: no Sysmon service found. Install Sysmon first." -ForegroundColor Red
         exit 1
     }
 
@@ -92,12 +104,12 @@ function Update-Configuration {
         $backupPath = Join-Path $backupDir "config-$timestamp.xml"
 
         Write-Host "Backing up current configuration to $backupPath" -ForegroundColor Cyan
-        & Sysmon64.exe -c | Out-File $backupPath
+        & $sysmonExe -c | Out-File $backupPath
     }
 
     # Update configuration
     Write-Host "Updating Sysmon configuration..." -ForegroundColor Yellow
-    $result = & Sysmon64.exe -c $ConfigPath 2>&1
+    $result = & $sysmonExe -c $ConfigPath 2>&1
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Configuration updated successfully!" -ForegroundColor Green

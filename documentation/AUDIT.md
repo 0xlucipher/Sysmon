@@ -2,7 +2,7 @@
 
 This audit compares the repository to [DESIGN.md](DESIGN.md), as of the start
 of phase 1. **Verdicts:** keep · fix · rebuild · delete.
-✅ = fixed in phase 1. ✅² = fixed in phase 2. ✅³ = fixed in phase 3.
+✅ = fixed in phase 1. ✅² = phase 2. ✅³ = phase 3. ✅⁴ = phase 4.
 
 ## Summary
 
@@ -61,22 +61,22 @@ Phase 2 replaced them with modules, profiles and a generator.
 | Item | Finding | Verdict |
 |---|---|---|
 | `Install-Sysmon.ps1` download | Ran the downloaded binary without verifying its signature. | ✅ Authenticode check added |
-| `Install-Sysmon.ps1` built-in Sysmon | Only knows the Sysinternals zip. No path for the Windows optional feature. | fix (phase 4, with the release pipeline) |
+| `Install-Sysmon.ps1` built-in Sysmon | Only knows the Sysinternals zip. No path for the Windows optional feature. | ✅⁴ `-Source Auto\|BuiltIn\|Standalone` |
 | Install/Update profile names | Mapped to the old five profiles. | ✅² `balanced` / `verbose` / `dc` from `dist/`. Unmeasured CPU and log figures removed. |
-| Drift detection | Missing (loaded config hash vs release). | add (phase 4, needs release checksums) |
+| Drift detection | Missing (loaded config hash vs release). | ✅⁴ `Test-SysmonDrift.ps1`, tested end to end in CI |
 | `Remove-Sysmon.ps1` | Fine in scope. | keep |
-| `Benchmark-Sysmon.ps1`, `Measure-LogVolume.ps1` | Useful on real hosts. The README's performance numbers are not produced by them. | keep; feed the volume report (phase 4) |
+| `Benchmark-Sysmon.ps1`, `Measure-LogVolume.ps1` | Useful on real hosts. The README's performance numbers were not produced by them. | kept; ✅⁴ unmeasured numbers removed, synthetic baseline workflow added |
 
 ## Documentation
 
 | Item | Finding | Verdict |
 |---|---|---|
-| `VALIDATION-REPORT.md`, `FIXES.md` | Claim validation that never covered loading into Sysmon. | delete (phase 4) |
-| `README.md` | Very long. "Ultimate" / "production-ready" claims. Advertises compliance modules that don't exist. | rewrite (phase 4) |
+| `VALIDATION-REPORT.md`, `FIXES.md` | Claim validation that never covered loading into Sysmon. | ✅⁴ deleted |
+| `README.md` | Very long. "Ultimate" / "production-ready" claims. Advertises compliance modules that don't exist. | ✅⁴ rewritten |
 | `documentation/mitre-mapping-matrix.csv` | Hand-written. 67 of 119 technique rows have no module behind them. | ✅³ deleted → generated `dist/coverage.md` |
 | `documentation/detection-logic-explained.md` | Good explanatory content. | keep, link from modules |
-| Placeholder URLs | `yourusername/sysmon-ultimate` in installer and CHANGELOG. | fix (phase 4 with rename) |
-| `LICENSE` | MIT, copyright "Sysmon Ultimate … Contributors". | fix copyright holder |
+| Placeholder URLs | `yourusername/sysmon-ultimate` in installer and CHANGELOG. | ✅⁴ fixed |
+| `LICENSE` | MIT, copyright "Sysmon Ultimate … Contributors". | ✅⁴ 0xlucipher |
 
 ## Phase 2 findings
 
