@@ -11,6 +11,13 @@
     Configuration profile to use: balanced, verbose, dc
     Default: balanced
 
+.PARAMETER Source
+    Where Sysmon comes from: Auto (default), BuiltIn or Standalone.
+    BuiltIn enables the Windows optional feature (Windows 11 / Server 2025).
+    Standalone downloads Sysinternals Sysmon and verifies its signature.
+    Auto uses built-in Sysmon when Windows offers it and no standalone Sysmon
+    is installed (the two cannot coexist), otherwise standalone.
+
 .PARAMETER SysmonPath
     Path to Sysmon64.exe. If not specified, script will attempt to download.
 
@@ -53,12 +60,12 @@
 
 .NOTES
     Version: 1.0.0
-    Author: Sysmon Ultimate Configuration Project
+    Project: sysmon-config (https://github.com/0xlucipher/Sysmon)
     Requires: PowerShell 5.1+ and Administrator privileges
     Compatible: Windows 10/11, Server 2016/2019/2022
 
 .LINK
-    https://github.com/yourusername/sysmon-ultimate
+    https://github.com/0xlucipher/Sysmon
     https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
 #>
 
@@ -67,6 +74,10 @@ param(
     [Parameter(ParameterSetName='Install')]
     [ValidateSet('balanced','verbose','dc')]
     [string]$ConfigProfile = 'balanced',
+
+    [Parameter(ParameterSetName='Install')]
+    [ValidateSet('Auto','BuiltIn','Standalone')]
+    [string]$Source = 'Auto',
 
     [Parameter(ParameterSetName='Install')]
     [string]$SysmonPath,
@@ -100,7 +111,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $Script:ScriptVersion = '1.0.0'
 $Script:SysmonDownloadUrl = 'https://download.sysinternals.com/files/Sysmon.zip'
-$Script:SysmonMinVersion = [Version]'13.0'
+$Script:SysmonMinVersion = [Version]'15.0'
 
 # Profile definitions. Configs are generated into dist/ by tools/sysmongen.py.
 # Volume is not listed until it has been measured (see documentation/DESIGN.md #11).
@@ -253,6 +264,36 @@ function Download-Sysmon {
     }
 }
 
+function Get-BuiltInSysmon {
+    <#
+    Returns the path to built-in Sysmon (Windows optional feature "Sysmon"),
+    enabling the feature first when -Enable is given. Returns $null when the
+    feature does not exist on this Windows build.
+    #>
+    param([switch]$Enable)
+
+    $feature = Get-WindowsOptionalFeature -Online -FeatureName 'Sysmon' -ErrorAction SilentlyContinue
+    if (-not $feature) {
+        return $null
+    }
+
+    if ($feature.State -ne 'Enabled') {
+        if (-not $Enable) {
+            return $null
+        }
+        Write-Log "Enabling the built-in Sysmon Windows feature" -Level Info
+        Enable-WindowsOptionalFeature -Online -FeatureName 'Sysmon' -NoRestart | Out-Null
+    }
+
+    $exe = Get-Command 'sysmon.exe' -ErrorAction SilentlyContinue
+    if (-not $exe) {
+        $candidate = Join-Path $env:SystemRoot 'System32\Sysmon.exe'
+        if (Test-Path $candidate) { return $candidate }
+        throw "Built-in Sysmon feature is enabled but sysmon.exe was not found"
+    }
+    return $exe.Source
+}
+
 function Test-ConfigurationValid {
     param([string]$ConfigPath)
 
@@ -402,7 +443,7 @@ function Backup-ExistingConfiguration {
 
 function Main {
     Write-Host "`n===============================================" -ForegroundColor Cyan
-    Write-Host "   SYSMON ULTIMATE - INSTALLATION SCRIPT" -ForegroundColor Cyan
+    Write-Host "   SYSMON-CONFIG - INSTALLATION SCRIPT" -ForegroundColor Cyan
     Write-Host "   Version: $Script:ScriptVersion" -ForegroundColor Cyan
     Write-Host "===============================================`n" -ForegroundColor Cyan
 
@@ -477,7 +518,20 @@ function Main {
         }
     }
 
-    # Determine Sysmon executable path
+    # Determine Sysmon executable path: built-in Windows Sysmon first, when allowed
+    if (-not $SysmonPath -and $Source -ne 'Standalone') {
+        $builtInEnabled = (Get-WindowsOptionalFeature -Online -FeatureName 'Sysmon' -ErrorAction SilentlyContinue).State -eq 'Enabled'
+        if ($Source -eq 'BuiltIn' -or $builtInEnabled -or -not $existingStatus.Installed) {
+            $SysmonPath = Get-BuiltInSysmon -Enable
+            if ($SysmonPath) {
+                Write-Log "Using built-in Windows Sysmon: $SysmonPath" -Level Info
+            } elseif ($Source -eq 'BuiltIn') {
+                Write-Log "ERROR: built-in Sysmon is not available on this Windows build" -Level Error
+                exit 1
+            }
+        }
+    }
+
     if (-not $SysmonPath) {
         # Check common locations
         $commonPaths = @(

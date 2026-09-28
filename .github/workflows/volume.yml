@@ -1,0 +1,29 @@
+name: Volume baseline
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - testing/Measure-ProfileVolume.ps1
+      - .github/workflows/volume.yml
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: Measure events per profile (synthetic)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Measure
+        shell: pwsh
+        run: ./testing/Measure-ProfileVolume.ps1 -OutputPath volume-report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: volume-report
+          path: |
+            volume-report.md
+            volume-report.json

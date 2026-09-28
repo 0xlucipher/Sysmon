@@ -66,6 +66,16 @@ jobs:
           name: sysmon-load-results
           path: sysmon-load-results/
 
+  deployment:
+    name: Install, drift check, update, remove
+    needs: lint
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: End-to-end deployment test
+        shell: pwsh
+        run: ./testing/Test-Deployment.ps1
+
   powershell:
     name: PowerShell analysis
     runs-on: windows-latest

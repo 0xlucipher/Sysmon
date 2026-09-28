@@ -58,7 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `tools/Generate-ModularConfig.ps1` and `testing/Validate-Configuration.ps1`.
 
-## [1.0.0] - 2025-10-30
+## 1.0.0 - 2025-10-30 (untagged)
+
+> Original description, kept for history. Many of these claims did not hold up;
+> see [documentation/AUDIT.md](documentation/AUDIT.md).
 
 ### Added
 
@@ -150,18 +153,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### Planned Features
-- Web-based configuration builder with GUI
-- Cloud SIEM integrations (Azure Sentinel, AWS Security Hub)
-- Automated threat intelligence feed integration
-- Machine learning-based exclusion suggestions
-- Linux Sysmon compatibility layer
-- Configuration migration tools for popular formats
-
----
-
 ## Version History
 
 ### Version Numbering Scheme
@@ -202,5 +193,4 @@ This project stands on the shoulders of giants. We thank the security community 
 
 ---
 
-[1.0.0]: https://github.com/yourusername/sysmon-ultimate/releases/tag/v1.0.0
-[Unreleased]: https://github.com/yourusername/sysmon-ultimate/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/0xlucipher/Sysmon/commits/main

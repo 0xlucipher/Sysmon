@@ -43,7 +43,7 @@ sysmon-modular already cover breadth. Neither proves detection.
 | 17 | Replay cadence | Weekly schedule, manual dispatch, and on PRs touching a module. |
 | 18 | Volume labelling | Published as a "synthetic baseline", with that limitation stated. |
 | 19–22 | GUI | Separate repo, static web app on GitHub Pages, runs this repo's Python generator in-browser via Pyodide. v1: profile + module toggles, exclusion editing, ATT&CK heatmap, volume estimate, validated export. Starts after phase 2. |
-| 23 | Name | Drop "Ultimate". New project name to be chosen. The GitHub repo stays `Sysmon`. |
+| 23 | Name | **sysmon-config**. The GitHub repo stays `Sysmon`. |
 | 24 | Releases | SemVer GitHub Releases carrying generated XML per profile × schema, `catalog.json`, SHA256 checksums, coverage and volume reports. |
 | 25 | Workflow | One PR per phase, merged before the next starts. |
 | 26 | Licence | MIT, copyright updated to the owner. SwiftOnSecurity licence checked before borrowing. |
