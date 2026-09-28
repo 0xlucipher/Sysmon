@@ -63,12 +63,20 @@ Clipboard capture is never enabled, and file blocking (events 27/28) stays off.
 [Releases](https://github.com/0xlucipher/Sysmon/releases) carry these files
 with a `SHA256SUMS`.
 
-**Volume.** The `Volume baseline` workflow measures events per hour and per
-event ID for each profile on a GitHub runner: idle time plus a scripted benign
-workload. It is a synthetic baseline for comparing profiles and catching
-regressions. A runner has no real user or business software, so don't size a
-SIEM with it. Measure your own hosts with
+**Volume.** The `Volume baseline` workflow measures events per profile on a
+GitHub runner: 60 s settle, 300 s idle, then 60 iterations of a scripted benign
+workload. It is a **synthetic baseline** for comparing profiles and catching
+regressions. A runner has no real user, browser or business software, so don't
+size a SIEM with it. Measure your own hosts with
 `performance\Measure-LogVolume.ps1`.
+
+| Profile | Events/hour (synthetic) | Largest sources |
+|---|---|---|
+| `balanced` | ~16,700 | registry value set (13), process access (10), network (3), process create (1) |
+| `dc` | ~16,100 | same as balanced on a non-DC runner |
+| `verbose` | ~441,000 | registry value set (13) ~62%, process access (10) ~20%, registry key create/delete (12) ~16% |
+
+*Sysmon 15.22 on Windows Server 2025 (GitHub-hosted runner), 2026-09-28.*
 
 ## How it's built
 
