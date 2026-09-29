@@ -17,13 +17,18 @@
 .PARAMETER Iterations
     How many times the workload loop runs per profile.
 
+.PARAMETER SettleSeconds
+    Wait after applying a profile (and after install) before counting, so
+    start-up activity does not land in the first profile's numbers.
+
 .PARAMETER OutputPath
     Markdown report path. A JSON file with the same base name is written too.
 #>
 [CmdletBinding()]
 param(
-    [int]$IdleSeconds = 120,
-    [int]$Iterations = 20,
+    [int]$IdleSeconds = 300,
+    [int]$Iterations = 60,
+    [int]$SettleSeconds = 60,
     [string]$OutputPath = (Join-Path $PWD 'volume-report.md')
 )
 
@@ -61,12 +66,39 @@ if ($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'O=Micr
     throw "Sysmon signature check failed"
 }
 & $sysmon -accepteula -i 2>&1 | Out-Null
+Start-Sleep -Seconds $SettleSeconds   # warm-up: let install-time activity pass
+
+function Test-DnsTelemetry {
+    # Resolve unique names through different APIs and check which ones Sysmon logs
+    # as event 22. Sysmon reads DNS from the Windows DNS Client (ETW), so lookups that
+    # bypass it (nslookup talks to the server directly) are not expected to appear.
+    $probes = [ordered]@{
+        'Resolve-DnsName'        = { param($n) Resolve-DnsName -Name $n -ErrorAction SilentlyContinue | Out-Null }
+        '.NET GetHostAddresses'  = { param($n) try { [System.Net.Dns]::GetHostAddresses($n) | Out-Null } catch { } }
+        'ping (getaddrinfo)'     = { param($n) ping.exe -n 1 -w 500 $n | Out-Null }
+    }
+    $result = [ordered]@{}
+    foreach ($name in $probes.Keys) {
+        $host_ = "sysmon-dns-probe-$([guid]::NewGuid().ToString('N').Substring(0, 12)).example.com"
+        & $probes[$name] $host_
+        Start-Sleep -Seconds 3
+        $hit = Get-WinEvent -LogName $log -ErrorAction SilentlyContinue |
+            Where-Object { $_.Id -eq 22 -and $_.Message -match [regex]::Escape($host_) }
+        $result[$name] = [bool]$hit
+    }
+    return $result
+}
+
+$dnsClient = Get-Service -Name Dnscache -ErrorAction SilentlyContinue
+$dnsProvider = [bool](Get-WinEvent -ListProvider 'Microsoft-Windows-DNS-Client' -ErrorAction SilentlyContinue)
+$dnsProbe = $null
 
 $results = [ordered]@{}
 foreach ($cfg in Get-ChildItem (Join-Path $root 'dist') -Filter 'sysmon-*.xml' | Sort-Object Name) {
     $profileName = $cfg.BaseName -replace '^sysmon-', ''
     Write-Host "=== $profileName"
     & $sysmon -c $cfg.FullName 2>&1 | Out-Null
+    Start-Sleep -Seconds $SettleSeconds
     wevtutil.exe cl $log
     $start = Get-Date
     Start-Sleep -Seconds $IdleSeconds
@@ -76,6 +108,10 @@ foreach ($cfg in Get-ChildItem (Join-Path $root 'dist') -Filter 'sysmon-*.xml' |
     $events = Get-WinEvent -LogName $log -ErrorAction SilentlyContinue
     $counts = [ordered]@{}
     foreach ($g in ($events | Group-Object Id | Sort-Object { [int]$_.Name })) { $counts[$g.Name] = $g.Count }
+    if ($profileName -eq 'verbose') {
+        # verbose logs DnsQuery in full, so any lookup the DNS Client sees should appear
+        $dnsProbe = Test-DnsTelemetry
+    }
     $results[$profileName] = [ordered]@{
         minutes = [math]::Round($minutes, 1)
         total = @($events).Count
@@ -89,13 +125,22 @@ $ids = $results.Values | ForEach-Object { $_.by_event_id.Keys } | Sort-Object { 
 $md = @(
     '# Synthetic volume baseline', '',
     "Sysmon $((Get-Item $sysmon).VersionInfo.FileVersion) on $((Get-CimInstance Win32_OperatingSystem).Caption), GitHub-hosted runner.",
-    "Each profile: $IdleSeconds s idle, then $Iterations iterations of a scripted benign workload.",
+    "Each profile: $SettleSeconds s settle after applying it, then $IdleSeconds s idle and $Iterations iterations of a scripted benign workload.",
     'A runner has no real user, browser or business software. Compare profiles with this, do not size a SIEM with it.', '',
     '| Profile | Minutes | Events | Events/hour |', '|---|---|---|---|'
 )
 foreach ($p in $results.Keys) { $r = $results[$p]; $md += "| $p | $($r.minutes) | $($r.total) | $($r.per_hour) |" }
 $md += '', '## Events by ID', '', ('| Event ID | ' + ($results.Keys -join ' | ') + ' |'), ('|---|' + ('---|' * $results.Count))
 foreach ($id in $ids) { $md += "| $id | " + (($results.Keys | ForEach-Object { $results[$_].by_event_id[$id] ?? 0 }) -join ' | ') + ' |' }
+$md += '', '## DNS telemetry check (verbose profile)', '',
+    "- DNS Client service (Dnscache): $(if ($dnsClient) { "$($dnsClient.Status), start type $($dnsClient.StartType)" } else { 'not present' })",
+    "- Microsoft-Windows-DNS-Client event provider: $(if ($dnsProvider) { 'present' } else { 'missing' })"
+if ($dnsProbe) {
+    foreach ($k in $dnsProbe.Keys) { $md += "- Unique-name lookup via ${k}: $(if ($dnsProbe[$k]) { 'logged as event 22' } else { 'NOT logged' })" }
+}
 $md -join "`n" | Out-File -Encoding utf8 $OutputPath
-$results | ConvertTo-Json -Depth 5 | Out-File -Encoding utf8 ([IO.Path]::ChangeExtension($OutputPath, '.json'))
+[ordered]@{ profiles = $results; dns = [ordered]@{
+        dnscache = if ($dnsClient) { "$($dnsClient.Status)/$($dnsClient.StartType)" } else { $null }
+        provider = $dnsProvider; probes = $dnsProbe } } |
+    ConvertTo-Json -Depth 6 | Out-File -Encoding utf8 ([IO.Path]::ChangeExtension($OutputPath, '.json'))
 Get-Content $OutputPath | Write-Host

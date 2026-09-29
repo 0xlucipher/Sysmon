@@ -324,6 +324,12 @@ def build_tree(profile: Profile, modules: dict[str, Module]) -> ET.Element:
             includes = []
         elif not includes:
             raise BuildError(f"profile {profile.name}: {event} is 'selective' but has no include modules")
+        else:
+            shadowed = find_shadowed(includes, excludes)
+            if shadowed:
+                raise BuildError(f"profile {profile.name}: {event} exclusions hide include rules "
+                                 "(Sysmon applies excludes first, so these can never log):\n  "
+                                 + "\n  ".join(shadowed))
 
         if includes:
             group = ET.SubElement(filtering, "RuleGroup", name=f"{event} include", groupRelation="or")
@@ -339,6 +345,58 @@ def build_tree(profile: Profile, modules: dict[str, Module]) -> ET.Element:
     profile.notes = notes
     ET.indent(root, space="  ")
     return root
+
+
+def _values(leaf: ET.Element) -> tuple[str, list[str]]:
+    """(base condition, lower-cased values) for a filter field."""
+    cond = leaf.get("condition", "is")
+    text = (leaf.text or "").strip().lower()
+    if cond in ("is any", "contains any"):
+        return cond.split()[0], [v for v in text.split(";") if v]
+    return cond, [text]
+
+
+def _covers(ex_cond: str, ex_val: str, in_cond: str, in_val: str) -> bool:
+    """True if every string matching (in_cond, in_val) also matches (ex_cond, ex_val)."""
+    if ex_cond == "contains":
+        return in_cond in ("is", "contains", "begin with", "end with") and ex_val in in_val
+    if ex_cond == "end with":
+        return in_cond in ("is", "end with") and in_val.endswith(ex_val)
+    if ex_cond == "begin with":
+        return in_cond in ("is", "begin with") and in_val.startswith(ex_val)
+    if ex_cond == "is":
+        return in_cond == "is" and in_val == ex_val
+    return False
+
+
+def find_shadowed(includes: list[Module], excludes: list[Module]) -> list[str]:
+    """Include conditions that a standalone exclude condition always matches.
+
+    Only standalone exclude fields are considered (an exclude <Rule> needs all
+    of its fields to match, so it cannot be proven to cover an include). An
+    include inside a <Rule groupRelation="and"> is shadowed when any one of its
+    fields is, because the rule only matches when that field does.
+    """
+    ex_leaves = [(m, leaf) for m in excludes for leaf in m.filter
+                 if isinstance(leaf.tag, str) and leaf.tag != "Rule"]
+    found = []
+    for m in includes:
+        for child in m.filter:
+            if not isinstance(child.tag, str):
+                continue
+            leaves = list(child) if child.tag == "Rule" else [child]
+            for leaf in (l for l in leaves if isinstance(l.tag, str)):
+                in_cond, in_vals = _values(leaf)
+                for ex_mod, ex in ex_leaves:
+                    if ex.tag != leaf.tag:
+                        continue
+                    ex_cond, ex_vals = _values(ex)
+                    hit = [v for v in in_vals for e in ex_vals if _covers(ex_cond, e, in_cond, v)]
+                    if hit:
+                        found.append(f"{m.id}: <{leaf.tag} {leaf.get('condition', 'is')}> "
+                                     f"{', '.join(sorted(set(hit)))} is excluded by {ex_mod.id} "
+                                     f"(<{ex.tag} {ex.get('condition', 'is')}> {(ex.text or '').strip()})")
+    return found
 
 
 def _header(profile: Profile) -> str:

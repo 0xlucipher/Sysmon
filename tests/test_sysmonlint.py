@@ -147,3 +147,12 @@ def test_standalone_command_line_exclude_warns():
 
 def test_empty_include_in_off_group_is_intentional():
     assert lint(group('<ProcessTerminate onmatch="include"/>', "ProcessTerminate off")) == []
+
+
+def test_unanchored_domain_exclude_warns():
+    warns = messages(lint(group('<DnsQuery onmatch="exclude">'
+                                '<QueryName condition="end with">microsoft.com</QueryName>'
+                                '<QueryName condition="end with">.microsoft.com</QueryName>'
+                                '<QueryName condition="is">microsoft.com</QueryName>'
+                                '</DnsQuery>')), "warning")
+    assert len(warns) == 1 and "lookalike" in warns[0]

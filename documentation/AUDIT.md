@@ -112,6 +112,14 @@ That is a phase 3 topic.
 | `extended_*` modules | Unreviewed, unused. | ✅³ deleted |
 | README coverage claims | "200/224 techniques = 89.3%", plus a non-existent `Update-MitreMapping.ps1`. | ✅³ replaced by the generated matrix |
 
+## Phase 4 findings
+
+| Area | Finding | Fix |
+|---|---|---|
+| DNS exclusions | `QueryName end with microsoft.com` (and 20 similar) also matched lookalikes such as `notmicrosoft.com`. | ✅⁴ anchored: `is` the domain, `end with .<domain>` for subdomains. The validator warns on unanchored domain excludes. |
+| DNS exclusions | Whole cloud platforms excluded (`amazonaws.com`, `azure.com`, `cloudflare.com`, `googleusercontent.com`). Attackers host C2 there, and the `cloudflare.com` exclusion silently cancelled this config's own `trycloudflare.com` tunnel detection. | ✅⁴ removed. The generator now fails the build when an exclusion hides an include rule. |
+| DNS telemetry | First volume run logged zero DNS events (ID 22) in every profile, including `verbose`. | ✅⁴ resolved: not a config problem. Unique names looked up via `Resolve-DnsName`, .NET and `ping` are all logged. The workload looked up the same name repeatedly, and answers served from the DNS client cache were not logged (60+ lookups produced 2 events). Keep this in mind when hunting: a name is logged when it is resolved, not on every use. |
+
 ## Coverage gap (vs. design Q8)
 
 Six technique modules exist (T1003, T1021, T1047, T1053, T1055, T1059). The

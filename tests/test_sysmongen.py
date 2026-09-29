@@ -206,3 +206,42 @@ def test_coverage_reports_all_and_rules_per_profile(repo):
     assert entry["events"] == ["DnsQuery", "ProcessCreate"]
     assert entry["profiles"] == {"p": ["all", "rules"], "q": ["all"]}
     assert "T1003.001" in cov and cov["T1003.001"]["profiles"]["p"] == []
+
+
+# ---------------------------------------------------------------- shadowed includes
+
+@pytest.mark.parametrize("exclude, include, shadowed", [
+    ('<QueryName condition="end with">cloudflare.com</QueryName>',
+     '<QueryName condition="end with">trycloudflare.com</QueryName>', True),
+    ('<QueryName condition="end with">.cloudflare.com</QueryName>',
+     '<QueryName condition="end with">trycloudflare.com</QueryName>', False),
+    ('<QueryName condition="contains">xmrig</QueryName>',
+     '<QueryName condition="contains any">coinminer;xmrig.pool</QueryName>', True),
+    ('<QueryName condition="begin with">wpad</QueryName>',
+     '<QueryName condition="is">wpad.corp</QueryName>', True),
+    ('<Image condition="end with">\\x.exe</Image>',
+     '<QueryName condition="end with">\\x.exe</QueryName>', False),  # different field
+    ('<Rule groupRelation="and"><QueryName condition="contains">a</QueryName>'
+     '<Image condition="is">b</Image></Rule>',
+     '<QueryName condition="is">a.com</QueryName>', False),  # exclude rule is narrower
+    ('<QueryName condition="end with">.onion</QueryName>',
+     '<Rule groupRelation="and"><QueryName condition="end with">x.onion</QueryName>'
+     '<Image condition="is">c</Image></Rule>', True),  # AND include shadowed via one field
+])
+def test_find_shadowed(repo, exclude, include, shadowed):
+    write_module(repo, "dns_query/inc", "DnsQuery", "include", include)
+    write_module(repo, "dns_query/exc", "DnsQuery", "exclude", exclude)
+    mods = sysmongen.load_modules(repo / "modules")
+    found = sysmongen.find_shadowed([mods["dns_query/inc"]], [mods["dns_query/exc"]])
+    assert bool(found) is shadowed
+
+
+def test_build_fails_when_exclude_hides_include(repo):
+    write_module(repo, "dns_query/inc", "DnsQuery", "include",
+                 '<QueryName condition="end with">trycloudflare.com</QueryName>')
+    write_module(repo, "dns_query/exc", "DnsQuery", "exclude",
+                 '<QueryName condition="end with">cloudflare.com</QueryName>')
+    write_profile(repo, "p", 'modules = ["dns_query/inc", "dns_query/exc"]\n'
+                             '[events]\nDnsQuery = "selective"\n')
+    with pytest.raises(sysmongen.BuildError, match="exclusions hide include rules"):
+        build(repo, "p")

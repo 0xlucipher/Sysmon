@@ -253,6 +253,13 @@ def _lint_broad_exclude(leaf: ET.Element, where: str, warn) -> None:
         warn(f"{where}: standalone <{leaf.tag}> exclusion is attacker-controlled: any process "
              "can add this text to its command line to hide; scope it with Image in a <Rule>")
         return
+    if leaf.tag == "QueryName" and leaf.get("condition") == "end with":
+        value = (leaf.text or "").strip()
+        if not value.startswith("."):
+            warn(f"{where}: <QueryName end with {value!r}> also excludes lookalike domains "
+                 f"(e.g. 'evil{value}'); use 'is' for the domain and 'end with .{value}' "
+                 "for subdomains")
+        return
     if leaf.tag not in IMAGE_FIELDS:
         return
     value = (leaf.text or "").strip()

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (phase 4)
+- DNS exclusions anchored to exact domains and real subdomains (no lookalikes).
+- Cloud-platform DNS exclusions removed; they hid C2 and this config's own
+  `trycloudflare.com` detection.
+
+### Added (phase 4)
+- Generator check: the build fails when an exclusion makes an include rule
+  impossible to log. Validator warning for unanchored `QueryName` exclusions.
+- Longer, warmed-up volume baseline with a DNS telemetry check.
+
 ### Added (phase 3)
 - ATT&CK v19.2 and SigmaHQ r2026-07-01 reference indexes in `data/`, rebuilt and
   checked in CI (`tools/refdata.py`). The build rejects unknown or revoked
