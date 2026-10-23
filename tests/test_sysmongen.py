@@ -236,6 +236,68 @@ def test_find_shadowed(repo, exclude, include, shadowed):
     assert bool(found) is shadowed
 
 
+# ---------------------------------------------------------------- replay wiring
+
+def write_replay(base, manifest, results=None):
+    d = base / "testing" / "replay"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "manifest.json").write_text(json.dumps(manifest))
+    if results is not None:
+        (d / "results.json").write_text(json.dumps(results))
+
+
+def test_replay_credits_every_technique_of_a_tests_modules(repo):
+    # the mshta module declares T1218.005; the lsass module declares T1003.001
+    write_replay(repo, {"format": 1, "framework": {},
+                        "tests": [{"technique": "T1218.005", "guid": "g1", "name": "mshta",
+                                   "modules": ["process_create/tech"]}]})
+    modules = sysmongen.load_modules(repo / "modules")
+    rep = sysmongen.load_replay(modules, repo / "testing")
+    assert rep["has_results"] is False
+    assert [t["guid"] for t in rep["by_technique"]["T1218.005"]] == ["g1"]
+    assert "T1003.001" not in rep["by_technique"]
+
+
+def test_replay_reads_committed_pass_state(repo):
+    write_replay(repo,
+                 {"format": 1, "framework": {},
+                  "tests": [{"technique": "T1218.005", "guid": "g1", "name": "mshta",
+                             "modules": ["process_create/tech"]}]},
+                 results={"generated_utc": "2026-10-23T00:00:00Z",
+                          "tests": [{"guid": "g1", "pass": True}]})
+    modules = sysmongen.load_modules(repo / "modules")
+    rep = sysmongen.load_replay(modules, repo / "testing")
+    assert rep["has_results"] is True and rep["generated"] == "2026-10-23T00:00:00Z"
+    assert rep["by_technique"]["T1218.005"][0]["passed"] is True
+
+
+def test_replay_manifest_rejects_unknown_module_and_dupes(repo):
+    write_replay(repo, {"format": 1, "framework": {},
+                        "tests": [{"technique": "T", "guid": "g1", "name": "x",
+                                   "modules": ["nope/missing"]}]})
+    with pytest.raises(sysmongen.BuildError, match="unknown module"):
+        sysmongen.load_replay(sysmongen.load_modules(repo / "modules"), repo / "testing")
+    write_replay(repo, {"format": 1, "framework": {},
+                        "tests": [{"technique": "T", "guid": "g1", "name": "x",
+                                   "modules": ["process_create/tech"]},
+                                  {"technique": "T", "guid": "g1", "name": "y",
+                                   "modules": ["process_create/tech"]}]})
+    with pytest.raises(sysmongen.BuildError, match="duplicate test GUID"):
+        sysmongen.load_replay(sysmongen.load_modules(repo / "modules"), repo / "testing")
+
+
+def test_coverage_markdown_replay_cell_states(repo):
+    modules = sysmongen.load_modules(repo / "modules")
+    profiles = []
+    cov_tests = sysmongen.coverage(modules, profiles,
+                                   {"by_technique": {"T1218.005": [{"guid": "g1", "name": "m",
+                                                                    "passed": True}]},
+                                    "has_results": True, "generated": "x"})
+    md = sysmongen.coverage_markdown(cov_tests, profiles, ref(),
+                                     {"by_technique": {}, "has_results": True, "generated": "x"})
+    assert "✅ 1/1" in md
+
+
 def test_build_fails_when_exclude_hides_include(repo):
     write_module(repo, "dns_query/inc", "DnsQuery", "include",
                  '<QueryName condition="end with">trycloudflare.com</QueryName>')

@@ -60,7 +60,7 @@ testing/                     Windows load test and rejection probes
 dist/                        generated configs, catalog.json, coverage.md (committed; CI checks it is current)
 data/                        pinned ATT&CK and SigmaHQ indexes the build validates against
 deployment/                  on-host PowerShell (install/update)
-atomics/<technique>.yml      (phase 4) which Atomic tests prove which module
+testing/replay/manifest.json which Atomic Red Team tests (by GUID) prove which module
 ```
 
 Profiles are TOML rather than YAML so the generator needs only the Python

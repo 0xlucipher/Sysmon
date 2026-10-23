@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `trycloudflare.com` detection.
 
 ### Added (phase 4)
+- Attack-replay testing: `testing/replay/` runs Atomic Red Team tests by GUID on
+  a Windows runner (`.github/workflows/replay.yml`) and asserts the Sysmon events
+  each technique module depends on actually fire. The coverage matrix's Replay
+  column is generated from the manifest and the committed run results. Attack
+  commands are not vendored — the runner fetches them from a pinned Atomic Red
+  Team checkout.
 - Generator check: the build fails when an exclusion makes an include rule
   impossible to log. Validator warning for unanchored `QueryName` exclusions.
 - Longer, warmed-up volume baseline with a DNS telemetry check.

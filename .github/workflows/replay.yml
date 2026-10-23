@@ -1,0 +1,36 @@
+name: Attack replay
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - modules/**
+      - dist/**
+      - testing/replay/**
+      - .github/workflows/replay.yml
+  schedule:
+    - cron: "41 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    name: Replay atomics and assert Sysmon events
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run replay
+        shell: pwsh
+        run: ./testing/replay/Invoke-Replay.ps1 -OutputPath replay-report.md
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: if (Test-Path replay-report.md) { Get-Content replay-report.md >> $env:GITHUB_STEP_SUMMARY }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: replay-report
+          path: |
+            replay-report.md
+            replay-report.json

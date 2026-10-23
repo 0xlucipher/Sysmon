@@ -6,73 +6,73 @@ ATT&CK v19.2 · SigmaHQ r2026-07-01. Per profile: **all events** = an
 event type the technique's modules watch is logged in full; **rules** = the modules'
 include rules are active on a selectively logged event; **–** = not collected.
 Sigma = SigmaHQ detections that read this telemetry.
-Replay = an Atomic Red Team test proved the events appear (phase 4).
+Replay = Atomic Red Team tests wired for this technique in [.github/workflows/replay.yml](../.github/workflows/replay.yml); the count is how many. `mapped` = wired but no committed run yet; the workflow asserts the events on a Windows runner.
 
 | Technique | Tactics | balanced | dc | verbose | Sysmon events | Sigma | Replay |
 |---|---|---|---|---|---|---|---|
-| T1003.001 LSASS Memory | credential-access | all events + rules | all events + rules | all events | FileCreate, ImageLoad, ProcessAccess, ProcessCreate, RegistryEvent | 15 | not yet |
-| T1003.002 Security Account Manager | credential-access | all events + rules | all events + rules | all events | FileCreate, ImageLoad, ProcessCreate, RawAccessRead | 8 | not yet |
-| T1003.003 NTDS | credential-access | all events + rules | all events + rules | all events | FileCreate, ProcessCreate | 11 | not yet |
-| T1003.005 Cached Domain Credentials | credential-access | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1003.006 DCSync | credential-access | all events | all events | all events | ProcessCreate | 4 | not yet |
-| T1021.001 Remote Desktop Protocol | lateral-movement | all events + rules | all events + rules | all events | NetworkConnect, ProcessCreate, RegistryEvent | 4 | not yet |
-| T1021.002 SMB/Windows Admin Shares | lateral-movement | all events + rules | all events + rules | all events | FileCreate, NetworkConnect, PipeEvent, ProcessCreate, RegistryEvent | 10 | not yet |
-| T1021.003 Distributed Component Object Model | lateral-movement | all events | all events | all events | NetworkConnect, ProcessCreate | 4 | not yet |
-| T1021.004 SSH | lateral-movement | all events | all events | all events | NetworkConnect, ProcessCreate | 4 | not yet |
-| T1021.006 Windows Remote Management | lateral-movement | all events + rules | all events + rules | all events | NetworkConnect, PipeEvent, ProcessCreate | 7 | not yet |
-| T1027 Obfuscated Files or Information | stealth | all events | all events | all events | ProcessCreate | 3 | not yet |
-| T1027.010 Command Obfuscation | stealth | all events | all events | all events | ProcessCreate | 4 | not yet |
-| T1036.003 Rename Legitimate Utilities | stealth | all events | all events | all events | ProcessCreate | 3 | not yet |
-| T1036.005 Match Legitimate Resource Name or Location | stealth | all events | all events | all events | ProcessCreate | 3 | not yet |
-| T1047 Windows Management Instrumentation | execution | all events + rules | all events + rules | all events | FileCreate, NetworkConnect, PipeEvent, ProcessCreate, WmiEvent | 10 | not yet |
-| T1053.005 Scheduled Task | execution, persistence, privilege-escalation | all events + rules | all events + rules | all events | FileCreate, ProcessCreate, RegistryEvent | 6 | not yet |
-| T1055 Process Injection | stealth, privilege-escalation | all events + rules | all events + rules | all events | CreateRemoteThread, ImageLoad, PipeEvent, ProcessAccess | 7 | not yet |
-| T1055.003 Thread Execution Hijacking | stealth, privilege-escalation | all events + rules | all events + rules | all events | CreateRemoteThread, ProcessAccess | 3 | not yet |
-| T1055.004 Asynchronous Procedure Call | stealth, privilege-escalation | all events | all events | all events | CreateRemoteThread | 3 | not yet |
-| T1055.011 Extra Window Memory Injection | stealth, privilege-escalation | rules | rules | all events | ProcessAccess | 0 | not yet |
-| T1055.012 Process Hollowing | stealth, privilege-escalation | all events + rules | all events + rules | all events | ProcessAccess, ProcessTampering | 1 | not yet |
-| T1055.013 Process Doppelgänging | stealth, privilege-escalation | all events | all events | all events | ProcessCreate | 0 | not yet |
-| T1059 Command and Scripting Interpreter | execution | all events + rules | all events + rules | all events | FileCreate, NetworkConnect | 1 | not yet |
-| T1059.001 PowerShell | execution | all events + rules | all events + rules | all events | ImageLoad, ProcessCreate | 6 | not yet |
-| T1059.003 Windows Command Shell | execution | all events | all events | all events | ProcessCreate | 2 | not yet |
-| T1059.005 Visual Basic | execution | all events | all events | all events | ProcessCreate | 1 | not yet |
-| T1059.007 JavaScript | execution | all events | all events | all events | ProcessCreate | 1 | not yet |
-| T1070.004 File Deletion | stealth | rules | rules | all events + rules | FileDelete, FileDeleteDetected | 1 | not yet |
-| T1090.003 Multi-hop Proxy | command-and-control | rules | rules | all events | DnsQuery | 2 | not yet |
-| T1105 Ingress Tool Transfer | command-and-control | all events + rules | all events + rules | all events | FileCreate, FileExecutableDetected, ProcessCreate | 3 | not yet |
-| T1137 Office Application Startup | persistence | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1140 Deobfuscate/Decode Files or Information | stealth | all events | all events | all events | ProcessCreate | 3 | not yet |
-| T1176.001 Browser Extensions | persistence | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1204.002 Malicious File | execution | rules | rules | all events | FileCreate, FileExecutableDetected | 0 | not yet |
-| T1204.004 Malicious Copy and Paste | execution | all events + rules | all events + rules | all events | ProcessCreate, RegistryEvent | 4 | not yet |
-| T1218.005 Mshta | stealth | all events + rules | all events + rules | all events | DnsQuery, ProcessCreate | 4 | not yet |
-| T1218.010 Regsvr32 | stealth | all events + rules | all events + rules | all events | DnsQuery, ProcessCreate | 4 | not yet |
-| T1218.011 Rundll32 | stealth | all events + rules | all events + rules | all events | DnsQuery, ProcessCreate | 4 | not yet |
-| T1484.001 Group Policy Modification | defense-impairment, privilege-escalation | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1490 Inhibit System Recovery | impact | all events + rules | all events + rules | all events | FileDeleteDetected, ProcessCreate | 5 | not yet |
-| T1496.001 Compute Hijacking | impact | rules | rules | all events | DnsQuery | 2 | not yet |
-| T1505.003 Web Shell | persistence | rules | rules | all events | FileCreate | 0 | not yet |
-| T1543.003 Windows Service | persistence, privilege-escalation | all events + rules | all events + rules | all events | ProcessCreate, RegistryEvent | 5 | not yet |
-| T1546.003 Windows Management Instrumentation Event Subscription | privilege-escalation, persistence | all events | all events | all events | WmiEvent | 3 | not yet |
-| T1546.010 AppInit DLLs | privilege-escalation, persistence | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1546.012 Image File Execution Options Injection | privilege-escalation, persistence | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1546.015 Component Object Model Hijacking | privilege-escalation, persistence | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1547.001 Registry Run Keys / Startup Folder | persistence, privilege-escalation | rules | rules | all events | FileCreate, RegistryEvent | 5 | not yet |
-| T1547.004 Winlogon Helper DLL | persistence, privilege-escalation | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1547.005 Security Support Provider | persistence, privilege-escalation | rules | rules | all events | ImageLoad, RegistryEvent | 0 | not yet |
-| T1547.014 Active Setup | persistence, privilege-escalation | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1548.002 Bypass User Account Control | privilege-escalation | rules | rules | all events | RegistryEvent | 0 | not yet |
-| T1553.005 Mark-of-the-Web Bypass | defense-impairment | rules | rules | all events | FileCreate | 0 | not yet |
-| T1555.004 Windows Credential Manager | credential-access | rules | rules | all events | ImageLoad | 2 | not yet |
-| T1564 Hide Artifacts | stealth | rules | rules | all events | FileCreate | 0 | not yet |
-| T1568 Dynamic Resolution | command-and-control | rules | rules | all events | DnsQuery | 2 | not yet |
-| T1569.002 Service Execution | execution | rules | rules | all events | PipeEvent | 3 | not yet |
-| T1572 Protocol Tunneling | command-and-control | rules | rules | all events | DnsQuery | 2 | not yet |
-| T1574.001 DLL | stealth, execution | rules | rules | all events | ImageLoad | 0 | not yet |
-| T1685 Disable or Modify Tools | defense-impairment | all events + rules | all events + rules | all events | ProcessCreate, RegistryEvent | 6 | not yet |
-| T1685.001 Disable or Modify Windows Event Log | defense-impairment | all events | all events | all events | ProcessCreate | 1 | not yet |
-| T1685.005 Clear Windows Event Logs | defense-impairment | all events + rules | all events + rules | all events | FileDeleteDetected, ProcessCreate | 2 | not yet |
-| T1686 Disable or Modify System Firewall | defense-impairment | rules | rules | all events | RegistryEvent | 1 | not yet |
+| T1003.001 LSASS Memory | credential-access | all events + rules | all events + rules | all events | FileCreate, ImageLoad, ProcessAccess, ProcessCreate, RegistryEvent | 15 | mapped (1) |
+| T1003.002 Security Account Manager | credential-access | all events + rules | all events + rules | all events | FileCreate, ImageLoad, ProcessCreate, RawAccessRead | 8 | – |
+| T1003.003 NTDS | credential-access | all events + rules | all events + rules | all events | FileCreate, ProcessCreate | 11 | – |
+| T1003.005 Cached Domain Credentials | credential-access | rules | rules | all events | RegistryEvent | 0 | – |
+| T1003.006 DCSync | credential-access | all events | all events | all events | ProcessCreate | 4 | – |
+| T1021.001 Remote Desktop Protocol | lateral-movement | all events + rules | all events + rules | all events | NetworkConnect, ProcessCreate, RegistryEvent | 4 | – |
+| T1021.002 SMB/Windows Admin Shares | lateral-movement | all events + rules | all events + rules | all events | FileCreate, NetworkConnect, PipeEvent, ProcessCreate, RegistryEvent | 10 | – |
+| T1021.003 Distributed Component Object Model | lateral-movement | all events | all events | all events | NetworkConnect, ProcessCreate | 4 | – |
+| T1021.004 SSH | lateral-movement | all events | all events | all events | NetworkConnect, ProcessCreate | 4 | – |
+| T1021.006 Windows Remote Management | lateral-movement | all events + rules | all events + rules | all events | NetworkConnect, PipeEvent, ProcessCreate | 7 | – |
+| T1027 Obfuscated Files or Information | stealth | all events | all events | all events | ProcessCreate | 3 | – |
+| T1027.010 Command Obfuscation | stealth | all events | all events | all events | ProcessCreate | 4 | mapped (1) |
+| T1036.003 Rename Legitimate Utilities | stealth | all events | all events | all events | ProcessCreate | 3 | – |
+| T1036.005 Match Legitimate Resource Name or Location | stealth | all events | all events | all events | ProcessCreate | 3 | – |
+| T1047 Windows Management Instrumentation | execution | all events + rules | all events + rules | all events | FileCreate, NetworkConnect, PipeEvent, ProcessCreate, WmiEvent | 10 | mapped (1) |
+| T1053.005 Scheduled Task | execution, persistence, privilege-escalation | all events + rules | all events + rules | all events | FileCreate, ProcessCreate, RegistryEvent | 6 | mapped (1) |
+| T1055 Process Injection | stealth, privilege-escalation | all events + rules | all events + rules | all events | CreateRemoteThread, ImageLoad, PipeEvent, ProcessAccess | 7 | – |
+| T1055.003 Thread Execution Hijacking | stealth, privilege-escalation | all events + rules | all events + rules | all events | CreateRemoteThread, ProcessAccess | 3 | – |
+| T1055.004 Asynchronous Procedure Call | stealth, privilege-escalation | all events | all events | all events | CreateRemoteThread | 3 | – |
+| T1055.011 Extra Window Memory Injection | stealth, privilege-escalation | rules | rules | all events | ProcessAccess | 0 | – |
+| T1055.012 Process Hollowing | stealth, privilege-escalation | all events + rules | all events + rules | all events | ProcessAccess, ProcessTampering | 1 | – |
+| T1055.013 Process Doppelgänging | stealth, privilege-escalation | all events | all events | all events | ProcessCreate | 0 | – |
+| T1059 Command and Scripting Interpreter | execution | all events + rules | all events + rules | all events | FileCreate, NetworkConnect | 1 | – |
+| T1059.001 PowerShell | execution | all events + rules | all events + rules | all events | ImageLoad, ProcessCreate | 6 | mapped (1) |
+| T1059.003 Windows Command Shell | execution | all events | all events | all events | ProcessCreate | 2 | mapped (1) |
+| T1059.005 Visual Basic | execution | all events | all events | all events | ProcessCreate | 1 | – |
+| T1059.007 JavaScript | execution | all events | all events | all events | ProcessCreate | 1 | – |
+| T1070.004 File Deletion | stealth | rules | rules | all events + rules | FileDelete, FileDeleteDetected | 1 | – |
+| T1090.003 Multi-hop Proxy | command-and-control | rules | rules | all events | DnsQuery | 2 | – |
+| T1105 Ingress Tool Transfer | command-and-control | all events + rules | all events + rules | all events | FileCreate, FileExecutableDetected, ProcessCreate | 3 | – |
+| T1137 Office Application Startup | persistence | rules | rules | all events | RegistryEvent | 0 | – |
+| T1140 Deobfuscate/Decode Files or Information | stealth | all events | all events | all events | ProcessCreate | 3 | – |
+| T1176.001 Browser Extensions | persistence | rules | rules | all events | RegistryEvent | 0 | – |
+| T1204.002 Malicious File | execution | rules | rules | all events | FileCreate, FileExecutableDetected | 0 | – |
+| T1204.004 Malicious Copy and Paste | execution | all events + rules | all events + rules | all events | ProcessCreate, RegistryEvent | 4 | – |
+| T1218.005 Mshta | stealth | all events + rules | all events + rules | all events | DnsQuery, ProcessCreate | 4 | mapped (1) |
+| T1218.010 Regsvr32 | stealth | all events + rules | all events + rules | all events | DnsQuery, ProcessCreate | 4 | – |
+| T1218.011 Rundll32 | stealth | all events + rules | all events + rules | all events | DnsQuery, ProcessCreate | 4 | mapped (1) |
+| T1484.001 Group Policy Modification | defense-impairment, privilege-escalation | rules | rules | all events | RegistryEvent | 0 | – |
+| T1490 Inhibit System Recovery | impact | all events + rules | all events + rules | all events | FileDeleteDetected, ProcessCreate | 5 | – |
+| T1496.001 Compute Hijacking | impact | rules | rules | all events | DnsQuery | 2 | – |
+| T1505.003 Web Shell | persistence | rules | rules | all events | FileCreate | 0 | – |
+| T1543.003 Windows Service | persistence, privilege-escalation | all events + rules | all events + rules | all events | ProcessCreate, RegistryEvent | 5 | mapped (1) |
+| T1546.003 Windows Management Instrumentation Event Subscription | privilege-escalation, persistence | all events | all events | all events | WmiEvent | 3 | mapped (1) |
+| T1546.010 AppInit DLLs | privilege-escalation, persistence | rules | rules | all events | RegistryEvent | 0 | – |
+| T1546.012 Image File Execution Options Injection | privilege-escalation, persistence | rules | rules | all events | RegistryEvent | 0 | – |
+| T1546.015 Component Object Model Hijacking | privilege-escalation, persistence | rules | rules | all events | RegistryEvent | 0 | – |
+| T1547.001 Registry Run Keys / Startup Folder | persistence, privilege-escalation | rules | rules | all events | FileCreate, RegistryEvent | 5 | mapped (1) |
+| T1547.004 Winlogon Helper DLL | persistence, privilege-escalation | rules | rules | all events | RegistryEvent | 0 | – |
+| T1547.005 Security Support Provider | persistence, privilege-escalation | rules | rules | all events | ImageLoad, RegistryEvent | 0 | – |
+| T1547.014 Active Setup | persistence, privilege-escalation | rules | rules | all events | RegistryEvent | 0 | – |
+| T1548.002 Bypass User Account Control | privilege-escalation | rules | rules | all events | RegistryEvent | 0 | – |
+| T1553.005 Mark-of-the-Web Bypass | defense-impairment | rules | rules | all events | FileCreate | 0 | – |
+| T1555.004 Windows Credential Manager | credential-access | rules | rules | all events | ImageLoad | 2 | – |
+| T1564 Hide Artifacts | stealth | rules | rules | all events | FileCreate | 0 | – |
+| T1568 Dynamic Resolution | command-and-control | rules | rules | all events | DnsQuery | 2 | – |
+| T1569.002 Service Execution | execution | rules | rules | all events | PipeEvent | 3 | – |
+| T1572 Protocol Tunneling | command-and-control | rules | rules | all events | DnsQuery | 2 | – |
+| T1574.001 DLL | stealth, execution | rules | rules | all events | ImageLoad | 0 | – |
+| T1685 Disable or Modify Tools | defense-impairment | all events + rules | all events + rules | all events | ProcessCreate, RegistryEvent | 6 | – |
+| T1685.001 Disable or Modify Windows Event Log | defense-impairment | all events | all events | all events | ProcessCreate | 1 | – |
+| T1685.005 Clear Windows Event Logs | defense-impairment | all events + rules | all events + rules | all events | FileDeleteDetected, ProcessCreate | 2 | – |
+| T1686 Disable or Modify System Firewall | defense-impairment | rules | rules | all events | RegistryEvent | 1 | – |
 
 ## Modules and Sigma rules per technique
 

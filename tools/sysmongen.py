@@ -428,7 +428,43 @@ def build_profile(name: str, profiles_dir: Path, modules: dict[str, Module]) -> 
     return profile, render(root)
 
 
-def coverage(modules: dict[str, Module], profiles: list[Profile]) -> dict[str, dict]:
+def load_replay(modules: dict[str, Module], testing_dir: Path = ROOT / "testing") -> dict | None:
+    """Read the replay manifest (and committed results, if any).
+
+    Returns None when no manifest is present. Otherwise a dict mapping each
+    technique ID to the replay tests that cover it, derived from the modules each
+    test lists, plus whether a committed results file records a pass for each.
+    """
+    mpath = testing_dir / "replay" / "manifest.json"
+    if not mpath.exists():
+        return None
+    manifest = json.loads(mpath.read_text(encoding="utf-8"))
+    rpath = testing_dir / "replay" / "results.json"
+    results = json.loads(rpath.read_text(encoding="utf-8")) if rpath.exists() else None
+    pass_by_guid = {t["guid"]: bool(t["pass"]) for t in (results or {}).get("tests", [])}
+
+    by_technique: dict[str, list[dict]] = {}
+    seen_guids = set()
+    for test in manifest["tests"]:
+        if test["guid"] in seen_guids:
+            raise BuildError(f"replay manifest: duplicate test GUID {test['guid']}")
+        seen_guids.add(test["guid"])
+        for mid in test["modules"]:
+            mod = modules.get(mid)
+            if mod is None:
+                raise BuildError(f"replay manifest: test {test['guid']} names unknown module {mid}")
+            for tid in mod.techniques:
+                record = {"guid": test["guid"], "name": test["name"],
+                          "passed": pass_by_guid.get(test["guid"])}
+                dest = by_technique.setdefault(tid, [])
+                if test["guid"] not in {r["guid"] for r in dest}:
+                    dest.append(record)
+    return {"by_technique": by_technique, "has_results": results is not None,
+            "generated": (results or {}).get("generated_utc")}
+
+
+def coverage(modules: dict[str, Module], profiles: list[Profile],
+             replay: dict | None = None) -> dict[str, dict]:
     """Per technique: which modules declare it, and how each profile collects its events.
 
     For each profile, the states that apply across the technique's modules:
@@ -441,7 +477,7 @@ def coverage(modules: dict[str, Module], profiles: list[Profile]) -> dict[str, d
         if m.onmatch != "include":
             continue
         for tid in m.techniques:
-            entry = out.setdefault(tid, {"modules": [], "events": [], "sigma": [],
+            entry = out.setdefault(tid, {"modules": [], "events": [], "sigma": [], "replay": [],
                                          "profiles": {p.name: [] for p in profiles}})
             entry["modules"].append(m.id)
             if m.event not in entry["events"]:
@@ -453,6 +489,10 @@ def coverage(modules: dict[str, Module], profiles: list[Profile]) -> dict[str, d
                     "rules" if mode == "selective" and m.id in p.modules else None)
                 if state and state not in entry["profiles"][p.name]:
                     entry["profiles"][p.name].append(state)
+    if replay:
+        for tid, tests in replay["by_technique"].items():
+            if tid in out:
+                out[tid]["replay"] = tests
     for entry in out.values():
         entry["events"].sort()
         for states in entry["profiles"].values():
@@ -460,12 +500,31 @@ def coverage(modules: dict[str, Module], profiles: list[Profile]) -> dict[str, d
     return dict(sorted(out.items()))
 
 
-def coverage_markdown(cov: dict[str, dict], profiles: list[Profile], ref: RefData) -> str:
+def coverage_markdown(cov: dict[str, dict], profiles: list[Profile], ref: RefData,
+                      replay: dict | None = None) -> str:
     label = {"all": "all events", "rules": "rules"}
     names = [p.name for p in profiles]
 
     def cell(states: list[str]) -> str:
         return " + ".join(label[s] for s in states) or "–"
+
+    def replay_cell(tests: list[dict]) -> str:
+        if not tests:
+            return "–"
+        if not (replay and replay["has_results"]):
+            return f"mapped ({len(tests)})"
+        passed = sum(1 for t in tests if t["passed"])
+        return f"✅ {passed}/{len(tests)}" if passed == len(tests) else f"⚠️ {passed}/{len(tests)}"
+
+    if replay and replay["has_results"]:
+        replay_doc = (f"Replay = Atomic Red Team tests that fire this technique's events, proven on a "
+                      f"Windows runner (last run {replay['generated']}); ✅ = all passed. See "
+                      "[.github/workflows/replay.yml](../.github/workflows/replay.yml).")
+    else:
+        replay_doc = ("Replay = Atomic Red Team tests wired for this technique in "
+                      "[.github/workflows/replay.yml](../.github/workflows/replay.yml); the count is how "
+                      "many. `mapped` = wired but no committed run yet; the workflow asserts the events "
+                      "on a Windows runner.")
 
     lines = [
         "# ATT&CK coverage",
@@ -476,7 +535,7 @@ def coverage_markdown(cov: dict[str, dict], profiles: list[Profile], ref: RefDat
         "event type the technique's modules watch is logged in full; **rules** = the modules'",
         "include rules are active on a selectively logged event; **–** = not collected.",
         "Sigma = SigmaHQ detections that read this telemetry.",
-        "Replay = an Atomic Red Team test proved the events appear (phase 4).",
+        replay_doc,
         "",
         "| Technique | Tactics | " + " | ".join(names) + " | Sysmon events | Sigma | Replay |",
         "|---|---|" + "---|" * len(names) + "---|---|---|",
@@ -486,7 +545,7 @@ def coverage_markdown(cov: dict[str, dict], profiles: list[Profile], ref: RefDat
         lines.append(
             f"| {tid} {t.get('name', '?')} | {', '.join(t.get('tactics', []))} | "
             + " | ".join(cell(e["profiles"][n]) for n in names)
-            + f" | {', '.join(e['events'])} | {len(e['sigma'])} | not yet |")
+            + f" | {', '.join(e['events'])} | {len(e['sigma'])} | {replay_cell(e['replay'])} |")
     lines += ["", "## Modules and Sigma rules per technique", ""]
     for tid, e in cov.items():
         lines += [f"### {tid} {ref.technique_name(tid)}", ""]
@@ -559,9 +618,10 @@ def build_all(modules_dir: Path, profiles_dir: Path, verbose: bool = False,
     unused = sorted(set(modules) - {m for p in profiles for m in p.modules})
     if unused:
         print(f"  {len(unused)} module(s) not used by any profile: {', '.join(unused)}")
-    cov = coverage(modules, profiles)
+    replay = load_replay(modules, modules_dir.parent / "testing")
+    cov = coverage(modules, profiles, replay)
     outputs["catalog.json"] = catalog(modules, profiles, ref, cov)
-    outputs["coverage.md"] = coverage_markdown(cov, profiles, ref)
+    outputs["coverage.md"] = coverage_markdown(cov, profiles, ref, replay)
     return outputs
 
 

@@ -38,7 +38,7 @@ Phase 2 replaced them with modules, profiles and a generator.
 | Same event and `onmatch` in several RuleGroups | Modules repeat e.g. `ProcessCreate include` 3×. Unclear semantics once merged. | ✅² generator merges per event and onmatch |
 | Profiles (`minimal`, `base`, `comprehensive`, `forensics`, `modular`) | Five overlapping hand-written files. Design calls for three generated profiles. | ✅² deleted → `dist/sysmon-{balanced,verbose,dc}.xml` |
 | `examples/*` (workstation, server, DC) | Copies of profile content. Hand-maintained. | ✅² deleted; DC rules → `dc_*` modules and the `dc` profile. Workstation/server copies dropped. |
-| Technique modules (T1003, T1021, T1047, T1053, T1055, T1059) | Useful rule content, but mixed event types per group and no test IDs. | ✅² split into `t<id>_*` modules (test IDs in phase 4) |
+| Technique modules (T1003, T1021, T1047, T1053, T1055, T1059) | Useful rule content, but mixed event types per group and no test IDs. | ✅² split into `t<id>_*` modules; ✅⁴ Atomic test GUIDs wired for the priority techniques in `testing/replay/manifest.json` |
 | Category modules (01, 03, 10, 13) | Overlap with technique modules. | ✅² kept as optional `extended_*` modules, not in any profile |
 | Exclusion modules | Reasonable noise lists, but several exclusions hid attacks (see phase 2 findings). `environment_specific_template.xml` was placeholders only. | ✅² fixed, became `noise_*` modules for `verbose`. Template dropped. |
 | `forensics` profile | Uses `begin with C:\` as "log all" (misses other drives and UNC paths); captures clipboard. | superseded by `verbose` (empty exclude, no clipboard) |
@@ -54,7 +54,7 @@ Phase 2 replaced them with modules, profiles and a generator.
 | Real Sysmon load test | Did not exist. | ✅ `testing/Test-SysmonLoad.ps1` on a Windows runner |
 | CI | No `.github/`. | ✅ `validate.yml` (lint + Windows load) |
 | PowerShell linting | No PSScriptAnalyzer. | ✅² CI job (error severity) |
-| Atomic Red Team replays | Missing. | add (phase 4) |
+| Atomic Red Team replays | Missing. | ✅⁴ `testing/replay/` + `replay.yml` |
 
 ## Deployment and performance scripts
 
@@ -116,6 +116,7 @@ That is a phase 3 topic.
 
 | Area | Finding | Fix |
 |---|---|---|
+| Atomic Red Team replays | Missing: coverage claimed detections without proving the events fire. | ✅⁴ `testing/replay/` runs Atomic tests by GUID on a Windows runner (`.github/workflows/replay.yml`) and asserts the expected Sysmon event IDs appear. The coverage matrix's Replay column is generated from the manifest and the committed results. Attack commands are not vendored; the runner fetches them from a pinned Atomic Red Team checkout. |
 | DNS exclusions | `QueryName end with microsoft.com` (and 20 similar) also matched lookalikes such as `notmicrosoft.com`. | ✅⁴ anchored: `is` the domain, `end with .<domain>` for subdomains. The validator warns on unanchored domain excludes. |
 | DNS exclusions | Whole cloud platforms excluded (`amazonaws.com`, `azure.com`, `cloudflare.com`, `googleusercontent.com`). Attackers host C2 there, and the `cloudflare.com` exclusion silently cancelled this config's own `trycloudflare.com` tunnel detection. | ✅⁴ removed. The generator now fails the build when an exclusion hides an include rule. |
 | DNS telemetry | First volume run logged zero DNS events (ID 22) in every profile, including `verbose`. | ✅⁴ resolved: not a config problem. Unique names looked up via `Resolve-DnsName`, .NET and `ping` are all logged. The workload looked up the same name repeatedly, and answers served from the DNS client cache were not logged (60+ lookups produced 2 events). Keep this in mind when hunting: a name is logged when it is resolved, not on every use. |
