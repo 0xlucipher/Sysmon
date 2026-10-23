@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "framework": {
+    "runner": "invoke-atomicredteam",
+    "atomics_repo": "redcanaryco/atomic-red-team",
+    "atomics_ref": "1edbe50b8f49560110e6cf85161c1ef75a5732b7",
+    "profile": "balanced",
+    "note": "Attack commands are NOT stored here. Invoke-AtomicTest fetches and runs each test by GUID from the pinned Atomic Red Team checkout at run time. This file records only which test proves which module and which Sysmon event IDs must appear."
+  },
+  "tests": [
+    {
+      "technique": "T1003.001",
+      "guid": "2536dee2-12fb-459a-8c37-971844fa73be",
+      "name": "Dump LSASS.exe Memory using comsvcs.dll",
+      "elevation": true,
+      "expect": ["ProcessAccess", "FileCreate"],
+      "modules": ["process_access/t1003_001_lsass_any", "file_create/t1003_001_dump_files"]
+    },
+    {
+      "technique": "T1547.001",
+      "guid": "e55be3fd-3521-4610-9d1a-e210e42dcf05",
+      "name": "Reg Key Run",
+      "elevation": false,
+      "expect": ["RegistryEvent", "ProcessCreate"],
+      "modules": ["registry_event/t1547_001_run_keys", "process_create/t1059_003_cmd"]
+    },
+    {
+      "technique": "T1053.005",
+      "guid": "af9fd58f-c4ac-4bf2-a9ba-224b71ff25fd",
+      "name": "Powershell Cmdlet Scheduled Task",
+      "elevation": false,
+      "expect": ["RegistryEvent", "FileCreate"],
+      "modules": ["registry_event/t1053_scheduled_task", "file_create/t1053_scheduled_task"]
+    },
+    {
+      "technique": "T1543.003",
+      "guid": "491a4af6-a521-4b74-b23b-f7b3f1ee9e77",
+      "name": "Service Installation PowerShell",
+      "elevation": true,
+      "expect": ["RegistryEvent", "ProcessCreate"],
+      "modules": ["registry_event/t1543_003_services", "process_create/t1543_003_services"]
+    },
+    {
+      "technique": "T1218.005",
+      "guid": "8707a805-2b76-4f32-b1c0-14e558205772",
+      "name": "Mshta used to Execute PowerShell",
+      "elevation": false,
+      "expect": ["ProcessCreate"],
+      "modules": ["process_create/t1218_005_mshta"]
+    },
+    {
+      "technique": "T1218.011",
+      "guid": "638730e7-7aed-43dc-bf8c-8117f805f5bb",
+      "name": "Rundll32 execute VBscript command",
+      "elevation": false,
+      "expect": ["ProcessCreate"],
+      "modules": ["process_create/t1218_011_rundll32"]
+    },
+    {
+      "technique": "T1027",
+      "guid": "a50d5a97-2531-499e-a1de-5544c74432c6",
+      "name": "Execute base64-encoded PowerShell",
+      "elevation": false,
+      "expect": ["ProcessCreate"],
+      "modules": ["process_create/t1059_001_powershell"]
+    },
+    {
+      "technique": "T1546.003",
+      "guid": "3c64f177-28e2-49eb-a799-d767b24dd1e0",
+      "name": "Persistence via WMI Event Subscription - CommandLineEventConsumer",
+      "elevation": true,
+      "expect": ["WmiEvent"],
+      "modules": ["wmi_event/t1047_wmi"]
+    }
+  ]
+}

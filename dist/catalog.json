@@ -2212,6 +2212,13 @@
         "2704ab9e-afe2-4854-a3b1-0c0706d03578",
         "b1876533-4ed5-4a83-90f3-b8645840a413"
       ],
+      "replay": [
+        {
+          "guid": "2536dee2-12fb-459a-8c37-971844fa73be",
+          "name": "Dump LSASS.exe Memory using comsvcs.dll",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all",
@@ -2253,6 +2260,7 @@
         "b1876533-4ed5-4a83-90f3-b8645840a413",
         "db809f10-56ce-4420-8c86-d6a7d793c79c"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2295,6 +2303,7 @@
         "2704ab9e-afe2-4854-a3b1-0c0706d03578",
         "b1876533-4ed5-4a83-90f3-b8645840a413"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2321,6 +2330,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -2350,6 +2360,7 @@
         "2704ab9e-afe2-4854-a3b1-0c0706d03578",
         "b1876533-4ed5-4a83-90f3-b8645840a413"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2383,6 +2394,7 @@
         "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
         "3abd6094-7027-475f-9630-8ab9be7b9725"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2429,6 +2441,7 @@
         "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
         "3abd6094-7027-475f-9630-8ab9be7b9725"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2462,6 +2475,7 @@
         "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
         "3abd6094-7027-475f-9630-8ab9be7b9725"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2493,6 +2507,7 @@
         "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
         "3abd6094-7027-475f-9630-8ab9be7b9725"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2529,6 +2544,7 @@
         "734f8d9b-42b8-41b2-bcf5-abaf49d5a3c8",
         "3abd6094-7027-475f-9630-8ab9be7b9725"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2559,6 +2575,7 @@
         "22e58743-4ac8-4a9f-bf19-00a0428d8c5f",
         "e32d4572-9826-4738-b651-95fa63747e8a"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2588,6 +2605,13 @@
         "88f680b8-070e-402c-ae11-d2914f2257f1",
         "d7bcd677-645d-4691-a8d4-7a5602b780d1"
       ],
+      "replay": [
+        {
+          "guid": "a50d5a97-2531-499e-a1de-5544c74432c6",
+          "name": "Execute base64-encoded PowerShell",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all"
@@ -2616,6 +2640,7 @@
         "e22a6eb2-f8a5-44b5-8b44-a2dbd47b1144",
         "3dfd06d2-eaf4-4532-9555-68aca59f57c4"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2644,6 +2669,7 @@
         "e22a6eb2-f8a5-44b5-8b44-a2dbd47b1144",
         "3dfd06d2-eaf4-4532-9555-68aca59f57c4"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2687,6 +2713,13 @@
         "fe21810c-2a8c-478f-8dd3-5a287fb2a0e0",
         "0f06a3a5-6a09-413f-8743-e6cf35561297"
       ],
+      "replay": [
+        {
+          "guid": "3c64f177-28e2-49eb-a799-d767b24dd1e0",
+          "name": "Persistence via WMI Event Subscription - CommandLineEventConsumer",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all",
@@ -2725,6 +2758,13 @@
         "39019a4e-317f-4ce3-ae63-309a8c6b53c5",
         "4720b7df-40c3-48fd-bbdf-fd4b3c464f0d",
         "5b16df71-8615-4f7f-ac9b-6c43c0509e61"
+      ],
+      "replay": [
+        {
+          "guid": "af9fd58f-c4ac-4bf2-a9ba-224b71ff25fd",
+          "name": "Powershell Cmdlet Scheduled Task",
+          "passed": null
+        }
       ],
       "profiles": {
         "balanced": [
@@ -2767,6 +2807,7 @@
         "85adeb13-4fc9-4e68-8a4a-c7cb2c336eb7",
         "fe3ac066-98bb-432a-b1e7-a5229cb39d4a"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2800,6 +2841,7 @@
         "6309645e-122d-4c5b-bb2b-22e4f9c2fa42",
         "02d1d718-dd13-41af-989d-ea85c7fab93f"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2831,6 +2873,7 @@
         "6309645e-122d-4c5b-bb2b-22e4f9c2fa42",
         "02d1d718-dd13-41af-989d-ea85c7fab93f"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2856,6 +2899,7 @@
         "ProcessAccess"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -2885,6 +2929,7 @@
       "sigma": [
         "c4b890e5-8d8c-4496-8c66-c805753817cd"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2912,6 +2957,7 @@
         "ProcessCreate"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -2940,6 +2986,7 @@
       "sigma": [
         "992a6cae-db6a-43c8-9cec-76d7195c96fc"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -2975,6 +3022,13 @@
         "88f680b8-070e-402c-ae11-d2914f2257f1",
         "d7bcd677-645d-4691-a8d4-7a5602b780d1"
       ],
+      "replay": [
+        {
+          "guid": "a50d5a97-2531-499e-a1de-5544c74432c6",
+          "name": "Execute base64-encoded PowerShell",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all",
@@ -3004,6 +3058,13 @@
         "a16980c2-0c56-4de0-9a79-17971979efdd",
         "438025f9-5856-4663-83f7-52f878a70a50"
       ],
+      "replay": [
+        {
+          "guid": "e55be3fd-3521-4610-9d1a-e210e42dcf05",
+          "name": "Reg Key Run",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all"
@@ -3030,6 +3091,7 @@
       "sigma": [
         "cea72823-df4d-4567-950c-0b579eaf0846"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -3056,6 +3118,7 @@
       "sigma": [
         "cea72823-df4d-4567-950c-0b579eaf0846"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -3085,6 +3148,7 @@
       "sigma": [
         "63c779ba-f638-40a0-a593-ddd45e8b1ddc"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3113,6 +3177,7 @@
         "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
         "a1d9eec5-33b2-4177-8d24-27fe754d0812"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3145,6 +3210,7 @@
         "2ddef153-167b-4e89-86b6-757a9e65dcac",
         "21dd6d38-2b18-4453-9404-a0fe4a0cc288"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -3171,6 +3237,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3199,6 +3266,7 @@
         "22e58743-4ac8-4a9f-bf19-00a0428d8c5f",
         "e32d4572-9826-4738-b651-95fa63747e8a"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -3223,6 +3291,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3249,6 +3318,7 @@
         "FileExecutableDetected"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3280,6 +3350,7 @@
         "7a1b4c5e-8f3d-4b9a-7c2e-1f4a5b8c6d9e",
         "a7df0e9e-91a5-459a-a003-4cde67c2ff5d"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -3312,6 +3383,13 @@
         "b98d0db6-511d-45de-ad02-e82a98729620",
         "67f113fa-e23d-4271-befa-30113b3e08b1",
         "03cc0c25-389f-4bf8-b48d-11878079f1ca"
+      ],
+      "replay": [
+        {
+          "guid": "8707a805-2b76-4f32-b1c0-14e558205772",
+          "name": "Mshta used to Execute PowerShell",
+          "passed": null
+        }
       ],
       "profiles": {
         "balanced": [
@@ -3346,6 +3424,7 @@
         "2dd2c217-bf68-437a-b57c-fe9fd01d5de8",
         "6f0947a4-1c5e-4e0d-8ac7-53159b8f23ca"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -3379,6 +3458,13 @@
         "2569ed8c-1147-498a-9b8c-2ad3656b10ed",
         "ae9c6a7c-9521-42a6-915e-5aaa8689d529"
       ],
+      "replay": [
+        {
+          "guid": "638730e7-7aed-43dc-bf8c-8117f805f5bb",
+          "name": "Rundll32 execute VBscript command",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all",
@@ -3406,6 +3492,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3438,6 +3525,7 @@
         "1444443e-6757-43e4-9ea4-c8fc705f79a2",
         "21ff4ca9-f13a-41ad-b828-0077b2af2e40"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -3467,6 +3555,7 @@
         "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
         "a1d9eec5-33b2-4177-8d24-27fe754d0812"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3491,6 +3580,7 @@
         "FileCreate"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3524,6 +3614,13 @@
         "612e47e9-8a59-43a6-b404-f48683f45bd6",
         "4a5f5a5e-ac01-474b-9b4e-d61298c9df1d"
       ],
+      "replay": [
+        {
+          "guid": "491a4af6-a521-4b74-b23b-f7b3f1ee9e77",
+          "name": "Service Installation PowerShell",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all",
@@ -3555,6 +3652,13 @@
         "fe21810c-2a8c-478f-8dd3-5a287fb2a0e0",
         "0f06a3a5-6a09-413f-8743-e6cf35561297"
       ],
+      "replay": [
+        {
+          "guid": "3c64f177-28e2-49eb-a799-d767b24dd1e0",
+          "name": "Persistence via WMI Event Subscription - CommandLineEventConsumer",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "all"
@@ -3580,6 +3684,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3605,6 +3710,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3630,6 +3736,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3663,6 +3770,13 @@
         "02ee49e2-e294-4d0f-9278-f5b3212fc588",
         "b7916c2a-fa2f-4795-9477-32b731f70f11"
       ],
+      "replay": [
+        {
+          "guid": "e55be3fd-3521-4610-9d1a-e210e42dcf05",
+          "name": "Reg Key Run",
+          "passed": null
+        }
+      ],
       "profiles": {
         "balanced": [
           "rules"
@@ -3688,6 +3802,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3715,6 +3830,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3740,6 +3856,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3764,6 +3881,7 @@
         "RegistryEvent"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3788,6 +3906,7 @@
         "FileCreate"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3815,6 +3934,7 @@
         "8cde342c-ba48-4b74-b615-172c330f2e93",
         "bdc64095-d59a-42a2-8588-71fd9c9d9abc"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3839,6 +3959,7 @@
         "FileCreate"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3866,6 +3987,7 @@
         "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
         "a1d9eec5-33b2-4177-8d24-27fe754d0812"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3894,6 +4016,7 @@
         "d36f87ea-c403-44d2-aa79-1a0ac7c24456",
         "f318b911-ea88-43f4-9281-0de23ede628e"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3921,6 +4044,7 @@
         "b55ca2a3-7cff-4dda-8bdd-c7bfa63bf544",
         "a1d9eec5-33b2-4177-8d24-27fe754d0812"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3946,6 +4070,7 @@
         "ImageLoad"
       ],
       "sigma": [],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"
@@ -3979,6 +4104,7 @@
         "93d298a1-d28f-47f1-a468-d971e7796679",
         "e1aa95de-610a-427d-b9e7-9b46cfafbe6a"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -4007,6 +4133,7 @@
       "sigma": [
         "cc36992a-4671-4f21-a91d-6c2b72a2edf5"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all"
@@ -4036,6 +4163,7 @@
         "63c779ba-f638-40a0-a593-ddd45e8b1ddc",
         "cc36992a-4671-4f21-a91d-6c2b72a2edf5"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "all",
@@ -4064,6 +4192,7 @@
       "sigma": [
         "974515da-6cc5-4c95-ae65-f97f9150ec7f"
       ],
+      "replay": [],
       "profiles": {
         "balanced": [
           "rules"

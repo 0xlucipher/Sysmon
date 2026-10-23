@@ -86,7 +86,7 @@ profiles/<name>.toml         event modes and module list; a profile can `extends
 tools/sysmongen.py           modules + profiles -> dist/ (configs, catalog.json, coverage.md)
 tools/sysmonlint.py          static validator
 tools/refdata.py             builds the pinned ATT&CK / Sigma indexes in data/
-testing/                     Sysmon load test, rejection probes, deployment and volume tests
+testing/                     Sysmon load test, rejection probes, deployment, volume and attack-replay tests
 deployment/                  install, update, drift check, remove
 ```
 
@@ -108,6 +108,7 @@ the design decisions.
 | Reference data | `data/` matches the pinned ATT&CK and SigmaHQ releases |
 | Load configs into Sysmon | every module and profile loads with `sysmon -c`; broken probes are rejected |
 | Deployment | install → no drift → switch profile → drift detected → remove, using the real scripts |
+| Attack replay | Atomic Red Team tests run on a Windows runner; the expected Sysmon event IDs must fire for each priority technique |
 | PowerShell analysis | PSScriptAnalyzer, error severity |
 
 ## ATT&CK coverage
@@ -121,6 +122,14 @@ See **[dist/coverage.md](dist/coverage.md)**. For each technique it lists:
 The current focus is about 20 of the most prevalent Windows endpoint techniques
 (Red Canary Threat Detection Report). Techniques use ATT&CK v19 IDs, for
 example `T1685` (formerly `T1562.001`).
+
+The **Replay** column is proof, not a claim. For the priority techniques,
+`.github/workflows/replay.yml` runs the matching [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team)
+tests on a Windows runner and checks that the Sysmon events each module depends
+on actually appear. The repository stores only the test GUIDs and the expected
+event IDs ([testing/replay/manifest.json](testing/replay/manifest.json)); the
+attack commands are fetched from a pinned Atomic Red Team checkout at run time,
+never vendored here.
 
 Sysmon only sees the endpoint. Cloud and identity techniques, encrypted C2
 content and off-host activity need other log sources.
