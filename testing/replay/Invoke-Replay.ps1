@@ -73,22 +73,28 @@ function Install-Sysmon {
 }
 
 function Install-AtomicRunner {
-    param([string]$AtomicsRef)
-    # Install the runner and the atomics folder pinned to the manifest's commit.
+    param([string]$AtomicsRef, [string[]]$Techniques)
+    # Install the runner and check out only the atomics folders this run needs,
+    # pinned to the manifest's commit. A full checkout of atomic-red-team fails on
+    # Windows (some unrelated test folders have paths NTFS rejects), so use a
+    # sparse checkout limited to the manifest's techniques.
     Install-Module -Name powershell-yaml -Scope CurrentUser -Force -ErrorAction SilentlyContinue
     $iart = Join-Path $env:TEMP 'invoke-atomicredteam'
     if (-not (Test-Path $iart)) {
         git clone -q --depth 1 https://github.com/redcanaryco/invoke-atomicredteam $iart
     }
     Import-Module (Join-Path $iart 'Invoke-AtomicRedTeam.psd1') -Force
-    $atomics = Join-Path $env:TEMP 'atomics'
-    if (-not (Test-Path $atomics)) {
-        $repo = Join-Path $env:TEMP 'atomic-red-team'
-        git clone -q --filter=blob:none --no-checkout https://github.com/redcanaryco/atomic-red-team $repo
+
+    $repo = Join-Path $env:TEMP 'atomic-red-team'
+    if (-not (Test-Path (Join-Path $repo 'atomics'))) {
+        if (Test-Path $repo) { Remove-Item -Recurse -Force $repo }
+        git clone -q --filter=blob:none --no-checkout --sparse `
+            https://github.com/redcanaryco/atomic-red-team $repo
+        $paths = $Techniques | ForEach-Object { "atomics/$_" }
+        git -C $repo sparse-checkout set --cone @paths
         git -C $repo checkout -q $AtomicsRef
-        Copy-Item (Join-Path $repo 'atomics') $atomics -Recurse
     }
-    return $atomics
+    return (Join-Path $repo 'atomics')
 }
 
 function Get-EventCounts {
@@ -113,7 +119,8 @@ try { Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop } catc
     Write-Warning "Could not disable Defender real-time monitoring: $_"
 }
 
-$atomicsPath = Install-AtomicRunner -AtomicsRef $manifest.framework.atomics_ref
+$techniques = $manifest.tests | ForEach-Object { $_.technique } | Sort-Object -Unique
+$atomicsPath = Install-AtomicRunner -AtomicsRef $manifest.framework.atomics_ref -Techniques $techniques
 
 $results = @()
 foreach ($test in $manifest.tests) {
